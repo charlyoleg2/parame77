@@ -1,0 +1,75 @@
+{
+	"name": "desi77",
+	"version": "0.1.0",
+	"description": "A collection of 3D-designs",
+	"private": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MYNAME/parame77.git"
+	},
+	"homepage": "https://MYNAME.github.io/parame77/",
+	"author": "MYNAME",
+	"license": "ISC",
+	"keywords": [
+		"parametrix",
+		"3D",
+		"CAD"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.map",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"tsup": {
+		"entry": [
+			"src/index.ts"
+		],
+		"format": "esm",
+		"splitting": false,
+		"dts": true,
+		"sourcemap": true,
+		"clean": true
+	},
+	"scripts": {
+		"dev": "tsup --watch",
+		"build": "tsup",
+		"check": "tsc --noEmit",
+		"pretty": "prettier --check .",
+		"format": "prettier --write .",
+		"lint": "eslint .",
+		"test:unit": "vitest",
+		"test:unit:once": "vitest --run",
+		"ci": "run-s check build pretty lint test:unit:once svgo",
+		"svgo1": "svgo --config ./svgo.config.js -f src/myGroup1/svg -o dist/pgdsvg/",
+		"svgo": "run-s svgo1",
+		"browserBundleA": "esbuild src/myGroup1/myBox.ts --bundle --format=esm --outfile=dist2/myBox.js",
+		"browserBundleAll": "esbuild dist/index.js --bundle --format=esm --outfile=dist2/desi77.js",
+		"clean": "rimraf dist dist2 node_modules"
+	},
+	"dependencies": {
+		"geometrix": "^1.0.3"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.10.0",
+		"@types/eslint__js": "^8.42.3",
+		"esbuild": "^0.24.0",
+		"eslint": "^9.14.0",
+		"eslint-config-prettier": "^10.0.1",
+		"npm-run-all2": "^7.0.1",
+		"prettier": "^3.3.3",
+		"rimraf": "^6.0.1",
+		"svgo": "^3.3.2",
+		"tsup": "^8.3.5",
+		"typescript": "^5.6.3",
+		"typescript-eslint": "^8.14.0",
+		"vitest": "^3.0.3"
+	}
+}

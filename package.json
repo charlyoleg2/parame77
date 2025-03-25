@@ -1,0 +1,64 @@
+{
+	"name": "parame77",
+	"version": "0.1.0",
+	"description": "The mono-repo for desi77, desi77-cli, desi77-ui and desi77-uis",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MYNAME/parame77.git"
+	},
+	"homepage": "https://MYNAME.github.io/parame77/",
+	"author": "MYNAME",
+	"license": "ISC",
+	"keywords": [
+		"parametrix",
+		"3D",
+		"CAD"
+	],
+	"type": "module",
+	"workspaces": [
+		"pkg/*"
+	],
+	"scripts": {
+		"desi77:dev": "npm -w desi77 run dev",
+		"desi77:ci": "npm -w desi77 run ci",
+		"desi77:svgo": "npm -w desi77 run svgo",
+		"desi77:clean": "npm -w desi77 run clean",
+		"desi77:version": "npm -w desi77 version patch",
+		"desi77:publish": "npm -w desi77 publish --provenance",
+		"desi77-ui:dev": "npm -w desi77-ui run dev",
+		"desi77-ui:ci": "npm -w desi77-ui run ci",
+		"desi77-ui:clean": "npm -w desi77-ui run clean",
+		"desi77-ui:preview": "npm -w desi77-ui run preview",
+		"desi77-ui:version": "npm -w desi77-ui version patch",
+		"desi77-cli:ci": "npm -w desi77-cli run ci",
+		"desi77-cli:run": "npm -w desi77-cli run run",
+		"desi77-cli:clean": "npm -w desi77-cli run clean",
+		"desi77-cli:version": "npm -w desi77-cli version patch",
+		"desi77-cli:publish": "npm -w desi77-cli publish --provenance",
+		"desi77-uis:ci": "npm -w desi77-uis run ci",
+		"desi77-uis:copy_public": "npm -w desi77-uis run copy_public",
+		"desi77-uis:run": "npm -w desi77-uis run run",
+		"desi77-uis:clean": "npm -w desi77-uis run clean",
+		"desi77-uis:version": "npm -w desi77-uis version patch",
+		"desi77-uis:publish": "npm -w desi77-uis publish --provenance",
+		"dev": "run-p desi77:dev desi77-ui:dev",
+		"ci": "run-s desi77:ci desi77-ui:ci desi77-cli:ci desi77-uis:ci",
+		"ci2": "run-s desi77:ci desi77-ui:ci",
+		"ci3": "run-s desi77:ci desi77-cli:ci",
+		"svgo": "run-s desi77:svgo",
+		"clean-root": "rimraf tmp output output2",
+		"clean": "run-s clean-root desi77:clean desi77-ui:clean desi77-cli:clean desi77-uis:clean",
+		"preview": "run-s desi77-ui:preview",
+		"run-uis": "run-s desi77-uis:run",
+		"run-cli": "run-s desi77-cli:run",
+		"versions": "run-s desi77:version desi77-ui:version desi77-cli:version desi77-uis:version",
+		"gh-publish": "run-s desi77:publish desi77-cli:publish desi77-uis:publish",
+		"ls-workspaces": "npm -ws exec -c pwd"
+	},
+	"devDependencies": {
+		"@atao60/fse-cli": "^0.1.9",
+		"npm-run-all2": "^7.0.1",
+		"rimraf": "^6.0.1"
+	}
+}
