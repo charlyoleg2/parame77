@@ -24,7 +24,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="0.78484147"
-     inkscape:cx="396.25837"
+     inkscape:cx="397.53251"
      inkscape:cy="561.25984"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
@@ -52,6 +52,11 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect1);fill:#000000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="10.193359"
          y="21.880972"
-         id="tspan2">src_stoneBuilding.svg</tspan></text>
+         id="tspan1">src_stoneBuilding.svg</tspan></text>
+    <path
+       style="fill:#ffffff;stroke:#008080;stroke-width:0.264583;stroke-linejoin:round"
+       d="M 48.544834,79.896707 32.363224,51.578888 62.029511,33.037457 89.673097,51.24177 75.17707,79.559591 Z"
+       id="path1"
+       sodipodi:nodetypes="ccccc" />
   </g>
 </svg>
