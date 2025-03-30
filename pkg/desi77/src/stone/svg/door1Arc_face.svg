@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
-   sodipodi:docname="src_door1A.svg"
+   sodipodi:docname="src_door1Arc.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.5696829"
-     inkscape:cx="238.26468"
-     inkscape:cy="239.22028"
+     inkscape:zoom="1.1099334"
+     inkscape:cx="264.88075"
+     inkscape:cy="847.34812"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -43,6 +43,18 @@
   </sodipodi:namedview>
   <defs
      id="defs1">
+    <rect
+       x="377.14624"
+       y="430.02316"
+       width="47.461815"
+       height="22.616034"
+       id="rect37" />
+    <rect
+       x="366.17892"
+       y="389.25058"
+       width="39.635517"
+       height="27.075533"
+       id="rect36" />
     <rect
        x="180.64146"
        y="115.32223"
@@ -138,7 +150,7 @@
        height="84.953461"
        x="9.9449492"
        y="37.588539"
-       inkscape:export-filename="door_vault.svg"
+       inkscape:export-filename="door1Arc_face.svg"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96" />
     <rect
@@ -368,5 +380,29 @@
          x="180.64062"
          y="129.55871"
          id="tspan7">R3</tspan></text>
+    <path
+       style="fill:#ffffff;stroke:#800080;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide);marker-end:url(#ArrowWide)"
+       d="m 26.615148,79.64135 v 5.291664"
+       id="path35" />
+    <path
+       style="fill:#ffffff;stroke:#800080;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide);marker-end:url(#ArrowWide)"
+       d="M 28.202649,87.049682 H 38.785982"
+       id="path36" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-76.356983,-22.755392)"
+       id="text36"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect36);fill:#800080;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="366.17969"
+         y="403.48644"
+         id="tspan8">bH</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-69.193248,-26.632237)"
+       id="text37"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect37);fill:#800080;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="377.14648"
+         y="444.25988"
+         id="tspan9">bW</tspan></text>
   </g>
 </svg>
