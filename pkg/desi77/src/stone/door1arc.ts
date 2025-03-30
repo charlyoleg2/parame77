@@ -3,7 +3,7 @@
 
 import type {
 	//tContour,
-	tOuterInner,
+	//tOuterInner,
 	tParamDef,
 	tParamVal,
 	tGeom,
@@ -14,10 +14,11 @@ import type {
 import {
 	contour,
 	contourCircle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
-	//ffix,
+	ffix,
 	pNumber,
 	//pCheckbox,
 	//pDropdown,
@@ -31,13 +32,13 @@ const pDef: tParamDef = {
 	partName: 'door1arc',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('W1', 'mm', 40, 1, 4000, 1),
-		pNumber('H1', 'mm', 50, 1, 4000, 1),
+		pNumber('W1', 'mm', 1500, 100, 4000, 1),
+		pNumber('H1', 'mm', 1000, 1, 4000, 1),
 		pNumber('H2p', '%', 50, 1, 100, 1),
 		pSectionSeparator('brick'),
 		pNumber('bW', 'mm', 400, 10, 1000, 1),
 		pNumber('bH', 'mm', 200, 10, 1000, 1),
-		pNumber('T1', 'mm', 200, 10, 1000, 1)
+		pNumber('T1', 'mm', 200, 1, 1000, 1)
 	],
 	paramSvg: {
 		W1: 'door1Arc_nArcs.svg',
@@ -59,16 +60,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figFace = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
+		// step-4 : some preparation calculation
+		const Hvault = ((param.H2p / 100) * param.W1) / 2;
+		const Hdoor = param.H1 + Hvault;
+		// step-5 : checks on the parameter values
+		if (param.H2p < 1) {
+			throw `err167: H2p ${param.H2p} is too small`;
+		}
+		// step-6 : any logs
+		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
 		// figFace
-		const face1: tOuterInner = [];
-		const ctrPoleFace = contour(-param.H1 / 2, -param.H2p / 2)
-			.addSegStrokeA(param.H1 / 2, -param.H2p / 2)
-			.addSegStrokeA(param.H1 / 2, param.H2p / 2)
-			.addSegStrokeA(-param.H1 / 2, param.H2p / 2)
+		const ctrDoor = contour(0, 0)
+			.addSegStrokeR(param.W1, 0)
+			.addSegStrokeR(0, param.H1)
+			.addSegStrokeR(-param.W1 / 2, Hvault)
+			.addSegStrokeR(-param.W1 / 2, -Hvault)
 			.closeSegStroke();
-		face1.push(ctrPoleFace);
-		face1.push(contourCircle(0, 0, param.H2p));
-		figFace.addMainOI(face1);
+		figFace.addMainO(ctrDoor);
+		figFace.addSecond(contourCircle(0, 0, param.H2p));
+		figFace.addSecond(ctrRectangle(-param.bW, 0, param.bW, param.bH));
+		figFace.addSecond(ctrRectangle(-param.bW / 2, param.bH, param.bW / 2, param.bH));
 		// final figure list
 		rGeome.fig = {
 			faceDoor: figFace
