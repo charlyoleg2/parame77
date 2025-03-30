@@ -27,6 +27,7 @@ import {
 	EBVolume,
 	initGeom
 } from 'geometrix';
+import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 
 const pDef: tParamDef = {
 	partName: 'door1arc',
@@ -63,18 +64,40 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const Hvault = ((param.H2p / 100) * param.W1) / 2;
 		const Hdoor = param.H1 + Hvault;
+		const lBE = Hvault;
+		const lDE = param.W1 / 2;
+		const aDBE = Math.atan2(lDE, lBE);
+		const lDB = Math.sqrt(lBE ** 2 + lDE ** 2);
+		const lBC = lDB / 2;
+		const lBA = lBC / Math.cos(aDBE);
+		const R1 = lBA;
+		const bW2 = param.bW / 2;
+		const R2 = R1 + bW2;
+		const R3 = R2 + bW2;
+		const aBAC = Math.PI / 2 - aDBE;
+		const aGAD = 2 * aBAC;
+		const aBGD = Math.PI - aGAD;
+		const aFGD = 2 * aBGD;
+		const [lGD, trilog1] = triLALrL(param.Hc, aGAD, R1);
+		const [aDGA, trilog2] = triLLLrA(param.Hc, R1, lGD);
+		const [lAI1, lAI2, trilog3] = triALLrL(aDGA, param.Hc, R3);
+		const nStone = Math.ceil((aFGD * lAI1) / param.bH);
+		rGeome.logstr += trilog1 + trilog2 + trilog3;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
+		rGeome.logstr += `nStone ${ffix(nStone)} vault-stones\n`;
+		rGeome.logstr += `dbg093: lAI1 ${ffix(lAI1)}, lAI2 ${ffix(lAI2)} mm\n`;
 		// figFace
 		const ctrDoor = contour(0, 0)
 			.addSegStrokeR(param.W1, 0)
 			.addSegStrokeR(0, param.H1)
-			.addSegStrokeR(-param.W1 / 2, Hvault)
-			.addSegStrokeR(-param.W1 / 2, -Hvault)
+			.addPointR(-param.W1 / 2, Hvault)
+			.addPointR(-param.W1, 0)
+			.addSegArc2()
 			.closeSegStroke();
 		figFace.addMainO(ctrDoor);
 		figFace.addSecond(contourCircle(0, 0, param.H2p));

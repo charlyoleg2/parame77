@@ -55,7 +55,8 @@
 		"clean": "rimraf dist dist2 node_modules"
 	},
 	"dependencies": {
-		"geometrix": "^1.0.17"
+		"geometrix": "^1.0.17",
+		"triangule": "^1.0.8"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.10.0",
