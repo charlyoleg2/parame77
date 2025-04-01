@@ -76,14 +76,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R1 = lBA;
 		const aBAC = Math.PI / 2 - aDBE;
 		const aGAD = 2 * aBAC;
-		const [lGD, trilog1] = triLALrL(param.Hc, aGAD, R1);
-		const [aDGA, trilog2] = triLLLrA(param.Hc, R1, lGD);
+		const [lGD, trilog1] = triLALrL(param.H2p, aGAD, R1);
+		const [aDGA, trilog2] = triLLLrA(param.H2p, R1, lGD);
 		const aBGD = Math.PI - aDGA;
 		const aFGD = 2 * aBGD;
 		const nVaultStone = Math.ceil((aFGD * R1) / param.bH);
 		rGeome.logstr += trilog1 + trilog2;
 		const bW2 = param.bW / 2;
 		const nSideStone = Math.floor(param.H1 / param.bH);
+		const nBottomStone = Math.floor(param.W1 / param.bW);
+		const firstBottomW = (param.W1 + param.bW - nBottomStone * param.bW) / 2;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
@@ -95,6 +97,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
 		rGeome.logstr += `nVaultStone ${ffix(nVaultStone)} vault-stones\n`;
+		//rGeome.logstr += `dbg100: aGAD ${ffix(aGAD)}, lGD ${ffix(lGD)}\n`;
+		//rGeome.logstr += `dbg101: aDGA ${ffix(aDGA)}, aFGD ${ffix(aFGD)}\n`;
 		// sub-function
 		function ctrBrick(iX: number, iY: number, iW: number): tContour {
 			const rCtr = ctrRectangle(
@@ -106,6 +110,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			return rCtr;
 		}
 		// figFace
+		// hollow
 		const ctrDoor = contour(0, 0, 'green')
 			.addSegStrokeR(param.W1, 0)
 			.addSegStrokeR(0, param.H1)
@@ -114,13 +119,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.closeSegStroke();
 		figFace.addSecond(ctrDoor);
-		figFace.addSecond(contourCircle(0, 0, param.H2p));
+		figFace.addSecond(contourCircle(param.W1 / 2, param.H1 + Hvault - R1, R1));
+		// side stones
 		for (let idx = 0; idx < nSideStone; idx++) {
 			const posY = idx * param.bH;
 			const ibW = idx % 2 === 0 ? 2 * bW2 : bW2;
 			figFace.addMainO(ctrBrick(-ibW, posY, ibW));
 			figFace.addMainO(ctrBrick(param.W1, posY, ibW));
 		}
+		// bottom stones
+		figFace.addMainO(ctrBrick(-bW2, -param.bH, firstBottomW));
+		for (let idx = 0; idx < nBottomStone; idx++) {
+			const posX = -bW2 + firstBottomW + idx * 2 * bW2;
+			figFace.addMainO(ctrBrick(posX, -param.bH, 2 * bW2));
+		}
+		const posXBottom = -bW2 + firstBottomW + nBottomStone * 2 * bW2;
+		figFace.addMainO(ctrBrick(posXBottom, -param.bH, firstBottomW));
 		// final figure list
 		rGeome.fig = {
 			faceDoor: figFace
