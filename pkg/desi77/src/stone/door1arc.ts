@@ -39,6 +39,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('brick'),
 		pNumber('bW', 'mm', 400, 10, 1000, 1),
 		pNumber('bH', 'mm', 200, 10, 1000, 1),
+		pNumber('jW', 'mm', 0.2, 0, 200, 0.1),
 		pNumber('T1', 'mm', 200, 1, 1000, 1)
 	],
 	paramSvg: {
@@ -47,6 +48,7 @@ const pDef: tParamDef = {
 		H2p: 'door1Arc_face.svg',
 		bH: 'door1Arc_face.svg',
 		bW: 'door1Arc_face.svg',
+		jW: 'door1Arc_face.svg',
 		T1: 'door1Arc_nArcs.svg'
 	},
 	sim: {
