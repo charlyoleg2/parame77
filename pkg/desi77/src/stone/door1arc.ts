@@ -74,22 +74,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lBC = lDB / 2;
 		const lBA = lBC / Math.cos(aDBE);
 		const R1 = lBA;
-		const bW2 = param.bW / 2;
 		const aBAC = Math.PI / 2 - aDBE;
 		const aGAD = 2 * aBAC;
 		const [lGD, trilog1] = triLALrL(param.Hc, aGAD, R1);
 		const [aDGA, trilog2] = triLLLrA(param.Hc, R1, lGD);
 		const aBGD = Math.PI - aDGA;
 		const aFGD = 2 * aBGD;
-		const nStone = Math.ceil((aFGD * R1) / param.bH);
+		const nVaultStone = Math.ceil((aFGD * R1) / param.bH);
 		rGeome.logstr += trilog1 + trilog2;
+		const bW2 = param.bW / 2;
+		const nSideStone = Math.floor(param.H1 / param.bH);
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
 		}
+		const bHs = param.bH - 2 * param.jW;
+		if (bHs < 1.0) {
+			throw `err192: bHs ${ffix(bHs)} is negative or almost zero`;
+		}
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
-		rGeome.logstr += `nStone ${ffix(nStone)} vault-stones\n`;
+		rGeome.logstr += `nVaultStone ${ffix(nVaultStone)} vault-stones\n`;
 		// sub-function
 		function ctrBrick(iX: number, iY: number, iW: number): tContour {
 			const rCtr = ctrRectangle(
@@ -110,8 +115,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figFace.addSecond(ctrDoor);
 		figFace.addSecond(contourCircle(0, 0, param.H2p));
-		figFace.addMainO(ctrBrick(-2 * bW2, 0, 2 * bW2));
-		figFace.addMainO(ctrBrick(-bW2, param.bH, bW2));
+		for (let idx = 0; idx < nSideStone; idx++) {
+			const posY = idx * param.bH;
+			const ibW = idx % 2 === 0 ? 2 * bW2 : bW2;
+			figFace.addMainO(ctrBrick(-ibW, posY, ibW));
+			figFace.addMainO(ctrBrick(param.W1, posY, ibW));
+		}
 		// final figure list
 		rGeome.fig = {
 			faceDoor: figFace
