@@ -2,7 +2,7 @@
 // door or window with a 1-arc vault
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -27,7 +27,8 @@ import {
 	EBVolume,
 	initGeom
 } from 'geometrix';
-import { triLALrL, triALLrL, triLLLrA } from 'triangule';
+//import { triLALrL, triALLrL, triLLLrA } from 'triangule';
+import { triLALrL, triLLLrA } from 'triangule';
 
 const pDef: tParamDef = {
 	partName: 'door1arc',
@@ -74,17 +75,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lBA = lBC / Math.cos(aDBE);
 		const R1 = lBA;
 		const bW2 = param.bW / 2;
-		const R2 = R1 + bW2;
-		const R3 = R2 + bW2;
 		const aBAC = Math.PI / 2 - aDBE;
 		const aGAD = 2 * aBAC;
-		const aBGD = Math.PI - aGAD;
-		const aFGD = 2 * aBGD;
 		const [lGD, trilog1] = triLALrL(param.Hc, aGAD, R1);
 		const [aDGA, trilog2] = triLLLrA(param.Hc, R1, lGD);
-		const [lAI1, lAI2, trilog3] = triALLrL(aDGA, param.Hc, R3);
-		const nStone = Math.ceil((aFGD * lAI1) / param.bH);
-		rGeome.logstr += trilog1 + trilog2 + trilog3;
+		const aBGD = Math.PI - aDGA;
+		const aFGD = 2 * aBGD;
+		const nStone = Math.ceil((aFGD * R1) / param.bH);
+		rGeome.logstr += trilog1 + trilog2;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
@@ -92,19 +90,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
 		rGeome.logstr += `nStone ${ffix(nStone)} vault-stones\n`;
-		rGeome.logstr += `dbg093: lAI1 ${ffix(lAI1)}, lAI2 ${ffix(lAI2)} mm\n`;
+		// sub-function
+		function ctrBrick(iX: number, iY: number, iW: number): tContour {
+			const rCtr = ctrRectangle(
+				iX + param.jW,
+				iY + param.jW,
+				iW - 2 * param.jW,
+				param.bH - 2 * param.jW
+			);
+			return rCtr;
+		}
 		// figFace
-		const ctrDoor = contour(0, 0)
+		const ctrDoor = contour(0, 0, 'green')
 			.addSegStrokeR(param.W1, 0)
 			.addSegStrokeR(0, param.H1)
 			.addPointR(-param.W1 / 2, Hvault)
 			.addPointR(-param.W1, 0)
 			.addSegArc2()
 			.closeSegStroke();
-		figFace.addMainO(ctrDoor);
+		figFace.addSecond(ctrDoor);
 		figFace.addSecond(contourCircle(0, 0, param.H2p));
-		figFace.addSecond(ctrRectangle(-param.bW, 0, param.bW, param.bH));
-		figFace.addSecond(ctrRectangle(-param.bW / 2, param.bH, param.bW / 2, param.bH));
+		figFace.addMainO(ctrBrick(-2 * bW2, 0, 2 * bW2));
+		figFace.addMainO(ctrBrick(-bW2, param.bH, bW2));
 		// final figure list
 		rGeome.fig = {
 			faceDoor: figFace
