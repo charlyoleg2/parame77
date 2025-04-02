@@ -12,6 +12,8 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
+	//withinZeroPi,
+	point,
 	contour,
 	contourCircle,
 	ctrRectangle,
@@ -28,7 +30,7 @@ import {
 	initGeom
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
-//import { triLALrL, triLLLrA } from 'triangule';
+import { triALLrL } from 'triangule';
 
 const pDef: tParamDef = {
 	partName: 'door1arc',
@@ -61,10 +63,23 @@ const pDef: tParamDef = {
 	}
 };
 
-//function calcGL(aMGL: number, R1: number, lAG: number): number {
-//	const rlGL = R1 + 0.0001 * (aMGL + lAG);
-//	return rlGL;
-//}
+function calcGL(aMGL: number, R1: number, lAG: number): number {
+	let rlGL = R1; // lAG === 0
+	if (lAG > 0) {
+		let aA = aMGL + Math.PI / 2;
+		if (aA > Math.PI) {
+			aA = 2 * Math.PI - aA;
+		}
+		[, rlGL] = triALLrL(aA, lAG, R1);
+	} else if (lAG < 0) {
+		let aA = Math.PI / 2 - aMGL;
+		if (aA < 0) {
+			aA = -aA;
+		}
+		[, rlGL] = triALLrL(aA, -lAG, R1);
+	}
+	return rlGL;
+}
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
@@ -91,6 +106,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//const aBGD = Math.PI - aDGA;
 		//const aFGD = 2 * aBGD;
 		const nVaultStone = Math.ceil((aFGD * R1) / param.bH);
+		const aVaultStone = aFGD / nVaultStone;
 		//rGeome.logstr += trilog1 + trilog2;
 		const bW2 = param.bW / 2;
 		const nSideStone = Math.floor(param.H1 / param.bH);
@@ -133,6 +149,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figFace.addSecond(ctrDoor);
 		figFace.addDynamics(contourCircle(param.W1 / 2, param.H1 + Hvault - R1, R1));
+		// vault stones
+		for (let idx = 0; idx < nVaultStone; idx++) {
+			const a0 = aMGF + idx * aVaultStone;
+			const l0 = calcGL(a0, R1, param.Hc);
+			const a1 = a0 + aVaultStone;
+			const l1 = calcGL(a1, R1, param.Hc);
+			const pt0 = point(param.W1 / 2, param.H1 - lEG).translatePolar(a0, l0);
+			const pt1 = point(param.W1 / 2, param.H1 - lEG).translatePolar(a1, l1 + param.bW);
+			const ctrV = contour(pt0.cx, pt0.cy)
+				.addSegStrokeRP(a0, param.bW)
+				.addSegStrokeA(pt1.cx, pt1.cy)
+				.addSegStrokeRP(a1 + Math.PI, param.bW)
+				.closeSegStroke();
+			figFace.addMainO(ctrV);
+		}
 		// side stones
 		for (let idx = 0; idx < nSideStone; idx++) {
 			const posY = idx * param.bH;
