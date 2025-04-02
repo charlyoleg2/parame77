@@ -61,6 +61,11 @@ const pDef: tParamDef = {
 	}
 };
 
+//function calcGL(aMGL: number, R1: number, lAG: number): number {
+//	const rlGL = R1 + 0.0001 * (aMGL + lAG);
+//	return rlGL;
+//}
+
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figFace = figure();
@@ -127,7 +132,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.closeSegStroke();
 		figFace.addSecond(ctrDoor);
-		figFace.addSecond(contourCircle(param.W1 / 2, param.H1 + Hvault - R1, R1));
+		figFace.addDynamics(contourCircle(param.W1 / 2, param.H1 + Hvault - R1, R1));
 		// side stones
 		for (let idx = 0; idx < nSideStone; idx++) {
 			const posY = idx * param.bH;
