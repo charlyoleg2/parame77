@@ -19,11 +19,11 @@ import {
 	ctrRectangle,
 	figure,
 	//degToRad,
-	//radToDeg,
+	radToDeg,
 	ffix,
 	pNumber,
 	//pCheckbox,
-	//pDropdown,
+	pDropdown,
 	pSectionSeparator,
 	EExtrude,
 	EBVolume,
@@ -39,9 +39,13 @@ const pDef: tParamDef = {
 		pNumber('W1', 'mm', 1500, 100, 4000, 1),
 		pNumber('H1', 'mm', 1000, 1, 4000, 1),
 		pNumber('H2p', '%', 50, 1, 100, 1),
+		pSectionSeparator('vault'),
 		pNumber('Hc', 'mm', 0, -1000, 1000, 1),
+		pDropdown('spread', ['widest', 'odd', 'even']),
+		pNumber('vL', 'mm', 400, 10, 1000, 1),
+		pNumber('vW', 'mm', 200, 10, 1000, 1),
 		pSectionSeparator('brick'),
-		pNumber('bW', 'mm', 400, 10, 1000, 1),
+		pNumber('bL', 'mm', 400, 10, 1000, 1),
 		pNumber('bH', 'mm', 200, 10, 1000, 1),
 		pNumber('jW', 'mm', 0.2, 0, 200, 0.1),
 		pNumber('T1', 'mm', 200, 1, 1000, 1)
@@ -51,8 +55,11 @@ const pDef: tParamDef = {
 		H1: 'door1Arc_nArcs.svg',
 		H2p: 'door1Arc_face.svg',
 		Hc: 'door1Arc_face.svg',
+		spread: 'door1Arc_face.svg',
+		vL: 'door1Arc_face.svg',
+		vW: 'door1Arc_face.svg',
+		bL: 'door1Arc_face.svg',
 		bH: 'door1Arc_face.svg',
-		bW: 'door1Arc_face.svg',
 		jW: 'door1Arc_face.svg',
 		T1: 'door1Arc_nArcs.svg'
 	},
@@ -99,19 +106,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lEG = lBA - Hvault - param.Hc;
 		const aMGF = Math.atan2(lEG, param.W1 / 2);
 		const aFGD = Math.PI - 2 * aMGF;
-		//const aBAC = Math.PI / 2 - aDBE;
-		//const aGAD = 2 * aBAC;
-		//const [lGD, trilog1] = triLALrL(param.Hc, aGAD, R1);
-		//const [aDGA, trilog2] = triLLLrA(param.Hc, R1, lGD);
-		//const aBGD = Math.PI - aDGA;
-		//const aFGD = 2 * aBGD;
-		const nVaultStone = Math.ceil((aFGD * R1) / param.bH);
+		// nVaultStone, aVaultStone
+		const Lmax = Math.max(calcGL(aMGF, R1, param.Hc), R1 - param.Hc);
+		const nVaultStone = Math.ceil((aFGD * (Lmax + param.vL)) / param.vW);
 		const aVaultStone = aFGD / nVaultStone;
 		//rGeome.logstr += trilog1 + trilog2;
-		const bW2 = param.bW / 2;
+		const bL2 = param.bL / 2;
 		const nSideStone = Math.floor(param.H1 / param.bH);
-		const nBottomStone = Math.ceil(param.W1 / param.bW) - 1;
-		const firstBottomW = (param.W1 + param.bW - nBottomStone * param.bW) / 2;
+		const nBottomStone = Math.ceil(param.W1 / param.bL) - 1;
+		const firstBottomW = (param.W1 + param.bL - nBottomStone * param.bL) / 2;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
@@ -126,6 +129,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
 		rGeome.logstr += `nVaultStone ${ffix(nVaultStone)} vault-stones\n`;
+		rGeome.logstr += `aVaultStone ${ffix(radToDeg(aVaultStone))} degree ${ffix(aVaultStone * Lmax)} ${ffix(aVaultStone * (Lmax + param.vL))} mm\n`;
 		//rGeome.logstr += `dbg100: aGAD ${ffix(aGAD)}, lGD ${ffix(lGD)}\n`;
 		//rGeome.logstr += `dbg101: aDGA ${ffix(aDGA)}, aFGD ${ffix(aFGD)}\n`;
 		// sub-function
@@ -156,28 +160,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const a1 = a0 + aVaultStone;
 			const l1 = calcGL(a1, R1, param.Hc);
 			const pt0 = point(param.W1 / 2, param.H1 - lEG).translatePolar(a0, l0);
-			const pt1 = point(param.W1 / 2, param.H1 - lEG).translatePolar(a1, l1 + param.bW);
+			const pt1 = point(param.W1 / 2, param.H1 - lEG).translatePolar(a1, l1 + param.vL);
 			const ctrV = contour(pt0.cx, pt0.cy)
-				.addSegStrokeRP(a0, param.bW)
+				.addSegStrokeRP(a0, param.vL)
 				.addSegStrokeA(pt1.cx, pt1.cy)
-				.addSegStrokeRP(a1 + Math.PI, param.bW)
+				.addSegStrokeRP(a1 + Math.PI, param.vL)
 				.closeSegStroke();
 			figFace.addMainO(ctrV);
 		}
 		// side stones
 		for (let idx = 0; idx < nSideStone; idx++) {
 			const posY = idx * param.bH;
-			const ibW = idx % 2 === 0 ? 2 * bW2 : bW2;
+			const ibW = idx % 2 === 0 ? 2 * bL2 : bL2;
 			figFace.addMainO(ctrBrick(-ibW, posY, ibW));
 			figFace.addMainO(ctrBrick(param.W1, posY, ibW));
 		}
 		// bottom stones
-		figFace.addMainO(ctrBrick(-bW2, -param.bH, firstBottomW));
+		figFace.addMainO(ctrBrick(-bL2, -param.bH, firstBottomW));
 		for (let idx = 0; idx < nBottomStone; idx++) {
-			const posX = -bW2 + firstBottomW + idx * 2 * bW2;
-			figFace.addMainO(ctrBrick(posX, -param.bH, 2 * bW2));
+			const posX = -bL2 + firstBottomW + idx * 2 * bL2;
+			figFace.addMainO(ctrBrick(posX, -param.bH, 2 * bL2));
 		}
-		const posXBottom = -bW2 + firstBottomW + nBottomStone * 2 * bW2;
+		const posXBottom = -bL2 + firstBottomW + nBottomStone * 2 * bL2;
 		figFace.addMainO(ctrBrick(posXBottom, -param.bH, firstBottomW));
 		// final figure list
 		rGeome.fig = {
