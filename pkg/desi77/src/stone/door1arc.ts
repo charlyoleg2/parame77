@@ -13,6 +13,7 @@ import type {
 } from 'geometrix';
 import {
 	//withinZeroPi,
+	ShapePoint,
 	point,
 	contour,
 	contourCircle,
@@ -55,9 +56,9 @@ const pDef: tParamDef = {
 		H1: 'door1Arc_nArcs.svg',
 		H2p: 'door1Arc_face.svg',
 		Hc: 'door1Arc_face.svg',
-		spread: 'door1Arc_face.svg',
-		vL: 'door1Arc_face.svg',
-		vW: 'door1Arc_face.svg',
+		spread: 'door1Arc_spread.svg',
+		vL: 'door1Arc_vaultStone.svg',
+		vW: 'door1Arc_vaultStone.svg',
 		bL: 'door1Arc_face.svg',
 		bH: 'door1Arc_face.svg',
 		jW: 'door1Arc_face.svg',
@@ -108,7 +109,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aFGD = Math.PI - 2 * aMGF;
 		// nVaultStone, aVaultStone
 		const Lmax = Math.max(calcGL(aMGF, R1, param.Hc), R1 - param.Hc);
-		const nVaultStone = Math.ceil((aFGD * (Lmax + param.vL)) / param.vW);
+		let nVaultStone = Math.ceil((aFGD * (Lmax + param.vL)) / param.vW);
+		const nVeven = nVaultStone % 2 === 0 ? true : false;
+		if (param.spread === 1 && nVeven) {
+			nVaultStone += 1;
+		} else if (param.spread === 2 && !nVeven) {
+			nVaultStone += 1;
+		}
 		const aVaultStone = aFGD / nVaultStone;
 		//rGeome.logstr += trilog1 + trilog2;
 		const bL2 = param.bL / 2;
@@ -152,7 +159,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.closeSegStroke();
 		figFace.addSecond(ctrDoor);
-		figFace.addDynamics(contourCircle(param.W1 / 2, param.H1 + Hvault - R1, R1));
+		const ccx = param.W1 / 2;
+		const ccy = param.H1 + Hvault - R1;
+		figFace.addDynamics(contourCircle(ccx, ccy, R1));
+		figFace.addPoint(point(ccx, ccy, ShapePoint.eTwoTri));
+		figFace.addPoint(point(ccx, ccy + param.Hc, ShapePoint.eSquare));
 		// vault stones
 		for (let idx = 0; idx < nVaultStone; idx++) {
 			const a0 = aMGF + idx * aVaultStone;
