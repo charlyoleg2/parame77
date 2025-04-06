@@ -128,6 +128,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const nSVx = Math.ceil(svLmin / param.bL);
 		const vHmin = Hdoor + param.vL - (nSideStone + nSVy) * param.bH;
 		const nTVy = Math.ceil(vHmin / param.bH);
+		const nTVx0 = Math.ceil(param.W1 / param.bL);
+		const nTVx1 = Math.ceil((param.W1 + 2 * bL2) / param.bL);
+		const vW0 = param.W1 / nTVx0;
+		const vW1 = (param.W1 + 2 * bL2) / nTVx1;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
@@ -202,12 +206,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFace.addMainO(ctrBrick(posXBottom, -param.bH, firstBottomW));
 		// side-vault stones
 		for (let idxY = 0; idxY < nSVy; idxY++) {
+			const posY = (idxY + nSideStone) * param.bH;
 			for (let idxX = 0; idxX < nSVx; idxX++) {
 				const posX1 = (idxX - nSVx) * 2 * bL2;
 				const posX2 = param.W1 + idxX * 2 * bL2;
-				const posY = (idxY + nSideStone) * param.bH;
 				figFace.addSecond(ctrBrick(posX1, posY, 2 * bL2));
 				figFace.addSecond(ctrBrick(posX2, posY, 2 * bL2));
+			}
+			for (let idxX = 0; idxX < nTVx0; idxX++) {
+				figFace.addSecond(ctrBrick(idxX * vW0, posY, vW0));
 			}
 		}
 		// top-vault stones
@@ -216,6 +223,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const ibW = idxY % 2 === 1 ? 2 * bL2 : bL2;
 			figFace.addSecond(ctrBrick(-2 * bL2, posY, ibW));
 			figFace.addSecond(ctrBrick(param.W1 + 2 * bL2 - ibW, posY, ibW));
+			const nX = idxY % 2 === 0 ? nTVx1 : nTVx0;
+			const wX = idxY % 2 === 0 ? vW1 : vW0;
+			const sX = idxY % 2 === 0 ? -bL2 : 0;
+			for (let idxX = 0; idxX < nX; idxX++) {
+				figFace.addSecond(ctrBrick(sX + idxX * wX, posY, wX));
+			}
 		}
 		// final figure list
 		rGeome.fig = {
