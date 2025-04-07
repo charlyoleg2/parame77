@@ -129,9 +129,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const vHmin = Hdoor + param.vL - (nSideStone + nSVy) * param.bH;
 		const nTVy = Math.ceil(vHmin / param.bH);
 		const nTVx0 = Math.ceil(param.W1 / param.bL);
-		const nTVx1 = Math.ceil((param.W1 + 2 * bL2) / param.bL);
+		const sTVx12 = (nSVx - 1) * param.bL;
+		const nTVx1 = Math.ceil((param.W1 + 2 * sTVx12 + 2 * bL2) / param.bL);
+		const nTVx2 = Math.ceil((param.W1 + 2 * sTVx12 + 2) / param.bL);
 		const vW0 = param.W1 / nTVx0;
-		const vW1 = (param.W1 + 2 * bL2) / nTVx1;
+		const vW1 = (param.W1 + 2 * sTVx12 + 2 * bL2) / nTVx1;
+		const vW2 = (param.W1 + 2 * sTVx12) / nTVx2;
 		// step-5 : checks on the parameter values
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
@@ -221,11 +224,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let idxY = 0; idxY < nTVy; idxY++) {
 			const posY = (idxY + nSideStone + nSVy) * param.bH;
 			const ibW = idxY % 2 === 1 ? 2 * bL2 : bL2;
-			figFace.addSecond(ctrBrick(-2 * bL2, posY, ibW));
-			figFace.addSecond(ctrBrick(param.W1 + 2 * bL2 - ibW, posY, ibW));
-			const nX = idxY % 2 === 0 ? nTVx1 : nTVx0;
-			const wX = idxY % 2 === 0 ? vW1 : vW0;
-			const sX = idxY % 2 === 0 ? -bL2 : 0;
+			figFace.addSecond(ctrBrick(-sTVx12 - 2 * bL2, posY, ibW));
+			figFace.addSecond(ctrBrick(param.W1 + sTVx12 + 2 * bL2 - ibW, posY, ibW));
+			const nX = idxY % 2 === 0 ? nTVx1 : nTVx2;
+			const wX = idxY % 2 === 0 ? vW1 : vW2;
+			const sX = idxY % 2 === 0 ? -sTVx12 - bL2 : -sTVx12;
 			for (let idxX = 0; idxX < nX; idxX++) {
 				figFace.addSecond(ctrBrick(sX + idxX * wX, posY, wX));
 			}
