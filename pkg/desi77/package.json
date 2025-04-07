@@ -49,7 +49,8 @@
 		"test:unit:once": "vitest --run",
 		"ci": "run-s check build pretty lint test:unit:once svgo",
 		"svgo1": "svgo --config ./svgo.config.js -f src/stone/svg -o dist/pgdsvg/",
-		"svgo": "run-s svgo1",
+		"svgo2": "svgo --config ./svgo.config.js -f src/spring/svg -o dist/pgdsvg/",
+		"svgo": "run-s svgo1 svgo2",
 		"browserBundleA": "esbuild src/stone/door1arc.ts --bundle --format=esm --outfile=dist2/door1arc.js",
 		"browserBundleAll": "esbuild dist/index.js --bundle --format=esm --outfile=dist2/desi77.js",
 		"clean": "rimraf dist dist2 node_modules"
