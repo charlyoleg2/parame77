@@ -22,8 +22,8 @@ The UI is also available on the github-page.
 Links
 -----
 
-- [desi77-ui](https://MYNAME.github.io/parame77/) : public instance of the UI
-- [sources](https://github.com/MYNAME/parame77) : git-repository
+- [desi77-ui](https://charlyoleg2.github.io/parame77/) : public instance of the UI
+- [sources](https://github.com/charlyoleg2/parame77) : git-repository
 - [pkg](https://www.npmjs.com/package/desi77) : desi77 as npm-package
 - [pkg-cli](https://www.npmjs.com/package/desi77-cli) : desi77-cli as npm-package
 - [pkg-uis](https://www.npmjs.com/package/desi77-uis) : desi77-uis as npm-package
@@ -34,7 +34,7 @@ Usage for Makers
 
 Parametrize and generate your 3D-files with the online-app:
 
-[https://MYNAME.github.io/parame77/](https://MYNAME.github.io/parame77/)
+[https://charlyoleg2.github.io/parame77/](https://charlyoleg2.github.io/parame77/)
 
 Or use the UI locally:
 
@@ -52,7 +52,7 @@ Getting started for Dev
 -----------------------
 
 ```bash
-git clone https://github.com/MYNAME/parame77
+git clone https://github.com/charlyoleg2/parame77
 cd parame77
 npm i
 npm run ci
