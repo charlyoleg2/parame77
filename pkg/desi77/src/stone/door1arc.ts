@@ -122,7 +122,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const nSideStone = Math.floor(param.H1 / param.bH);
 		const nBottomStone = Math.ceil(param.W1 / param.bL) - 1;
 		const firstBottomW = (param.W1 + param.bL - nBottomStone * param.bL) / 2;
-		const svHmin = param.vL * Math.sin(aMGF) + param.H1 - nSideStone * param.bH;
+		const svHinit = param.H1 - nSideStone * param.bH;
+		const svHmin = param.vL * Math.sin(aMGF) + svHinit;
 		const svLmin = param.vL * Math.cos(aMGF);
 		const nSVy = Math.ceil(svHmin / param.bH);
 		const nSVx = Math.ceil(svLmin / param.bL);
@@ -161,6 +162,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				param.bH - 2 * param.jW
 			);
 			return rCtr;
+		}
+		function ctrFirstSV(iX: number, iSig: number): tContour {
+			const dX = (param.bH - svHinit) / Math.tan(aMGF);
+			const dY = param.bL * Math.tan(aMGF);
+			const ctrSV1 = contour(iX, param.H1, 'green');
+			if (dX > param.bL) {
+				ctrSV1.addSegStrokeR(-iSig * param.bL, dY).addSegStrokeR(0, -dY - svHinit);
+			} else {
+				ctrSV1
+					.addSegStrokeR(-iSig * dX, param.bH - svHinit)
+					.addSegStrokeR(iSig * (-param.bL + dX), 0)
+					.addSegStrokeR(0, -param.bH);
+			}
+			if (svHinit === 0) {
+				ctrSV1.closeSegStroke();
+			} else {
+				ctrSV1.addSegStrokeR(iSig * param.bL, 0).closeSegStroke();
+			}
+			return ctrSV1;
 		}
 		// figFace
 		// hollow
@@ -216,10 +236,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figFace.addSecond(ctrBrick(posX1, posY, 2 * bL2));
 				figFace.addSecond(ctrBrick(posX2, posY, 2 * bL2));
 			}
-			for (let idxX = 0; idxX < nTVx0; idxX++) {
-				figFace.addSecond(ctrBrick(idxX * vW0, posY, vW0));
-			}
 		}
+		for (let idxX = 0; idxX < nTVx0; idxX++) {
+			const posY = (nSideStone + nSVy - 1) * param.bH;
+			figFace.addSecond(ctrBrick(idxX * vW0, posY, vW0));
+		}
+		// first side-vault stone
+		figFace.addMainO(ctrFirstSV(0, 1));
+		figFace.addMainO(ctrFirstSV(param.W1, -1));
 		// top-vault stones
 		for (let idxY = 0; idxY < nTVy; idxY++) {
 			const posY = (idxY + nSideStone + nSVy) * param.bH;
