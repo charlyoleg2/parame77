@@ -105,7 +105,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lBA = lBC / Math.cos(aDBE);
 		const R1 = lBA;
 		const lEG = lBA - Hvault - param.Hc;
-		const aMGF = Math.atan2(lEG, param.W1 / 2);
+		const lEG0 = Math.max(lEG, 0);
+		const aMGF = Math.atan2(lEG0, param.W1 / 2);
 		const aFGD = Math.PI - 2 * aMGF;
 		// nVaultStone, aVaultStone
 		const Lmax = Math.max(calcGL(aMGF, R1, param.Hc), R1 - param.Hc);
@@ -140,17 +141,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.H2p < 1) {
 			throw `err167: H2p ${param.H2p} is too small`;
 		}
-		if (lEG < 1) {
-			throw `err170: lEG ${lEG} is negative or almost zero`;
+		if (lEG < -0.1) {
+			throw `err170: lEG ${lEG} is negative`;
 		}
 		const bHs = param.bH - 2 * param.jW;
 		if (bHs < 1.0) {
 			throw `err192: bHs ${ffix(bHs)} is negative or almost zero`;
 		}
+		const withSV = aMGF > 0.1 ? true : false;
 		// step-6 : any logs
 		rGeome.logstr += `Hdoor ${ffix(Hdoor)}, Hvault ${ffix(Hvault)} mm\n`;
 		rGeome.logstr += `nVaultStone ${ffix(nVaultStone)} vault-stones\n`;
 		rGeome.logstr += `aVaultStone ${ffix(radToDeg(aVaultStone))} degree ${ffix(aVaultStone * Lmax)} ${ffix(aVaultStone * (Lmax + param.vL))} mm\n`;
+		if (withSV) {
+			rGeome.logstr += `including side-vault stone with aMGF ${ffix(radToDeg(aMGF))} degree\n`;
+		} else {
+			rGeome.logstr += `without side-vault stone because too small aMGF ${ffix(radToDeg(aMGF))} degree\n`;
+		}
 		//rGeome.logstr += `dbg100: aGAD ${ffix(aGAD)}, lGD ${ffix(lGD)}\n`;
 		//rGeome.logstr += `dbg101: aDGA ${ffix(aDGA)}, aFGD ${ffix(aFGD)}\n`;
 		// sub-function
@@ -228,22 +235,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const posXBottom = -bL2 + firstBottomW + nBottomStone * 2 * bL2;
 		figFace.addMainO(ctrBrick(posXBottom, -param.bH, firstBottomW));
 		// side-vault stones
-		for (let idxY = 0; idxY < nSVy; idxY++) {
-			const posY = (idxY + nSideStone) * param.bH;
-			for (let idxX = 0; idxX < nSVx; idxX++) {
-				const posX1 = (idxX - nSVx) * 2 * bL2;
-				const posX2 = param.W1 + idxX * 2 * bL2;
-				figFace.addSecond(ctrBrick(posX1, posY, 2 * bL2));
-				figFace.addSecond(ctrBrick(posX2, posY, 2 * bL2));
+		if (withSV) {
+			for (let idxY = 0; idxY < nSVy; idxY++) {
+				const posY = (idxY + nSideStone) * param.bH;
+				for (let idxX = 0; idxX < nSVx; idxX++) {
+					const posX1 = (idxX - nSVx) * 2 * bL2;
+					const posX2 = param.W1 + idxX * 2 * bL2;
+					figFace.addSecond(ctrBrick(posX1, posY, 2 * bL2));
+					figFace.addSecond(ctrBrick(posX2, posY, 2 * bL2));
+				}
+			}
+			for (let idxX = 0; idxX < nTVx0; idxX++) {
+				const posY = (nSideStone + nSVy - 1) * param.bH;
+				figFace.addSecond(ctrBrick(idxX * vW0, posY, vW0));
 			}
 		}
-		for (let idxX = 0; idxX < nTVx0; idxX++) {
-			const posY = (nSideStone + nSVy - 1) * param.bH;
-			figFace.addSecond(ctrBrick(idxX * vW0, posY, vW0));
-		}
 		// first side-vault stone
-		figFace.addMainO(ctrFirstSV(0, 1));
-		figFace.addMainO(ctrFirstSV(param.W1, -1));
+		if (withSV) {
+			figFace.addMainO(ctrFirstSV(0, 1));
+			figFace.addMainO(ctrFirstSV(param.W1, -1));
+		}
 		// top-vault stones
 		for (let idxY = 0; idxY < nTVy; idxY++) {
 			const posY = (idxY + nSideStone + nSVy) * param.bH;
