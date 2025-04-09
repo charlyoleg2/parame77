@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4.1 (1:1.4.1+202503302257+93de688d07)"
-   sodipodi:docname="springTorqueA.svg"
+   sodipodi:docname="src_springTorqueA.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="1.1099335"
-     inkscape:cx="270.28647"
-     inkscape:cy="265.33122"
+     inkscape:cx="271.18742"
+     inkscape:cy="266.23217"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -70,7 +70,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect1);display:inline;fill:#000000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="12.103516"
          y="32.074332"
-         id="tspan2">springTorqueA.svg</tspan></text>
+         id="tspan1">src_springTorqueA.svg</tspan></text>
     <circle
        style="fill:#ffffff;stroke:#aa0000;stroke-width:0.264583;stroke-linejoin:round"
        id="path1-1"

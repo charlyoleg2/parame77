@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="600"
+   height="3000"
+   viewBox="0 0 158.75 793.75"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.1 (1:1.4.1+202503302257+93de688d07)"
+   sodipodi:docname="src_stoneTower.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="1.5696829"
+     inkscape:cx="402.62908"
+     inkscape:cy="289.54892"
+     inkscape:window-width="1854"
+     inkscape:window-height="1131"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <rect
+       x="10.193141"
+       y="7.644856"
+       width="280.31138"
+       height="84.093416"
+       id="rect1" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3-1"
+       width="5.2916665"
+       height="5.2916665"
+       x="130.05542"
+       y="24.1092" />
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3"
+       width="5.2916665"
+       height="5.2916665"
+       x="108.88876"
+       y="45.275867" />
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3-36"
+       width="15.875"
+       height="15.875"
+       x="114.18043"
+       y="29.400867" />
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3-36-9"
+       width="15.875"
+       height="15.875"
+       x="23.164207"
+       y="109.7979" />
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3-1-7"
+       width="5.2916665"
+       height="5.2916665"
+       x="17.872541"
+       y="125.6729" />
+    <rect
+       style="fill:none;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect3-3"
+       width="5.2916665"
+       height="5.2916665"
+       x="39.039207"
+       y="104.50624" />
+    <rect
+       style="fill:#999999;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect2-1-0-7"
+       width="117.47454"
+       height="106.85537"
+       x="17.872541"
+       y="24.1092"
+       ry="0" />
+    <rect
+       style="fill:#ffffff;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect2-1-0"
+       width="106.89122"
+       height="96.272034"
+       x="23.164207"
+       y="29.400871"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text1"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect1);fill:#000000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="10.193359"
+         y="21.880972"
+         id="tspan2">src_stoneTower.svg</tspan></text>
+    <rect
+       style="fill:#999999;stroke:#786721;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect2-1"
+       width="75.14122"
+       height="64.522034"
+       x="39.039207"
+       y="45.275867"
+       ry="0" />
+    <rect
+       style="fill:#ffffff;stroke:#786721;stroke-width:0.26458333;stroke-linejoin:round"
+       id="rect2"
+       width="64.557892"
+       height="53.938705"
+       x="44.330872"
+       y="50.567535"
+       ry="0" />
+  </g>
+</svg>
