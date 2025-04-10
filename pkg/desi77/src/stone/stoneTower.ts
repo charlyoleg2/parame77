@@ -149,7 +149,6 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const oXY1 = param.T1 + param.W2;
 		const Hbasement = 10;
 		const W22 = param.W2 / 2;
-		const Tdoor = param.T2 + 2 * W22;
 		// step-5 : checks on the parameter values
 		if (param.L1 < param.N4 * param.W4) {
 			throw `err152: L1 ${param.L1} is too small compare to N4 ${param.N4} W4 ${param.W4}`;
@@ -202,7 +201,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_door`,
 					face: `${designName}_faceDoor`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: Tdoor,
+					length: param.T2 + 2 * W22,
 					rotate: [Math.PI / 2, 0, 0],
 					translate: [L3 / 2, param.T2 + W22, 0]
 				}
