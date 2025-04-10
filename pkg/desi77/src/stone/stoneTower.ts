@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	//contourCircle,
 	ctrRectangle,
 	figure,
@@ -138,6 +138,7 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figHplan = figure();
+	const figDoor = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -145,9 +146,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const LW3 = param.T1 + param.W2 + param.T2;
 		const L3 = param.L1 + 2 * LW3;
 		const W3 = param.W1 + 2 * LW3;
+		const oXY1 = param.T1 + param.W2;
+		const Hbasement = 10;
+		const W22 = param.W2 / 2;
+		const Tdoor = param.T2 + 2 * W22;
 		// step-5 : checks on the parameter values
 		if (param.L1 < param.N4 * param.W4) {
 			throw `err152: L1 ${param.L1} is too small compare to N4 ${param.N4} W4 ${param.W4}`;
+		}
+		if (param.H8 < param.W8 / 2) {
+			throw `err158: H8 ${param.H8} is too small compare to W8 ${param.W8}`;
+		}
+		if (param.H1 < param.H8) {
+			throw `err161: H8 ${param.H1} is too small compare to H8 ${param.H8}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `L3 ${ffix(L3)}, W3 ${ffix(W3)}, H3 ${ffix(H3)} cm\n`;
@@ -157,9 +168,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ctrRectangle(0, 0, L3, W3),
 			ctrRectangle(param.T2, param.T2, L3 - 2 * param.T2, W3 - 2 * param.T2)
 		]);
+		figHplan.addMainOI([
+			ctrRectangle(oXY1, oXY1, param.L1 + 2 * param.T1, param.W1 + 2 * param.T1),
+			ctrRectangle(oXY1 + param.T1, oXY1 + param.T1, param.L1, param.W1)
+		]);
+		// figDoor
+		const ctrDoor = contour(-param.W8 / 2, 0)
+			.addSegStrokeA(param.W8 / 2, 0)
+			.addSegStrokeA(param.W8 / 2, param.H8 - param.W8 / 2)
+			.addPointA(0, param.H8)
+			.addPointA(-param.W8 / 2, param.H8 - param.W8 / 2)
+			.addSegArc2()
+			.closeSegStroke();
+		figDoor.addMainO(ctrDoor);
 		// final figure list
 		rGeome.fig = {
-			faceHplan: figHplan
+			faceHplan: figHplan,
+			faceDoor: figDoor
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -169,16 +194,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_Hplan`,
 					face: `${designName}_faceHplan`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: H3,
+					length: H3 + Hbasement,
 					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					translate: [0, 0, -Hbasement]
+				},
+				{
+					outName: `subpax_${designName}_door`,
+					face: `${designName}_faceDoor`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: Tdoor,
+					rotate: [Math.PI / 2, 0, 0],
+					translate: [L3 / 2, param.T2 + W22, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eIdentity,
-					inList: [`subpax_${designName}_Hplan`]
+					boolMethod: EBVolume.eSubstraction,
+					inList: [`subpax_${designName}_Hplan`, `subpax_${designName}_door`]
 				}
 			]
 		};
