@@ -144,7 +144,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const H3 = param.N1 * (param.H1 + param.Hf);
+		const Hfloor = param.H1 + param.Hf;
+		const H3 = param.N1 * Hfloor;
 		const LW3 = param.T1 + param.W2 + param.T2;
 		const L3 = param.L1 + 2 * LW3;
 		const W3 = param.W1 + 2 * LW3;
@@ -242,15 +243,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const designName = rGeome.partName;
 		const hollowObj: tExtrude[] = [];
 		const hollowName: string[] = [];
-		hollowObj.push({
-			outName: `subpax_${designName}_doorIn0`,
-			face: `${designName}_faceDoor`,
-			extrudeMethod: EExtrude.eLinearOrtho,
-			length: param.T1 + 2 * W22,
-			rotate: [Math.PI / 2, 0, 0],
-			translate: [L3 / 2, param.T1 + W22 * 3 + param.T2, 0]
-		});
-		hollowName.push(`subpax_${designName}_doorIn0`);
+		for (let idx = 0; idx < param.N1; idx++) {
+			hollowObj.push({
+				outName: `subpax_${designName}_doorIn${idx}`,
+				face: `${designName}_faceDoor`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.T1 + 2 * W22,
+				rotate: [Math.PI / 2, 0, 0],
+				translate: [L3 / 2, param.T1 + W22 * 3 + param.T2, idx * Hfloor]
+			});
+			hollowName.push(`subpax_${designName}_doorIn${idx}`);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
