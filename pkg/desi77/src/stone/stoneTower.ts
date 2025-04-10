@@ -4,8 +4,10 @@
 import type {
 	//tContour,
 	//tOuterInner,
+	Figure,
 	tParamDef,
 	tParamVal,
+	tExtrude,
 	tGeom,
 	tPageDef
 	//tSubInst
@@ -68,19 +70,19 @@ const pDef: tParamDef = {
 		pNumber('wE1', 'cm', 20, 1, 100, 1),
 		pNumber('wS1', 'cm', 120, 0, 300, 1),
 		pSectionSeparator('window-2'),
-		pNumber('wN2', 'hollow', 0, 0, 5, 1),
+		pNumber('wN2', 'hollow', 1, 0, 5, 1),
 		pNumber('wW2', 'cm', 80, 10, 300, 1),
 		pNumber('wH2', 'cm', 200, 10, 500, 1),
 		pNumber('wE2', 'cm', 20, 1, 100, 1),
 		pNumber('wS2', 'cm', 120, 0, 300, 1),
 		pSectionSeparator('window-3'),
-		pNumber('wN3', 'hollow', 0, 0, 5, 1),
+		pNumber('wN3', 'hollow', 2, 0, 5, 1),
 		pNumber('wW3', 'cm', 80, 10, 300, 1),
 		pNumber('wH3', 'cm', 200, 10, 500, 1),
 		pNumber('wE3', 'cm', 20, 1, 100, 1),
 		pNumber('wS3', 'cm', 120, 0, 300, 1),
 		pSectionSeparator('window-4'),
-		pNumber('wN4', 'hollow', 0, 0, 5, 1),
+		pNumber('wN4', 'hollow', 3, 0, 5, 1),
 		pNumber('wW4', 'cm', 80, 10, 300, 1),
 		pNumber('wH4', 'cm', 200, 10, 500, 1),
 		pNumber('wE4', 'cm', 20, 1, 100, 1),
@@ -149,6 +151,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const oXY1 = param.T1 + param.W2;
 		const Hbasement = 10;
 		const W22 = param.W2 / 2;
+		const wN = [param.wN1, param.wN2, param.wN3, param.wN4];
+		const wW = [param.wW1, param.wW2, param.wW3, param.wW4];
+		const wH = [param.wH1, param.wH2, param.wH3, param.wH4];
+		const wE = [param.wE1, param.wE2, param.wE3, param.wE4];
+		const wS = [param.wS1, param.wS2, param.wS3, param.wS4];
 		// step-5 : checks on the parameter values
 		if (param.L1 < param.N4 * param.W4) {
 			throw `err152: L1 ${param.L1} is too small compare to N4 ${param.N4} W4 ${param.W4}`;
@@ -157,11 +164,51 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err158: H8 ${param.H8} is too small compare to W8 ${param.W8}`;
 		}
 		if (param.H1 < param.H8) {
-			throw `err161: H8 ${param.H1} is too small compare to H8 ${param.H8}`;
+			throw `err161: H1 ${param.H1} is too small compare to H8 ${param.H8}`;
+		}
+		if (Math.max(param.L1, param.W1) < param.W8) {
+			throw `err168: L1 ${param.L1} or W1 ${param.W1} is too small compare to W8 ${param.W8}`;
+		}
+		for (let idx = 0; idx < 4; idx++) {
+			if (wH[idx] < wW[idx] / 2) {
+				throw `err169: window-${idx} wH ${wH[idx]} is too small compare to wW ${wW[idx]}`;
+			}
+			if (param.H1 < wS[idx] + wH[idx]) {
+				throw `err172: H1 ${param.H1} is too small compare to wS ${wS[idx]} and wH ${wH[idx]}`;
+			}
+			if (
+				wN[idx] > 0 &&
+				Math.max(param.L1, param.W1) < wN[idx] * wW[idx] + (wN[idx] - 1) * wE[idx]
+			) {
+				throw `err175: L1 ${param.L1} or W1 ${param.W1} is too small compare to wN ${wN[idx]}, wW ${wW[idx]} and wE ${wE[idx]}`;
+			}
 		}
 		// step-6 : any logs
 		rGeome.logstr += `L3 ${ffix(L3)}, W3 ${ffix(W3)}, H3 ${ffix(H3)} cm\n`;
 		// sub-function
+		function figWindow(
+			iwN: number,
+			iwW: number,
+			iwH: number,
+			iwE: number,
+			iwS: number
+		): Figure {
+			const rFig = figure();
+			const wW2 = iwW / 2;
+			const oX = ((iwN - 1) * (iwW + iwE)) / 2;
+			const dX = iwW + iwE;
+			for (let idx = 0; idx < iwN; idx++) {
+				const ctr = contour(-wW2, iwS)
+					.addSegStrokeA(wW2, iwS)
+					.addSegStrokeA(wW2, iwS + iwH - wW2)
+					.addPointA(0, iwS + iwH)
+					.addPointA(-wW2, iwS + iwH - wW2)
+					.addSegArc2()
+					.closeSegStroke();
+				rFig.addMainO(ctr.translate(-oX + idx * dX, 0));
+			}
+			return rFig;
+		}
 		// figHplan
 		figHplan.addMainOI([
 			ctrRectangle(0, 0, L3, W3),
@@ -180,13 +227,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.closeSegStroke();
 		figDoor.addMainO(ctrDoor);
+		// figWindow-1234 :  directly implemented in rGeom.fig
+		// figFloorSupport
 		// final figure list
 		rGeome.fig = {
 			faceHplan: figHplan,
-			faceDoor: figDoor
+			faceDoor: figDoor,
+			faceWin1: figWindow(wN[0], wW[0], wH[0], wE[0], wS[0]),
+			faceWin2: figWindow(wN[1], wW[1], wH[1], wE[1], wS[1]),
+			faceWin3: figWindow(wN[2], wW[2], wH[2], wE[2], wS[2]),
+			faceWin4: figWindow(wN[3], wW[3], wH[3], wE[3], wS[3])
 		};
 		// volume
 		const designName = rGeome.partName;
+		const hollowObj: tExtrude[] = [];
+		const hollowName: string[] = [];
+		hollowObj.push({
+			outName: `subpax_${designName}_doorIn0`,
+			face: `${designName}_faceDoor`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.T1 + 2 * W22,
+			rotate: [Math.PI / 2, 0, 0],
+			translate: [L3 / 2, param.T1 + W22 * 3 + param.T2, 0]
+		});
+		hollowName.push(`subpax_${designName}_doorIn0`);
 		rGeome.vol = {
 			extrudes: [
 				{
@@ -204,13 +268,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.T2 + 2 * W22,
 					rotate: [Math.PI / 2, 0, 0],
 					translate: [L3 / 2, param.T2 + W22, 0]
-				}
+				},
+				...hollowObj
 			],
 			volumes: [
 				{
+					outName: `subpax_${designName}_hollow`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_door`, ...hollowName]
+				},
+				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eSubstraction,
-					inList: [`subpax_${designName}_Hplan`, `subpax_${designName}_door`]
+					inList: [`subpax_${designName}_Hplan`, `subpax_${designName}_hollow`]
 				}
 			]
 		};
