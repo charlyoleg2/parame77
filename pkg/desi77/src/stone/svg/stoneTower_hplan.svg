@@ -3,8 +3,8 @@
 
 <svg
    width="510.94049"
-   height="473.1004"
-   viewBox="0 0 135.18634 125.17448"
+   height="487.96622"
+   viewBox="0 0 135.18634 129.10773"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.1 (1:1.4.1+202503302257+93de688d07)"
@@ -35,15 +35,21 @@
      showguides="false">
     <inkscape:page
        x="0"
-       y="-8.0619512e-15"
+       y="0"
        width="135.18634"
-       height="125.17448"
+       height="129.10773"
        id="page2"
        margin="0"
        bleed="0" />
   </sodipodi:namedview>
   <defs
      id="defs1">
+    <rect
+       x="82.437378"
+       y="567.60162"
+       width="218.03111"
+       height="34.23629"
+       id="rect13" />
     <rect
        x="463.15088"
        y="596.93585"
@@ -175,12 +181,12 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-13.216857,-18.699544)">
+     transform="translate(-13.216857,-18.699543)">
     <rect
        style="fill:#ffffff;stroke:#ffffff;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none"
        id="rect9"
        width="134.92175"
-       height="124.9099"
+       height="128.84314"
        x="13.349149"
        y="18.831835"
        inkscape:export-filename="stoneTower_hplan.svg"
@@ -500,5 +506,17 @@
        style="fill:#803300;stroke:#803300;stroke-width:0.264583;stroke-linejoin:round;marker-end:url(#ArrowWide-8)"
        d="M 121.47878,91.720352 V 80.932611"
        id="path41-7" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,-5.8402528,-8.4624066)"
+       id="text2"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect13);fill:#800000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="82.4375"
+         y="581.838"
+         id="tspan12">externalWall:[On,Off]</tspan></text>
+    <path
+       style="fill:#800000;stroke:#800000;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide)"
+       d="m 50.655254,131.46528 -4.529175,10.84619"
+       id="path42" />
   </g>
 </svg>
