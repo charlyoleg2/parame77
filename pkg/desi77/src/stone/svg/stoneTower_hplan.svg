@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="3.1393657"
-     inkscape:cx="336.37368"
-     inkscape:cy="1741.9124"
+     inkscape:zoom="2.2198668"
+     inkscape:cx="336.95716"
+     inkscape:cy="511.96766"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -513,7 +513,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect13);fill:#800000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="82.4375"
          y="581.838"
-         id="tspan12">externalWall:[On,Off]</tspan></text>
+         id="tspan12">showExtWall:[On,Off]</tspan></text>
     <path
        style="fill:#800000;stroke:#800000;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide)"
        d="m 50.655254,131.46528 -4.529175,10.84619"

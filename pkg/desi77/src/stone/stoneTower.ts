@@ -55,6 +55,7 @@ const pDef: tParamDef = {
 		pNumber('H1', 'cm', 400, 100, 1000, 1),
 		pNumber('Hf', 'cm', 40, 1, 100, 1),
 		pNumber('Hs', 'cm', 40, 1, 100, 1),
+		pCheckbox('showFloor', false),
 		pSectionSeparator('top'),
 		pNumber('H5', 'cm', 120, 0, 250, 1),
 		pNumber('H6', 'cm', 180, 0, 300, 1),
@@ -63,7 +64,7 @@ const pDef: tParamDef = {
 		pNumber('H8', 'cm', 220, 100, 400, 1),
 		pNumber('W8', 'cm', 100, 40, 400, 1),
 		pNumber('N3', 'stairs', 12, 1, 40, 1),
-		pCheckbox('externalWall', true),
+		pCheckbox('showExtWall', true),
 		pSectionSeparator('window-1'),
 		pNumber('wN1', 'hollow', 0, 0, 5, 1),
 		pNumber('wW1', 'cm', 80, 10, 300, 1),
@@ -104,13 +105,14 @@ const pDef: tParamDef = {
 		H1: 'stoneTower_vw.svg',
 		Hf: 'stoneTower_vw.svg',
 		Hs: 'stoneTower_vw.svg',
+		showFloor: 'stoneTower_vw.svg',
 		H5: 'stoneTower_vw.svg',
 		H6: 'stoneTower_vw.svg',
 		H7: 'stoneTower_vw.svg',
 		H8: 'stoneTower_vw.svg',
 		W8: 'stoneTower_vw.svg',
 		N3: 'stoneTower_hplan.svg',
-		externalWall: 'stoneTower_hplan.svg',
+		showExtWall: 'stoneTower_hplan.svg',
 		wN1: 'stoneTower_window2.svg',
 		wW1: 'stoneTower_window2.svg',
 		wH1: 'stoneTower_window2.svg',
@@ -223,7 +225,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figHplan
 		const eW1 = ctrRectangle(0, 0, L3, W3);
 		const eW2 = ctrRectangle(param.T2, param.T2, L3 - 2 * param.T2, W3 - 2 * param.T2);
-		if (param.externalWall) {
+		if (param.showExtWall) {
 			figHplan.addMainOI([eW1, eW2]);
 		} else {
 			figHplan.addSecond(eW1);
