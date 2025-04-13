@@ -152,6 +152,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTopCabMid = figure();
 	const figTopCabRear = figure();
 	const figFloors = figure();
+	//const figStairsW1 = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -177,6 +178,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aCabRoof2 = (Math.PI / 2 - aCabRoof) / 2;
 		const crdY1 = param.T1 / Math.cos(aCabRoof);
 		const crdY2 = param.T1 * Math.tan(aCabRoof2);
+		const stairsH = Hfloor / 2 / (param.N3 + 1);
+		const stairsHT = stairsH * 0.15;
+		const stairsL = [
+			(param.L1 / 2 - param.W8 / 2 + param.T1) / param.N3,
+			(param.W1 / 2 - param.W8 / 2 + param.T1) / param.N3
+		];
 		// step-5 : checks on the parameter values
 		//if (param.L1 < param.N4 * param.W4) {
 		if (sfdX < 0) {
@@ -374,6 +381,56 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figFloors.addSecond(ctrFloor);
 			}
 		}
+		// figStairs
+		function figStairs(iSide: number): Figure {
+			const rFig = figure();
+			const stL = iSide % 2 === 0 ? stairsL[0] : stairsL[1];
+			const stLW = iSide % 2 === 0 ? param.L1 : param.W1;
+			rFig.mergeFigure(figFloors, true);
+			const stairsL1ox1 = param.T2 + param.W2;
+			const stairsL1ox2 = stairsL1ox1 + param.T1 + stLW / 2;
+			const stairsL1ox3 = stairsL1ox2 + param.W8 / 2;
+			const stairsL1ox4 = stairsL1ox1 + 2 * param.T1 + stLW;
+			for (let ii = 0; ii < param.N1; ii++) {
+				if ((ii + iSide) % 4 === 0) {
+					rFig.addSecond(ctrDoor.translate(stairsL1ox2, ii * Hfloor));
+					for (let jj = 0; jj < param.N3; jj++) {
+						rFig.addMainO(
+							ctrRectangle(
+								stairsL1ox3 + jj * stL,
+								ii * Hfloor + (jj + 1) * stairsH - stairsHT,
+								stL,
+								stairsHT
+							)
+						);
+					}
+					rFig.addMainO(
+						ctrRectangle(
+							stairsL1ox4,
+							(ii + 0.5) * Hfloor - stairsHT,
+							param.W2,
+							stairsHT
+						)
+					);
+				}
+				if ((ii + iSide + 1) % 4 === 0) {
+					rFig.addSecond(
+						ctrRectangle(param.T2, (ii + 0.5) * Hfloor - stairsHT, param.W2, stairsHT)
+					);
+					for (let jj = 0; jj < param.N3; jj++) {
+						rFig.addMainO(
+							ctrRectangle(
+								stairsL1ox1 + jj * stL,
+								(ii + 0.5) * Hfloor + (jj + 1) * stairsH - stairsHT,
+								stL,
+								stairsHT
+							)
+						);
+					}
+				}
+			}
+			return rFig;
+		}
 		// final figure list
 		rGeome.fig = {
 			faceHplan: figHplan,
@@ -388,7 +445,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTCFront: figTopCabFront,
 			faceTCMid: figTopCabMid,
 			faceTCRear: figTopCabRear,
-			faceFloors: figFloors
+			faceFloors: figFloors,
+			faceStairsL1: figStairs(0),
+			faceStairsW2: figStairs(1),
+			faceStairsL2: figStairs(2),
+			faceStairsW1: figStairs(3)
 		};
 		// volume
 		const designName = rGeome.partName;
