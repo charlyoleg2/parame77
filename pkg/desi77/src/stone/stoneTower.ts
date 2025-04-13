@@ -2,7 +2,7 @@
 // a middle-age tower made out of stones
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	Figure,
 	tParamDef,
@@ -151,6 +151,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTopCabFront = figure();
 	const figTopCabMid = figure();
 	const figTopCabRear = figure();
+	const figFloors = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -289,17 +290,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figFloorSupport.addMainO(ctrFS1);
 		figFloorSupport.addMainO(ctrFS2);
-		figFloorSupport.addSecond(ctrRectangle(-param.T1, 0, param.T1, param.H1 + param.Hf));
-		figFloorSupport.addSecond(
+		const ctrOneFloor: tContour[] = [];
+		ctrOneFloor.push(ctrRectangle(-param.T1, 0, param.T1, param.H1 + param.Hf));
+		ctrOneFloor.push(
 			ctrRectangle(-param.T1 - param.T2 - param.W2, 0, param.T2, param.H1 + param.Hf)
 		);
-		figFloorSupport.addSecond(ctrRectangle(param.W1, 0, param.T1, param.H1 + param.Hf));
-		figFloorSupport.addSecond(
+		ctrOneFloor.push(ctrRectangle(param.W1, 0, param.T1, param.H1 + param.Hf));
+		ctrOneFloor.push(
 			ctrRectangle(param.W1 + param.T1 + param.W2, 0, param.T2, param.H1 + param.Hf)
 		);
-		figFloorSupport.addSecond(ctrCorriVault.translate(-param.W2 - param.T1, 0));
-		figFloorSupport.addSecond(ctrCorriVault.translate(param.W1 + param.T1, 0));
+		ctrOneFloor.push(ctrCorriVault.translate(-param.W2 - param.T1, 0));
+		ctrOneFloor.push(ctrCorriVault.translate(param.W1 + param.T1, 0));
+		for (const ictr of ctrOneFloor) {
+			figFloorSupport.addSecond(ictr);
+		}
 		figFloorSupport.addSecond(ctrRectangle(0, param.H1, param.W1, param.Hf));
+		ctrOneFloor.push(ctrFS1);
+		ctrOneFloor.push(ctrFS2);
 		// figTopExt
 		figTopExt.addMainOI([eW1, eW2]);
 		figTopExt.addSecond(eW1);
@@ -349,6 +356,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTopCabRear.addSecond(ctrTopExt1);
 		figTopCabRear.addSecond(ctrTopExt2);
 		figTopCabRear.addSecond(ctrTopCabMid);
+		// figFloors
+		figFloors.mergeFigure(figTopCabFront, true);
+		for (let ii = 0; ii < param.N1; ii++) {
+			for (const ictr of ctrOneFloor) {
+				figFloors.addSecond(ictr.translate(param.T2 + param.W2 + param.T1, ii * Hfloor));
+			}
+			const ctrFloor = ctrRectangle(
+				param.T1 + param.W2 + param.T2,
+				param.H1 + ii * Hfloor,
+				param.W1,
+				param.Hf
+			);
+			if (param.showFloor) {
+				figFloors.addMainO(ctrFloor);
+			} else {
+				figFloors.addSecond(ctrFloor);
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			faceHplan: figHplan,
@@ -362,7 +387,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTopExt: figTopExt,
 			faceTCFront: figTopCabFront,
 			faceTCMid: figTopCabMid,
-			faceTCRear: figTopCabRear
+			faceTCRear: figTopCabRear,
+			faceFloors: figFloors
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -483,7 +509,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			translate: [oXY1 + param.T1 + param.L1, 0, 0]
 		});
 		corriName.push(`subpax_${designName}_TCRear`);
-		// volume together
+		if (param.showFloor) {
+			corriObj.push({
+				outName: `subpax_${designName}_Floors`,
+				face: `${designName}_faceFloors`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.L1,
+				rotate: [Math.PI / 2, 0, Math.PI / 2],
+				translate: [oXY1 + param.T1, 0, 0]
+			});
+			corriName.push(`subpax_${designName}_Floors`);
+		}
+		// volumes together
 		rGeome.vol = {
 			extrudes: [
 				{
