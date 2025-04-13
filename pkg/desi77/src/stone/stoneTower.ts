@@ -22,7 +22,7 @@ import {
 	ctrRectangle,
 	figure,
 	//degToRad,
-	//radToDeg,
+	radToDeg,
 	ffix,
 	pNumber,
 	pCheckbox,
@@ -148,6 +148,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figCorridor = figure();
 	const figFloorSupport = figure();
 	const figTopExt = figure();
+	const figTopCabFront = figure();
+	const figTopCabMid = figure();
+	const figTopCabRear = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -156,7 +159,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const LW3 = param.T1 + param.W2 + param.T2;
 		const L3 = param.L1 + 2 * LW3;
 		const W3 = param.W1 + 2 * LW3;
-		const oXY1 = param.T1 + param.W2;
+		const oXY1 = param.T2 + param.W2;
 		const sfdX = (param.L1 - param.N4 * param.T4) / (param.N4 - 1);
 		const H1low = param.H1 - param.H4 - param.H4b;
 		const Hbasement = 10;
@@ -169,6 +172,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const sfoX = param.T2 + param.W2 + param.T1;
 		const sfoY = sfoX;
 		const sfdX2 = sfdX + param.T4;
+		const aCabRoof = Math.atan2(param.H7, param.T1 + param.W1 / 2);
+		const aCabRoof2 = (Math.PI / 2 - aCabRoof) / 2;
+		const crdY1 = param.T1 / Math.cos(aCabRoof);
+		const crdY2 = param.T1 * Math.tan(aCabRoof2);
 		// step-5 : checks on the parameter values
 		//if (param.L1 < param.N4 * param.W4) {
 		if (sfdX < 0) {
@@ -202,6 +209,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `L3 ${ffix(L3)}, W3 ${ffix(W3)}, H3 ${ffix(H3)} cm\n`;
+		rGeome.logstr += `aCabRoof ${ffix(radToDeg(aCabRoof))} degree\n`;
 		// sub-function
 		function figWindow(
 			iwN: number,
@@ -296,6 +304,51 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTopExt.addMainOI([eW1, eW2]);
 		figTopExt.addSecond(eW1);
 		figTopExt.addSecond(eW2);
+		// figTopCabFront
+		const ctrTopCabFront = contour(param.T2 + param.W2, param.N1 * Hfloor)
+			.addSegStrokeR(param.W1 / 2 - param.W8 / 2 + param.T1, 0)
+			.addSegStrokeR(0, param.H8 - param.W8 / 2)
+			.addPointR(param.W8 / 2, param.W8 / 2)
+			.addPointR(param.W8, 0)
+			.addSegArc2()
+			.addSegStrokeR(0, -param.H8 + param.W8 / 2)
+			.addSegStrokeR(param.W1 / 2 - param.W8 / 2 + param.T1, 0)
+			.addSegStrokeR(0, param.H6)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, param.H7)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, -param.H7)
+			.closeSegStroke();
+		const ctrTopExt1 = ctrRectangle(0, param.N1 * Hfloor, param.T2, param.H5);
+		const ctrTopExt2 = ctrRectangle(W3 - param.T2, param.N1 * Hfloor, param.T2, param.H5);
+		figTopCabFront.addMainO(ctrTopCabFront);
+		figTopCabFront.addSecond(ctrTopExt1);
+		figTopCabFront.addSecond(ctrTopExt2);
+		// figTopCabMid
+		const ctrTopCabMid = contour(param.T2 + param.W2, param.N1 * Hfloor)
+			.addSegStrokeR(param.T1, 0)
+			.addSegStrokeR(0, param.H6 - crdY2)
+			.addSegStrokeR(param.W1 / 2, param.H7 - crdY1 + crdY2)
+			.addSegStrokeR(param.W1 / 2, -param.H7 + crdY1 - crdY2)
+			.addSegStrokeR(0, -param.H6 + crdY2)
+			.addSegStrokeR(param.T1, 0)
+			.addSegStrokeR(0, param.H6)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, param.H7)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, -param.H7)
+			.closeSegStroke();
+		figTopCabMid.addMainO(ctrTopCabMid);
+		figTopCabMid.addSecond(ctrTopExt1);
+		figTopCabMid.addSecond(ctrTopExt2);
+		figTopCabMid.addSecond(ctrTopCabFront);
+		// figTopCabRear
+		const ctrTopCabRear = contour(param.T2 + param.W2, param.N1 * Hfloor)
+			.addSegStrokeR(param.W1 + 2 * param.T1, 0)
+			.addSegStrokeR(0, param.H6)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, param.H7)
+			.addSegStrokeR(-param.W1 / 2 - param.T1, -param.H7)
+			.closeSegStroke();
+		figTopCabRear.addMainO(ctrTopCabRear);
+		figTopCabRear.addSecond(ctrTopExt1);
+		figTopCabRear.addSecond(ctrTopExt2);
+		figTopCabRear.addSecond(ctrTopCabMid);
 		// final figure list
 		rGeome.fig = {
 			faceHplan: figHplan,
@@ -306,7 +359,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceWin4: figWindow(wN[3], wW[3], wH[3], wE[3], wS[3], figDoor),
 			faceCorri: figCorridor,
 			faceFS: figFloorSupport,
-			faceTopExt: figTopExt
+			faceTopExt: figTopExt,
+			faceTCFront: figTopCabFront,
+			faceTCMid: figTopCabMid,
+			faceTCRear: figTopCabRear
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -399,6 +455,35 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			translate: [0, 0, param.N1 * Hfloor]
 		});
 		corriName.push(`subpax_${designName}_topExt`);
+		// top-cabine
+		corriObj.push({
+			outName: `subpax_${designName}_TCFront`,
+			face: `${designName}_faceTCFront`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.T1,
+			rotate: [Math.PI / 2, 0, Math.PI / 2],
+			translate: [oXY1, 0, 0]
+		});
+		corriName.push(`subpax_${designName}_TCFront`);
+		corriObj.push({
+			outName: `subpax_${designName}_TCMid`,
+			face: `${designName}_faceTCMid`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: 2 * param.T1 + param.L1,
+			rotate: [Math.PI / 2, 0, Math.PI / 2],
+			translate: [oXY1, 0, 0]
+		});
+		corriName.push(`subpax_${designName}_TCMid`);
+		corriObj.push({
+			outName: `subpax_${designName}_TCRear`,
+			face: `${designName}_faceTCRear`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.T1,
+			rotate: [Math.PI / 2, 0, Math.PI / 2],
+			translate: [oXY1 + param.T1 + param.L1, 0, 0]
+		});
+		corriName.push(`subpax_${designName}_TCRear`);
+		// volume together
 		rGeome.vol = {
 			extrudes: [
 				{
