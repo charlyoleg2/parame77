@@ -147,6 +147,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figDoor = figure();
 	const figCorridor = figure();
 	const figFloorSupport = figure();
+	const figTopExt = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -230,16 +231,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figHplan
 		const eW1 = ctrRectangle(0, 0, L3, W3);
 		const eW2 = ctrRectangle(param.T2, param.T2, L3 - 2 * param.T2, W3 - 2 * param.T2);
+		const eW3 = ctrRectangle(oXY1, oXY1, param.L1 + 2 * param.T1, param.W1 + 2 * param.T1);
+		const eW4 = ctrRectangle(oXY1 + param.T1, oXY1 + param.T1, param.L1, param.W1);
 		if (param.showExtWall) {
 			figHplan.addMainOI([eW1, eW2]);
 		} else {
 			figHplan.addSecond(eW1);
 			figHplan.addSecond(eW2);
 		}
-		figHplan.addMainOI([
-			ctrRectangle(oXY1, oXY1, param.L1 + 2 * param.T1, param.W1 + 2 * param.T1),
-			ctrRectangle(oXY1 + param.T1, oXY1 + param.T1, param.L1, param.W1)
-		]);
+		figHplan.addMainOI([eW3, eW4]);
 		// figDoor
 		const ctrDoor = contour(-param.W8 / 2, 0)
 			.addSegStrokeA(param.W8 / 2, 0)
@@ -292,6 +292,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFloorSupport.addSecond(ctrCorriVault.translate(-param.W2 - param.T1, 0));
 		figFloorSupport.addSecond(ctrCorriVault.translate(param.W1 + param.T1, 0));
 		figFloorSupport.addSecond(ctrRectangle(0, param.H1, param.W1, param.Hf));
+		// figTopExt
+		figTopExt.addMainOI([eW1, eW2]);
+		figTopExt.addSecond(eW1);
+		figTopExt.addSecond(eW2);
 		// final figure list
 		rGeome.fig = {
 			faceHplan: figHplan,
@@ -301,7 +305,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceWin3: figWindow(wN[2], wW[2], wH[2], wE[2], wS[2], figDoor),
 			faceWin4: figWindow(wN[3], wW[3], wH[3], wE[3], wS[3], figDoor),
 			faceCorri: figCorridor,
-			faceFS: figFloorSupport
+			faceFS: figFloorSupport,
+			faceTopExt: figTopExt
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -384,6 +389,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				corriName.push(`subpax_${designName}_fs${ii}_${jj}`);
 			}
 		}
+		// top-external
+		corriObj.push({
+			outName: `subpax_${designName}_topExt`,
+			face: `${designName}_faceTopExt`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.H5,
+			rotate: [0, 0, 0],
+			translate: [0, 0, param.N1 * Hfloor]
+		});
+		corriName.push(`subpax_${designName}_topExt`);
 		rGeome.vol = {
 			extrudes: [
 				{
