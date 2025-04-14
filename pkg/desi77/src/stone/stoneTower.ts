@@ -141,6 +141,8 @@ const pDef: tParamDef = {
 	}
 };
 
+const initDoorIn = 2;
+
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figHplan = figure();
@@ -220,19 +222,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `L3 ${ffix(L3)}, W3 ${ffix(W3)}, H3 ${ffix(H3)}, H3b ${ffix(H3b)} cm\n`;
 		rGeome.logstr += `aCabRoof ${ffix(radToDeg(aCabRoof))} degree\n`;
 		// sub-function
-		function figWindow(
-			iwN: number,
-			iwW: number,
-			iwH: number,
-			iwE: number,
-			iwS: number,
-			iFig: Figure
-		): Figure {
-			const rFig = figure();
+		function ctrsWindows(idx: number): tContour[] {
+			const rCtrs: tContour[] = [];
+			const iwN = wN[idx];
+			const iwW = wW[idx];
+			const iwH = wH[idx];
+			const iwE = wE[idx];
+			const iwS = wS[idx];
 			const wW2 = iwW / 2;
 			const oX = ((iwN - 1) * (iwW + iwE)) / 2;
 			const dX = iwW + iwE;
-			for (let idx = 0; idx < iwN; idx++) {
+			for (let ii = 0; ii < iwN; ii++) {
 				const ctr = contour(-wW2, iwS)
 					.addSegStrokeA(wW2, iwS)
 					.addSegStrokeA(wW2, iwS + iwH - wW2)
@@ -240,7 +240,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					.addPointA(-wW2, iwS + iwH - wW2)
 					.addSegArc2()
 					.closeSegStroke();
-				rFig.addMainO(ctr.translate(-oX + idx * dX, 0));
+				rCtrs.push(ctr.translate(-oX + ii * dX, 0));
+			}
+			return rCtrs;
+		}
+		function figWindow(idx: number, iFig: Figure): Figure {
+			const rFig = figure();
+			const ctrs = ctrsWindows(idx);
+			for (const iCtr of ctrs) {
+				rFig.addMainO(iCtr);
 			}
 			rFig.mergeFigure(iFig, true);
 			return rFig;
@@ -430,6 +438,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						rFig.addMainO(ctrRectangle(oX4, oY4, stL, stairsHT));
 					}
 				}
+				if (ii > 0) {
+					const ctrs = ctrsWindows((ii + iSide) % 4);
+					for (const iCtr of ctrs) {
+						rFig.addSecond(iCtr.translate(stairsL1ox2, ii * Hfloor));
+					}
+				}
 			}
 			return rFig;
 		}
@@ -437,10 +451,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.fig = {
 			faceHplan: figHplan,
 			faceDoor: figDoor,
-			faceWin1: figWindow(wN[0], wW[0], wH[0], wE[0], wS[0], figDoor),
-			faceWin2: figWindow(wN[1], wW[1], wH[1], wE[1], wS[1], figDoor),
-			faceWin3: figWindow(wN[2], wW[2], wH[2], wE[2], wS[2], figDoor),
-			faceWin4: figWindow(wN[3], wW[3], wH[3], wE[3], wS[3], figDoor),
+			faceWin1: figWindow(0, figDoor),
+			faceWin2: figWindow(1, figDoor),
+			faceWin3: figWindow(2, figDoor),
+			faceWin4: figWindow(3, figDoor),
 			faceCorri: figCorridor,
 			faceFS: figFloorSupport,
 			faceTopExt: figTopExt,
@@ -458,7 +472,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const hollowObj: tExtrude[] = [];
 		const hollowName: string[] = [];
 		for (let idx = 0; idx < param.N1; idx++) {
-			const wallIdx = (idx + 2) % 4;
+			const wallIdx = (idx + initDoorIn) % 4;
 			const bLnW = wallIdx % 2 === 0;
 			const TyLnW = bLnW ? param.W1 / 2 : param.L1 / 2;
 			const Ty = param.T1 + TyLnW + param.W2 / 2;
