@@ -276,10 +276,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figDoor.addMainO(ctrDoor);
 		figDoor.addSecond(ctrRectangle(-param.L1 / 2, 0, param.L1, param.H1));
 		figDoor.addSecond(ctrRectangle(-param.W1 / 2, 0, param.W1, param.H1));
+		const ctrsFSL: tContour[] = [];
 		for (let idx = 0; idx < param.N4; idx++) {
-			const posX = -param.L1 / 2 + idx * sfdX;
-			figDoor.addSecond(ctrRectangle(posX, H1low + param.H4b, param.T4, param.H4));
-			figDoor.addSecond(ctrRectangle(posX, H1low, param.T4, param.H4b));
+			const posX = idx * (sfdX + param.T4);
+			ctrsFSL.push(ctrRectangle(posX, H1low + param.H4b, param.T4, param.H4));
+			ctrsFSL.push(ctrRectangle(posX, H1low, param.T4, param.H4b));
+		}
+		for (const iCtr of ctrsFSL) {
+			figDoor.addSecond(iCtr.translate(-param.L1 / 2, 0));
 		}
 		// figWindow-1234 :  directly implemented in rGeom.fig
 		// figCorridor
@@ -316,9 +320,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rCtrs.push(ctrRectangle(LW + param.T1 + param.W2, 0, param.T2, param.H1 + param.Hf));
 			rCtrs.push(ctrCorriVault.translate(-param.W2 - param.T1, 0));
 			rCtrs.push(ctrCorriVault.translate(LW + param.T1, 0));
-			if (!iLnW && withFS) {
-				rCtrs.push(ctrFS1);
-				rCtrs.push(ctrFS2);
+			if (withFS) {
+				if (iLnW) {
+					//for (const iCtr of ctrsFSL) {
+					//	rCtrs.push(iCtr);
+					//}
+					rCtrs.push(...ctrsFSL);
+				} else {
+					rCtrs.push(ctrFS1);
+					rCtrs.push(ctrFS2);
+				}
 			}
 			return rCtrs;
 		}
