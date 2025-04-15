@@ -474,9 +474,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTCRear: figTopCabRear,
 			faceFloors: figFloors,
 			faceStairsL1: figStairs(2, false),
-			faceStairsW2: figStairs(1, true),
+			faceStairsW2: figStairs(1, false),
 			faceStairsL2: figStairs(0, true),
-			faceStairsW1: figStairs(3, false)
+			faceStairsW1: figStairs(3, true)
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -597,6 +597,42 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			translate: [oXY1 + param.T1 + param.L1, 0, 0]
 		});
 		corriName.push(`subpax_${designName}_TCRear`);
+		corriObj.push({
+			outName: `subpax_${designName}_stairsL1`,
+			face: `${designName}_faceStairsL1`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.W2,
+			rotate: [Math.PI / 2, 0, 0],
+			translate: [0, param.W2 + param.T2, 0]
+		});
+		corriName.push(`subpax_${designName}_stairsL1`);
+		corriObj.push({
+			outName: `subpax_${designName}_stairsL2`,
+			face: `${designName}_faceStairsL2`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.W2,
+			rotate: [Math.PI / 2, 0, 0],
+			translate: [0, param.T2 + 2 * param.W2 + 2 * param.T1 + param.W1, 0]
+		});
+		corriName.push(`subpax_${designName}_stairsL2`);
+		corriObj.push({
+			outName: `subpax_${designName}_stairsW1`,
+			face: `${designName}_faceStairsW1`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.W2,
+			rotate: [Math.PI / 2, 0, Math.PI / 2],
+			translate: [param.T2, 0, 0]
+		});
+		corriName.push(`subpax_${designName}_stairsW1`);
+		corriObj.push({
+			outName: `subpax_${designName}_stairsW2`,
+			face: `${designName}_faceStairsW2`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: param.W2,
+			rotate: [Math.PI / 2, 0, Math.PI / 2],
+			translate: [param.T2 + param.W2 + 2 * param.T1 + param.L1, 0, 0]
+		});
+		corriName.push(`subpax_${designName}_stairsW2`);
 		if (param.showFloor) {
 			corriObj.push({
 				outName: `subpax_${designName}_Floors`,
