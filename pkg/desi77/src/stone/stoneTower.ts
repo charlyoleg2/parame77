@@ -51,7 +51,7 @@ const pDef: tParamDef = {
 		pNumber('H4', 'cm', 60, 1, 200, 1),
 		pNumber('H4b', 'cm', 60, 1, 200, 1),
 		pSectionSeparator('floor'),
-		pNumber('N1', 'floor', 3, 1, 10, 1),
+		pNumber('N1', 'floor', 5, 1, 10, 1),
 		pNumber('H1', 'cm', 400, 100, 1000, 1),
 		pNumber('Hf', 'cm', 40, 1, 100, 1),
 		pNumber('Hs', 'cm', 40, 1, 100, 1),
@@ -521,9 +521,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const corriName: string[] = [];
 		const corriPosX = [
 			param.T2 + param.W2,
-			param.T2 + param.W2 + 2 * param.T1 + param.L1,
+			param.T2,
 			param.T2 + param.W2,
-			param.T2
+			param.T2 + param.W2 + 2 * param.T1 + param.L1
 		];
 		const corriPosY = [
 			param.T2,
@@ -535,14 +535,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			// corridor vault
 			for (let jj = 0; jj < 4; jj++) {
 				const Ty = jj % 2 === 0 ? param.L1 : param.W1;
+				const isDoor = (ii + jj + initDoorIn + 1) % 4 === 0;
+				const Ty3 = isDoor ? (Ty + param.W8) / 2 + param.T1 : Ty + 2 * param.T1;
+				const offX3 = isDoor && jj === 0 ? Ty3 - param.W8 : 0;
+				const offY3 = isDoor && jj === 1 ? -Ty3 + param.W8 : 0;
 				const wallIdx = jj % 2 === 0 ? 1 : 0;
 				corriObj.push({
 					outName: `subpax_${designName}_corri${ii}_${jj}`,
 					face: `${designName}_faceCorri`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: Ty + 2 * param.T1,
+					length: Ty3,
 					rotate: [Math.PI / 2, 0, (wallIdx * Math.PI) / 2],
-					translate: [corriPosX[jj], corriPosY[jj], ii * Hfloor]
+					translate: [corriPosX[jj] + offX3, corriPosY[jj] + offY3, ii * Hfloor]
 				});
 				corriName.push(`subpax_${designName}_corri${ii}_${jj}`);
 			}
