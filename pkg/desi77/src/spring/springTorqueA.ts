@@ -50,7 +50,8 @@ const pDef: tParamDef = {
 		pSectionSeparator('Spoke'),
 		pNumber('N3', 'spoke', 5, 0, 60, 1),
 		pNumber('E3', 'mm', 3, 0.1, 100, 0.1),
-		pNumber('R3', 'mm', 3, 0, 100, 0.1)
+		pNumber('R3', 'mm', 3, 0, 100, 0.1),
+		pNumber('Th', 'mm', 3, 0.1, 100, 0.1)
 	],
 	paramSvg: {
 		D1: 'springTorqueA_profile.svg',
@@ -64,7 +65,8 @@ const pDef: tParamDef = {
 		E2: 'springTorqueA_profile.svg',
 		N3: 'springTorqueA_profile.svg',
 		E3: 'springTorqueA_profile.svg',
-		R3: 'springTorqueA_profile.svg'
+		R3: 'springTorqueA_profile.svg',
+		Th: 'springTorqueA_profile.svg'
 	},
 	sim: {
 		tMax: 180,
