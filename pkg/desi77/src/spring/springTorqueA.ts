@@ -95,7 +95,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err093: D1 ${param.D1} is too small compare to T1 ${param.T1}, E1 ${param.E1}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Rmax ${ffix(Rmax)}, Rmin ${ffix(Rmin)} mm\n`;
+		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
