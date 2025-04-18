@@ -113,14 +113,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ahR1 = Math.asin((E32 + param.R3) / (param.R3 + Rh1));
 		const ah0 = param.N3 > 0 ? (2 * Math.PI) / param.N3 : 3.14;
 		const sinah02 = Math.sin(ah0 / 2);
-		const Rh1b = sinah02 > 0 ? E32 / sinah02 : Rh1 / 2;
-		const Rh1b2 = sinah02 > 0 ? (E32 + param.R3) / sinah02 : Rh1 / 2;
-		const hollowTriangle = Rh1b2 > Rh1 + param.R3 - 0.1 ? true : false;
+		const Rh1b = sinah02 > 0.1 ? E32 / sinah02 : Rh1 / 2;
+		const Rh1b2 = sinah02 > 0.1 ? (E32 + param.R3) / sinah02 : Rh1 / 2;
+		const hollowTriangle = param.N3 > 1 && Rh1b2 > Rh1 + param.R3 - 0.1 ? true : false;
 		if (!hollowTriangle && ah0 < 2 * ahR1) {
 			throw `err115: ah0 ${ffix(radToDeg(ah0))} is too small compare to ah1 ${ffix(radToDeg(ah1))}, ahR1 ${ffix(radToDeg(ahR1))} degree`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin)} mm\n`;
+		rGeome.logstr += `Triangle vs quadri: ${hollowTriangle ? 'triangle' : 'quadri'}\n`;
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
