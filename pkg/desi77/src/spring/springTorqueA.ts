@@ -114,8 +114,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ah0 = param.N3 > 0 ? (2 * Math.PI) / param.N3 : 3.14;
 		const sinah02 = Math.sin(ah0 / 2);
 		const Rh1b = sinah02 > 0 ? E32 / sinah02 : Rh1 / 2;
-		const hollowTriangle = Rh1b - 0.1 > Rh1b ? true : false;
-		if (!hollowTriangle && ah0 < 2 * (ah1 + ahR1)) {
+		const Rh1b2 = sinah02 > 0 ? (E32 + param.R3) / sinah02 : Rh1 / 2;
+		const hollowTriangle = Rh1b2 > Rh1 + param.R3 - 0.1 ? true : false;
+		if (!hollowTriangle && ah0 < 2 * ahR1) {
 			throw `err115: ah0 ${ffix(radToDeg(ah0))} is too small compare to ah1 ${ffix(radToDeg(ah1))}, ahR1 ${ffix(radToDeg(ahR1))} degree`;
 		}
 		// step-6 : any logs
@@ -162,6 +163,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		figProfile.addMainOI([ctrExt, ctrInt, ...ctrsIntHoles, ...ctrsExtHoles, ...ctrsHollow]);
+		figProfile.addSecond(contourCircle(0, 0, Rh1));
+		figProfile.addSecond(contourCircle(0, 0, Rh1 + param.R3, 'yellow'));
+		figProfile.addSecond(contourCircle(0, 0, Rh1b2, 'orange'));
 		// final figure list
 		rGeome.fig = {
 			faceProfile: figProfile
