@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.5696829"
-     inkscape:cx="306.43131"
-     inkscape:cy="1092.8959"
+     inkscape:zoom="1.1099335"
+     inkscape:cx="291.00844"
+     inkscape:cy="1137.4556"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -361,7 +361,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect7-9);display:inline;fill:#1a1a1a;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="453.63086"
          y="98.925894"
-         id="tspan3">N1</tspan></text>
+         id="tspan3">Nt</tspan></text>
     <path
        style="fill:#1a1a1a;stroke:#999999;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide-26)"
        d="M 93.582468,251.51599 122.04216,231.53626"
@@ -399,7 +399,7 @@
          y="163.31066"
          id="tspan6"><tspan
    style="font-weight:bold;-inkscape-font-specification:'Liberation Mono Bold'"
-   id="tspan5">D1</tspan>=module*N1</tspan></text>
+   id="tspan5">Dt</tspan>=module*Nt</tspan></text>
     <path
        style="fill:#008000;stroke:#008000;stroke-width:0.264583;stroke-linejoin:round;marker-end:url(#ArrowWide-26)"
        d="m 9.883416,254.7577 28.992055,17.36152"
