@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	point,
-	//contour,
+	contour,
 	contourCircle,
 	//ctrRectangle,
 	figure,
@@ -38,7 +38,7 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
-		pNumber('Dt', 'mm', 20, 0.1, 1000, 0.1),
+		pNumber('Dt', 'mm', 25, 0.1, 1000, 0.1),
 		pNumber('Th', 'mm', 1, 0.1, 100, 0.1),
 		pDropdown('make3D', ['both', 'intern', 'extern']),
 		pSectionSeparator('Tooth profile'),
@@ -60,14 +60,14 @@ const pDef: tParamDef = {
 		pNumber('Rde', 'mm', 1, 0.1, 50, 0.1),
 		pSectionSeparator('Internal part'),
 		pNumber('Ni', 'holes', 5, 0, 1000, 1),
-		pNumber('Di', 'mm', 10, 0.1, 1000, 0.1),
+		pNumber('Di', 'mm', 12, 0.1, 1000, 0.1),
 		pNumber('DTi', 'mm', 3, 0.1, 100, 0.1),
-		pNumber('Ei', 'mm', 2, 0.1, 100, 0.1),
+		pNumber('Ei', 'mm', 1, 0.1, 100, 0.1),
 		pSectionSeparator('External part'),
 		pNumber('Ne', 'holes', 8, 0, 1000, 1),
-		pNumber('De', 'mm', 50, 0.1, 1000, 0.1),
+		pNumber('De', 'mm', 40, 0.1, 1000, 0.1),
 		pNumber('DTe', 'mm', 3, 0.1, 100, 0.1),
-		pNumber('Ee', 'mm', 2, 0.1, 100, 0.1)
+		pNumber('Ee', 'mm', 1, 0.1, 100, 0.1)
 	],
 	paramSvg: {
 		Nt: 'plugTorque_teeth_radial.svg',
@@ -123,6 +123,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const adTe = param.Ne > 0 ? (2 * Math.PI) / param.Ne : 3.14;
 		const aMindTi = Math.asin((RTi + 0.3 * param.Ei) / Ri);
 		const aMindTe = Math.asin((RTe + 0.3 * param.Ee) / Re);
+		const moduli = param.Dt / param.Nt;
+		const aTooth = (2 * Math.PI) / param.Nt;
+		const aAddenI = (param.ati * aTooth) / 100;
+		const aAddenE = (param.ate * aTooth) / 100;
+		const aSlopeI = 0; // TODO
+		const aSlopeE = 0; // TODO
+		const aAddI = aAddenI - aSlopeI; // TODO
+		const aDedI = aTooth - 2 * aSlopeI - aAddI;
+		const aAddE = aAddenE - aSlopeE; // TODO
+		const aDedE = aTooth - 2 * aSlopeE - aAddE;
+		const RmaxI = Rt + (moduli * param.ah) / 100;
+		const RbI = Rt - (moduli * (param.dh + param.deh)) / 100;
+		const RminE = Rt - (moduli * param.dh) / 100;
+		const RbE = Rt + (moduli * (param.ah + param.aeh)) / 100;
+		const aSlack = ((param.ate - param.ati) * aTooth) / 100;
 		// step-5 : checks on the parameter values
 		if (RminI < 0.1) {
 			throw `err087: RminI ${RminI} is too small because of Di ${param.Di}, DTi ${param.DTi} or Ei ${param.Ei}`;
@@ -133,9 +148,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (adTe < 2 * aMindTe) {
 			throw `err134: adTe ${ffix(radToDeg(adTe))} is too small compare to aMindTe ${ffix(radToDeg(aMindTe))} degree`;
 		}
+		if (param.ati > param.ate) {
+			throw `err145: ate ${param.ate} is too small compare to ati ${param.ati} %`;
+		}
+		if (RbI < Ri + RTi + param.Ei) {
+			throw `err087: RbI ${RbI} is too small compare to Di ${param.Di}, DTi ${param.DTi} or Ei ${param.Ei}`;
+		}
+		if (RbE > Re - RTe - param.Ee) {
+			throw `err087: RbE ${RbE} is too large compare to De ${param.De}, DTe ${param.DTe} or Ee ${param.Ee}`;
+		}
+		const tooSmallAngle = 0.0001;
+		if (aAddI < tooSmallAngle || aDedI < tooSmallAngle) {
+			throw `err161: aAddI ${ffix(radToDeg(aAddI))} or aDedI ${ffix(radToDeg(aDedI))} are too small`;
+		}
+		if (aAddE < tooSmallAngle || aDedE < tooSmallAngle) {
+			throw `err164: aAddE ${ffix(radToDeg(aAddE))} or aDedE ${ffix(radToDeg(aDedE))} are too small`;
+		}
 		// step-6 : any logs
-		rGeome.logstr += `Extern: Dmax ${ffix(2 * RmaxE)}, Dmin mm\n`;
-		rGeome.logstr += `Intern: Dmax, Dmin ${ffix(2 * RminI)} mm\n`;
+		rGeome.logstr += `Extern: Dmax ${ffix(2 * RmaxE)}, Dmin ${ffix(2 * RminE)} mm\n`;
+		rGeome.logstr += `Intern: Dmax ${ffix(2 * RmaxI)}, Dmin ${ffix(2 * RminI)} mm\n`;
+		rGeome.logstr += `aSlack: ${ffix(radToDeg(aSlack))} degree\n`;
 		// sub-function
 		// Intern
 		const ctrsI: tContour[] = [];
@@ -144,6 +176,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const p1 = point(0, 0).translatePolar(ii * adTi, Ri);
 			ctrsI.push(contourCircle(p1.cx, p1.cy, RTi));
 		}
+		const ctrToothI = contour(RbI, 0);
+		for (let ii = 0; ii < param.Nt; ii++) {
+			const aRef = ii * aTooth;
+			ctrToothI.addSegStrokeAP(aRef + aSlopeI, RmaxI).addCornerRounded(param.Rai);
+			if (param.SnAai === 1) {
+				ctrToothI
+					.addPointAP(aRef + aSlopeI + aAddI / 2, RmaxI)
+					.addPointAP(aRef + aSlopeI + aAddI, RmaxI)
+					.addSegArc2();
+			} else {
+				ctrToothI.addSegStrokeAP(aRef + aSlopeI + aAddI, RmaxI);
+			}
+			ctrToothI.addCornerRounded(param.Rai);
+			ctrToothI.addSegStrokeAP(aRef + 2 * aSlopeI + aAddI, RbI).addCornerRounded(param.Rdi);
+			if (param.SnAdi === 1) {
+				ctrToothI
+					.addPointAP(aRef + aTooth - aDedI / 2, RbI)
+					.addPointAP(aRef + aTooth, RbI)
+					.addSegArc2();
+			} else {
+				ctrToothI.addSegStrokeAP(aRef + aTooth, RbI);
+			}
+			ctrToothI.addCornerRounded(param.Rdi);
+		}
 		// Extern
 		const ctrsE: tContour[] = [];
 		ctrsE.push(contourCircle(0, 0, RmaxE));
@@ -151,10 +207,44 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const p1 = point(0, 0).translatePolar(ii * adTe, Re);
 			ctrsE.push(contourCircle(p1.cx, p1.cy, RTe));
 		}
+		const ctrToothE = contour(RminE, 0);
+		for (let ii = 0; ii < param.Nt; ii++) {
+			const aRef = ii * aTooth;
+			ctrToothE.addSegStrokeAP(aRef + aSlopeE, RbE).addCornerRounded(param.Rae);
+			if (param.SnAae === 1) {
+				ctrToothE
+					.addPointAP(aRef + aSlopeE + aAddE / 2, RbE)
+					.addPointAP(aRef + aSlopeE + aAddE, RbE)
+					.addSegArc2();
+			} else {
+				ctrToothE.addSegStrokeAP(aRef + aSlopeE + aAddE, RbE);
+			}
+			ctrToothE.addCornerRounded(param.Rae);
+			ctrToothE.addSegStrokeAP(aRef + 2 * aSlopeE + aAddE, RminE).addCornerRounded(param.Rde);
+			if (param.SnAde === 1) {
+				ctrToothE
+					.addPointAP(aRef + aTooth - aDedE / 2, RminE)
+					.addPointAP(aRef + aTooth, RminE)
+					.addSegArc2();
+			} else {
+				ctrToothE.addSegStrokeAP(aRef + aTooth, RminE);
+			}
+			ctrToothE.addCornerRounded(param.Rde);
+		}
 		// figIntern
-		figIntern.addMainOI([contourCircle(0, 0, Rt), ...ctrsI]);
+		figIntern.addMainOI([ctrToothI, ...ctrsI]);
+		figIntern.addSecond(contourCircle(0, 0, Rt));
+		figIntern.addSecond(ctrToothE);
+		for (const iCtr of ctrsE) {
+			figIntern.addSecond(iCtr);
+		}
 		// figExtern
-		figIntern.addMainOI([...ctrsE, contourCircle(0, 0, Rt)]);
+		figExtern.addMainOI([...ctrsE, ctrToothE]);
+		figExtern.addSecond(contourCircle(0, 0, Rt));
+		figExtern.addSecond(ctrToothI);
+		for (const iCtr of ctrsI) {
+			figExtern.addSecond(iCtr);
+		}
 		// final figure list
 		rGeome.fig = {
 			faceIntern: figIntern,
@@ -192,7 +282,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					face: `${designName}_faceExtern`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Th,
-					rotate: [0, 0, 0],
+					rotate: [0, 0, -aSlack / 2],
 					translate: [0, 0, 0]
 				}
 			],
