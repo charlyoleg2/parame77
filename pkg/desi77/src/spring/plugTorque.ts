@@ -13,6 +13,7 @@ import type {
 } from 'geometrix';
 import {
 	//withinZeroPi,
+	withinPiPi,
 	//ShapePoint,
 	point,
 	contour,
@@ -144,23 +145,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		let aAddE = aAddenE;
 		if (Math.abs(aM) > 0.001) {
 			const tri1 = triALLrLAA(aM, Rt, RbI);
-			const tri2 = triALLrLAA(Math.PI - aM, Rt, RmaxI);
+			const tri2 = triALLrLAA(withinPiPi(Math.PI + aM), Rt, RmaxI);
 			const tri3 = triALLrLAA(aM, Rt, RminE);
-			const tri4 = triALLrLAA(Math.PI - aM, Rt, RbE);
-			//const [l3a, a12a, a23a, l3b, a12b, a23b, trilog1] = tri1;
-			//const [l3c, a12c, a23c, l3d, a12d, a23d, trilog2] = tri2;
-			const [, a12a, , , , , trilog1] = tri1;
-			const [, a12c, , , , , trilog2] = tri2;
-			const [, a12e, , , , , trilog3] = tri3;
-			const [, a12g, , , , , trilog4] = tri4;
+			const tri4 = triALLrLAA(withinPiPi(Math.PI + aM), Rt, RbE);
+			//const [l3a, a31a, a12a, l3b, a31b, a12b, trilog1] = tri1;
+			//const [l3c, a31c, a12c, l3d, a31d, a12d, trilog2] = tri2;
+			const [, , a12a, , , , trilog1] = tri1;
+			const [, , , , , a12d, trilog2] = tri2;
+			const [, , a12e, , , , trilog3] = tri3;
+			const [, , , , , a12h, trilog4] = tri4;
 			rGeome.logstr += trilog1 + trilog2 + trilog3 + trilog4;
 			//rGeome.logstr += `dbg143: a31 ${ffix(aM)}, Rt ${ffix(Rt)}, RminE ${ffix(RminE)}\n`;
-			//rGeome.logstr += `dbg146: l3a ${ffix(l3a)}, a12a ${ffix(a12a)}, a23a ${ffix(a23a)}, l3b ${ffix(l3b)}, a12b ${ffix(a12b)}, a23b ${ffix(a23b)}\n`;
-			//rGeome.logstr += `dbg147: l3c ${ffix(l3c)}, a12c ${ffix(a12c)}, a23c ${ffix(a23c)}, l3d ${ffix(l3d)}, a12d ${ffix(a12d)}, a23d ${ffix(a23d)}\n`;
-			aSlopeI = -a12a + a12c;
-			aSlopeE = -a12e + a12g;
-			aAddI = aAddenI - 2 * a12c;
-			aAddE = aAddenE - 2 * a12g;
+			//rGeome.logstr += `dbg146: l3a ${ffix(l3a)}, a31a ${ffix(a31a)}, a12a ${ffix(a12a)}, l3b ${ffix(l3b)}, a31b ${ffix(a31b)}, a12b ${ffix(a12b)}\n`;
+			//rGeome.logstr += `dbg147: l3c ${ffix(l3c)}, a31c ${ffix(a31c)}, a12c ${ffix(a12c)}, l3d ${ffix(l3d)}, a31d ${ffix(a31d)}, a12d ${ffix(a12d)}\n`;
+			aSlopeI = -a12a + a12d;
+			aSlopeE = -a12e + a12h;
+			aAddI = aAddenI - 2 * a12d;
+			aAddE = aAddenE - 2 * a12h;
 		}
 		const aDedI = aTooth - 2 * aSlopeI - aAddI;
 		const aDedE = aTooth - 2 * aSlopeE - aAddE;
