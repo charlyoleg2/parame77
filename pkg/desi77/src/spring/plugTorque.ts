@@ -38,7 +38,7 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
-		pNumber('Dt', 'mm', 25, 0.1, 1000, 0.1),
+		pNumber('Dt', 'mm', 22, 0.1, 1000, 0.1),
 		pNumber('Ht', 'mm', 2, 0.1, 100, 0.1),
 		pNumber('Th', 'mm', 1, 0.1, 100, 0.1),
 		pDropdown('make3D', ['both', 'intern', 'extern']),
@@ -66,7 +66,7 @@ const pDef: tParamDef = {
 		pNumber('Ei', 'mm', 1, 0.1, 100, 0.1),
 		pSectionSeparator('External part'),
 		pNumber('Ne', 'holes', 8, 0, 1000, 1),
-		pNumber('De', 'mm', 40, 0.1, 1000, 0.1),
+		pNumber('De', 'mm', 32, 0.1, 1000, 0.1),
 		pNumber('DTe', 'mm', 3, 0.1, 100, 0.1),
 		pNumber('Ee', 'mm', 1, 0.1, 100, 0.1)
 	],
