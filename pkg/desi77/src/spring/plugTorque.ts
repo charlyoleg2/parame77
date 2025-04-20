@@ -39,11 +39,12 @@ const pDef: tParamDef = {
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
 		pNumber('Dt', 'mm', 25, 0.1, 1000, 0.1),
+		pNumber('Ht', 'mm', 2, 0.1, 100, 0.1),
 		pNumber('Th', 'mm', 1, 0.1, 100, 0.1),
 		pDropdown('make3D', ['both', 'intern', 'extern']),
 		pSectionSeparator('Tooth profile'),
 		pNumber('ati', '%', 50, 1, 99, 0.1),
-		pNumber('ate', '%', 50, 1, 99, 1),
+		pNumber('ate', '%', 52, 1, 99, 1),
 		pNumber('ah', '%', 100, 1, 400, 1),
 		pNumber('dh', '%', 100, 1, 400, 1),
 		pNumber('aeh', '%', 10, 0, 100, 1),
@@ -133,10 +134,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aDedI = aTooth - 2 * aSlopeI - aAddI;
 		const aAddE = aAddenE - aSlopeE; // TODO
 		const aDedE = aTooth - 2 * aSlopeE - aAddE;
-		const RmaxI = Rt + (moduli * param.ah) / 100;
-		const RbI = Rt - (moduli * (param.dh + param.deh)) / 100;
-		const RminE = Rt - (moduli * param.dh) / 100;
-		const RbE = Rt + (moduli * (param.ah + param.aeh)) / 100;
+		const Htai = (param.Ht * param.ah) / 100;
+		const Htdi = (param.Ht * (param.dh + param.deh)) / 100;
+		const RmaxI = Rt + Htai;
+		const RbI = Rt - Htdi;
+		const Htde = (param.Ht * param.dh) / 100;
+		const Htae = (param.Ht * (param.ah + param.aeh)) / 100;
+		const RminE = Rt - Htde;
+		const RbE = Rt + Htae;
 		const aSlack = ((param.ate - param.ati) * aTooth) / 100;
 		// step-5 : checks on the parameter values
 		if (RminI < 0.1) {
@@ -168,6 +173,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Extern: Dmax ${ffix(2 * RmaxE)}, Dmin ${ffix(2 * RminE)} mm\n`;
 		rGeome.logstr += `Intern: Dmax ${ffix(2 * RmaxI)}, Dmin ${ffix(2 * RminI)} mm\n`;
 		rGeome.logstr += `aSlack: ${ffix(radToDeg(aSlack))} degree\n`;
+		rGeome.logstr += `Tooth: Ht ${param.Ht}, moduli ${ffix(moduli)}, Hti ${ffix(Htai + Htdi)}, Hte ${ffix(Htae + Htde)} mm\n`;
 		// sub-function
 		// Intern
 		const ctrsI: tContour[] = [];
