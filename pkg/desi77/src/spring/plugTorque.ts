@@ -19,7 +19,7 @@ import {
 	contourCircle,
 	//ctrRectangle,
 	figure,
-	//degToRad,
+	degToRad,
 	radToDeg,
 	ffix,
 	pNumber,
@@ -31,7 +31,7 @@ import {
 	initGeom
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
-//import { triALLrL } from 'triangule';
+import { triALLrLAA } from 'triangule';
 
 const pDef: tParamDef = {
 	partName: 'plugTorque',
@@ -55,10 +55,10 @@ const pDef: tParamDef = {
 		pDropdown('SnAae', ['stroke', 'arc']),
 		pDropdown('SnAdi', ['stroke', 'arc']),
 		pDropdown('SnAde', ['stroke', 'arc']),
-		pNumber('Rai', 'mm', 1, 0.1, 50, 0.1),
-		pNumber('Rae', 'mm', 1, 0.1, 50, 0.1),
-		pNumber('Rdi', 'mm', 1, 0.1, 50, 0.1),
-		pNumber('Rde', 'mm', 1, 0.1, 50, 0.1),
+		pNumber('Rai', 'mm', 1, 0, 50, 0.1),
+		pNumber('Rae', 'mm', 1, 0, 50, 0.1),
+		pNumber('Rdi', 'mm', 1, 0, 50, 0.1),
+		pNumber('Rde', 'mm', 1, 0, 50, 0.1),
 		pSectionSeparator('Internal part'),
 		pNumber('Ni', 'holes', 5, 0, 1000, 1),
 		pNumber('Di', 'mm', 12, 0.1, 1000, 0.1),
@@ -73,6 +73,7 @@ const pDef: tParamDef = {
 	paramSvg: {
 		Nt: 'plugTorque_teeth_radial.svg',
 		Dt: 'plugTorque_teeth_radial.svg',
+		Ht: 'plugTorque_teeth_radial.svg',
 		Th: 'plugTorque_parts.svg',
 		make3D: 'plugTorque_parts.svg',
 		ati: 'plugTorque_teeth_radial.svg',
@@ -128,12 +129,6 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aTooth = (2 * Math.PI) / param.Nt;
 		const aAddenI = (param.ati * aTooth) / 100;
 		const aAddenE = (param.ate * aTooth) / 100;
-		const aSlopeI = 0; // TODO
-		const aSlopeE = 0; // TODO
-		const aAddI = aAddenI - aSlopeI; // TODO
-		const aDedI = aTooth - 2 * aSlopeI - aAddI;
-		const aAddE = aAddenE - aSlopeE; // TODO
-		const aDedE = aTooth - 2 * aSlopeE - aAddE;
 		const Htai = (param.Ht * param.ah) / 100;
 		const Htdi = (param.Ht * (param.dh + param.deh)) / 100;
 		const RmaxI = Rt + Htai;
@@ -142,6 +137,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Htae = (param.Ht * (param.ah + param.aeh)) / 100;
 		const RminE = Rt - Htde;
 		const RbE = Rt + Htae;
+		let aSlopeI = 0;
+		let aSlopeE = 0;
+		let aAddI = aAddenI;
+		let aAddE = aAddenE;
+		if (Math.abs(param.aM) > 0.001) {
+			const tri1 = triALLrLAA(degToRad(param.aM), Rt, RbI);
+			const tri2 = triALLrLAA(Math.PI - degToRad(param.aM), Rt, RmaxI);
+			const tri3 = triALLrLAA(degToRad(param.aM), Rt, RminE);
+			const tri4 = triALLrLAA(Math.PI - degToRad(param.aM), Rt, RbE);
+			//const [l3a, a12a, a23a, l3b, a12b, a23b, trilog1] = tri1;
+			//const [l3c, a12c, a23c, l3d, a12d, a23d, trilog2] = tri2;
+			const [, a12a, , , , , trilog1] = tri1;
+			const [, a12c, , , , , trilog2] = tri2;
+			const [, a12e, , , , , trilog3] = tri3;
+			const [, a12g, , , , , trilog4] = tri4;
+			rGeome.logstr += trilog1 + trilog2 + trilog3 + trilog4;
+			//rGeome.logstr += `dbg143: a31 ${ffix(degToRad(param.aM))}, Rt ${ffix(Rt)}, RminE ${ffix(RminE)}\n`;
+			//rGeome.logstr += `dbg146: l3a ${ffix(l3a)}, a12a ${ffix(a12a)}, a23a ${ffix(a23a)}, l3b ${ffix(l3b)}, a12b ${ffix(a12b)}, a23b ${ffix(a23b)}\n`;
+			//rGeome.logstr += `dbg147: l3c ${ffix(l3c)}, a12c ${ffix(a12c)}, a23c ${ffix(a23c)}, l3d ${ffix(l3d)}, a12d ${ffix(a12d)}, a23d ${ffix(a23d)}\n`;
+			aSlopeI = -a12a + a12c;
+			aSlopeE = -a12e + a12g;
+			aAddI = aAddenI - 2 * a12c;
+			aAddE = aAddenE - 2 * a12g;
+		}
+		const aDedI = aTooth - 2 * aSlopeI - aAddI;
+		const aDedE = aTooth - 2 * aSlopeE - aAddE;
 		const aSlack = ((param.ate - param.ati) * aTooth) / 100;
 		// step-5 : checks on the parameter values
 		if (RminI < 0.1) {
@@ -174,6 +195,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Intern: Dmax ${ffix(2 * RmaxI)}, Dmin ${ffix(2 * RminI)} mm\n`;
 		rGeome.logstr += `aSlack: ${ffix(radToDeg(aSlack))} degree\n`;
 		rGeome.logstr += `Tooth: Ht ${param.Ht}, moduli ${ffix(moduli)}, Hti ${ffix(Htai + Htdi)}, Hte ${ffix(Htae + Htde)} mm\n`;
+		rGeome.logstr += `Tooth angle intern: aM ${param.aM}, aM[adden] ${ffix(radToDeg(-aAddenI / 2))}, aM[deden] ${ffix(radToDeg((aTooth - aAddenI) / 2))} degree\n`;
+		rGeome.logstr += `Tooth angle extern: aM ${param.aM}, aM[adden] ${ffix(radToDeg(-aAddenE / 2))}, aM[deden] ${ffix(radToDeg((aTooth - aAddenE) / 2))} degree\n`;
 		// sub-function
 		// Intern
 		const ctrsI: tContour[] = [];
