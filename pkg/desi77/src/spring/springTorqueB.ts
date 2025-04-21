@@ -2,6 +2,7 @@
 // a spring disc for smooth torque transmission
 
 import type {
+	Point,
 	tContour,
 	//tOuterInner,
 	tParamDef,
@@ -15,7 +16,7 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	point,
-	//contour,
+	contour,
 	contourCircle,
 	//ctrRectangle,
 	figure,
@@ -124,7 +125,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aSpringStep = (2 * Math.PI) / param.Ns;
 		const aEs = (aSpringStep * param.aEs) / 100;
 		const aSpring = aSpringStep - aEs;
-		const HLs = (Rse - Ese) * Math.cos(aSpring);
+		const HLs = (Rse - Ese) * Math.sin(aSpring);
 		const iHLs = HLs / (2 * param.Nk);
 		const Rk = iHLs / 2;
 		const Ek = iHLs - param.Wk;
@@ -145,7 +146,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err145: Ek ${Ek} is too small`;
 		}
 		if (dRLs < 2 * Rk) {
-			throw `err148: dRLs ${dRLs} is too small compare to Rk ${Rk}`;
+			throw `err148: dRLs ${dRLs} is too small compare to Rk ${Rk}. Increase Nk ${param.Nk}`;
 		}
 		// step-5.1 : further calculation
 		const aHMinI = 2 * Math.asin((RTi + 0.5 * param.Ei) / Ri);
@@ -157,6 +158,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aHE = param.Ne > 0 ? (2 * Math.PI) / param.Ne : 3.14;
 		if (aHE < aHMinE) {
 			throw `err131: aHE ${ffix(radToDeg(aHE))} is too small compare to aHMinE ${ffix(radToDeg(aHMinE))} degree`;
+		}
+		const pts1: Point[] = [];
+		const Rk1 = Rsi + Esi + dRLs - Rk; // Rse - Ese - Rk
+		for (let ii = 0; ii < param.Nk; ii++) {
+			const ky = (ii * 4 + 1) * Rk;
+			//const ka = Math.asin(ky / Rk1);
+			const kx = Math.sqrt(Rk1 ** 2 - ky ** 2);
+			pts1.push(point(kx, ky));
+		}
+		const pts2: Point[] = [];
+		const Rk2 = Rsi + Esi + Rk;
+		const ak2 = aSpring < Math.PI / 2 - 0.0001 ? 1 / Math.tan(aSpring) : 0; // cotan(aSpring)
+		const kak2 = Rk / Math.sin(aSpring);
+		for (let ii = 0; ii < param.Nk; ii++) {
+			const ky = (ii * 4 + 3) * Rk;
+			let kx = ak2 * ky + kak2;
+			if (kx ** 2 + ky ** 2 < Rk2 ** 2) {
+				kx = Math.sqrt(Rk2 ** 2 - ky ** 2);
+			}
+			pts2.push(point(kx, ky));
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin1)} mm\n`;
@@ -175,6 +196,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const p1 = point(0, 0).translatePolar(ii * aHE, Re);
 			ctrsH.push(contourCircle(p1.cx, p1.cy, RTe));
 		}
+		// spring
+		const ctrSpringEnv = contour(Rsi + Esi, 0)
+			.addSegStrokeAP(0, Rse - Ese)
+			.addPointAP(aSpring / 2, Rse - Ese)
+			.addPointAP(aSpring, Rse - Ese)
+			.addSegArc2()
+			.addSegStrokeAP(aSpring, Rsi + Esi)
+			.addPointAP(aSpring / 2, Rsi + Esi)
+			.addPointAP(0, Rsi + Esi)
+			.addSegArc2();
+		figProfile.addSecond(ctrSpringEnv);
+		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, aSpringStep));
+		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, -aSpringStep));
+		for (let ii = 0; ii < param.Nk; ii++) {
+			figProfile.addSecond(contourCircle(pts1[ii].cx, pts1[ii].cy, Rk));
+			figProfile.addSecond(contourCircle(pts2[ii].cx, pts2[ii].cy, Rk));
+		}
+		// figProfile Main
 		figProfile.addMainOI([ctrExt, ...ctrsH]);
 		// final figure list
 		rGeome.fig = {
