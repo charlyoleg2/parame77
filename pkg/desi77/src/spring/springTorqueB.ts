@@ -125,18 +125,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (aHI < aHMinI) {
 			throw `err126: aHI ${ffix(radToDeg(aHI))} is too small compare to aHMinI ${ffix(radToDeg(aHMinI))} degree`;
 		}
+		const aHMinE = 2 * Math.asin((RTe + 0.5 * param.Ee) / Re);
+		const aHE = param.Ne > 0 ? (2 * Math.PI) / param.Ne : 3.14;
+		if (aHE < aHMinE) {
+			throw `err131: aHE ${ffix(radToDeg(aHE))} is too small compare to aHMinE ${ffix(radToDeg(aHMinE))} degree`;
+		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin1)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
-		const ctrInt = contourCircle(0, 0, Rmin1);
-		const ctrsHI: tContour[] = [];
+		const ctrsH: tContour[] = [];
+		ctrsH.push(contourCircle(0, 0, Rmin1));
 		for (let ii = 0; ii < param.Ni; ii++) {
 			const p1 = point(0, 0).translatePolar(ii * aHI, Ri);
-			ctrsHI.push(contourCircle(p1.cx, p1.cy, RTi));
+			ctrsH.push(contourCircle(p1.cx, p1.cy, RTi));
 		}
-		figProfile.addMainOI([ctrExt, ctrInt, ...ctrsHI]);
+		for (let ii = 0; ii < param.Ne; ii++) {
+			const p1 = point(0, 0).translatePolar(ii * aHE, Re);
+			ctrsH.push(contourCircle(p1.cx, p1.cy, RTe));
+		}
+		figProfile.addMainOI([ctrExt, ...ctrsH]);
 		// final figure list
 		rGeome.fig = {
 			faceProfile: figProfile
