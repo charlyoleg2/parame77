@@ -57,6 +57,8 @@ const pDef: tParamDef = {
 		pNumber('Nk', 'zigzag', 3, 1, 100, 1),
 		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
 		pNumber('Wc', 'mm', 1, 0.1, 20, 0.1),
+		pNumber('Rrsi', 'mm', 1, 0.1, 20, 0.1),
+		pNumber('Rrse', 'mm', 1, 0.1, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
 		pNumber('ate', '%', 52, 1, 99, 1),
 		pNumber('ah', '%', 100, 1, 400, 1),
@@ -87,6 +89,8 @@ const pDef: tParamDef = {
 		Nk: 'springTorqueB_profile.svg',
 		Wk: 'springTorqueB_profile.svg',
 		Wc: 'springTorqueB_profile.svg',
+		Rrsi: 'springTorqueB_profile.svg',
+		Rrse: 'springTorqueB_profile.svg',
 		ate: 'plugTorque_teeth_radial.svg',
 		dh: 'plugTorque_teeth_radial.svg',
 		ah: 'plugTorque_teeth_radial.svg',
@@ -179,6 +183,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 			pts2.push(point(kx, ky));
 		}
+		const Wk2 = param.Wk / 2;
+		const a14 = Math.asin(Wk2 / Rsi);
+		const a23 = Math.asin(Wk2 / Rse);
+		const pt1 = point(0, 0).translatePolar(a14, Rsi);
+		const pt2 = point(0, 0).translatePolar(aSpring + a23, Rse);
+		const pt3 = point(0, 0).translatePolar(aSpring - a23, Rse);
+		const pt4 = point(0, 0).translatePolar(-a14, Rsi);
+		const Rks = Rk - Wk2;
+		const Rkl = Rk + Wk2;
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin1)} mm\n`;
 		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)}, HLs ${ffix(HLs)} mm\n`;
@@ -212,6 +225,73 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.Nk; ii++) {
 			figProfile.addSecond(contourCircle(pts1[ii].cx, pts1[ii].cy, Rk));
 			figProfile.addSecond(contourCircle(pts2[ii].cx, pts2[ii].cy, Rk));
+		}
+		// partial-1
+		const ctrPartial1 = contour(pt1.cx, pt1.cy);
+		for (let ii = 0; ii < param.Nk; ii++) {
+			ctrPartial1
+				.addSegStrokeA(pts1[ii].cx, pts1[ii].cy - Rks)
+				.addPointA(pts1[ii].cx + Rks, pts1[ii].cy)
+				.addPointA(pts1[ii].cx, pts1[ii].cy + Rks)
+				.addSegArc2()
+				.addSegStrokeA(pts2[ii].cx, pts2[ii].cy - Rkl);
+			if (ii < param.Nk - 1) {
+				ctrPartial1
+					.addPointA(pts2[ii].cx - Rkl, pts2[ii].cy)
+					.addPointA(pts2[ii].cx, pts2[ii].cy + Rkl)
+					.addSegArc2();
+			}
+		}
+		const a2b = Math.PI + aSpring / 2;
+		const a2c = Math.PI / 2 + aSpring;
+		const pt2b = pts2[param.Nk - 1].translatePolar(a2b, Rkl);
+		const pt2c = pts2[param.Nk - 1].translatePolar(a2c, Rkl);
+		const pt3b = pts2[param.Nk - 1].translatePolar(a2b, Rks);
+		const pt3c = pts2[param.Nk - 1].translatePolar(a2c, Rks);
+		ctrPartial1
+			.addPointA(pt2b.cx, pt2b.cy)
+			.addPointA(pt2c.cx, pt2c.cy)
+			.addSegArc2()
+			.addSegStrokeA(pt2.cx, pt2.cy);
+		//figProfile.addSecond(ctrPartial1);
+		// partial-2
+		const ctrPartial2 = contour(pt3.cx, pt3.cy)
+			.addSegStrokeA(pt3c.cx, pt3c.cy)
+			.addPointA(pt3b.cx, pt3b.cy)
+			.addPointA(pts2[param.Nk - 1].cx, pts2[param.Nk - 1].cy - Rks)
+			.addSegArc2();
+		for (let ii = param.Nk - 1; ii >= 0; ii--) {
+			if (ii < param.Nk - 1) {
+				ctrPartial2
+					.addSegStrokeA(pts2[ii].cx, pts2[ii].cy + Rks)
+					.addPointA(pts2[ii].cx - Rks, pts2[ii].cy)
+					.addPointA(pts2[ii].cx, pts2[ii].cy - Rks)
+					.addSegArc2();
+			}
+			ctrPartial2
+				.addSegStrokeA(pts1[ii].cx, pts1[ii].cy + Rkl)
+				.addPointA(pts1[ii].cx + Rkl, pts1[ii].cy)
+				.addPointA(pts1[ii].cx, pts1[ii].cy - Rkl)
+				.addSegArc2();
+		}
+		ctrPartial2.addSegStrokeA(pt4.cx, pt4.cy);
+		//figProfile.addSecond(ctrPartial2);
+		// ctrSpringHollow
+		const ctrSpringHollow = contour(pt1.cx, pt1.cy)
+			.addCornerRounded(param.Rrsi)
+			.addPartial(ctrPartial1)
+			.addCornerRounded(param.Rrse)
+			.addPointAP(aSpring + aSpringStep / 2, Rse)
+			.addPointAP(aSpring + aSpringStep - a23, Rse)
+			.addSegArc2()
+			.addCornerRounded(param.Rrse)
+			.addPartial(ctrPartial2.rotate(0, 0, aSpringStep))
+			.addCornerRounded(param.Rrsi)
+			.addPointAP(aSpringStep / 2, Rsi)
+			.addPointAP(a14, Rsi)
+			.addSegArc2();
+		for (let ii = 0; ii < param.Ns; ii++) {
+			ctrsH.push(ctrSpringHollow.rotate(0, 0, ii * aSpringStep));
 		}
 		// figProfile Main
 		figProfile.addMainOI([ctrExt, ...ctrsH]);
