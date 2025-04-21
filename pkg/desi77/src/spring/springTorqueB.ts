@@ -13,7 +13,8 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	//withinZeroPi,
+	withinZeroPi,
+	//withinZero2Pi,
 	//ShapePoint,
 	point,
 	contour,
@@ -107,6 +108,38 @@ const pDef: tParamDef = {
 		tUpdate: 500 // every 0.5 second
 	}
 };
+
+// helper functions
+function calcAzig(cx1: number, cx2: number, r1: number, r2: number): [number, number] {
+	let ra12 = Math.PI / 2;
+	let ra21 = -Math.PI / 2;
+	if (cx2 > cx1) {
+		const triOpp = cx2 - cx1;
+		const triAdj = r1 + r2;
+		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
+		const aDiag = Math.atan2(triOpp, triAdj);
+		const lDiag1 = (lDiag * r1) / triAdj;
+		const aTri1 = Math.acos(r1 / lDiag1);
+		ra12 = Math.PI / 2 - aDiag - aTri1;
+		ra21 = -Math.PI / 2 - aDiag - aTri1;
+	}
+	return [ra12, ra21];
+}
+function calcAzag(cx2: number, cx1: number, r2: number, r1: number): [number, number] {
+	let ra22 = Math.PI / 2;
+	let ra11 = -Math.PI / 2;
+	if (cx2 > cx1) {
+		const triOpp = cx2 - cx1;
+		const triAdj = r1 + r2;
+		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
+		const aDiag = Math.atan2(triOpp, triAdj);
+		const lDiag2 = (lDiag * r2) / triAdj;
+		const aTri2 = Math.acos(r2 / lDiag2);
+		ra22 = Math.PI / 2 + aDiag + aTri2;
+		ra11 = -Math.PI / 2 + aDiag + aTri2;
+	}
+	return [ra22, ra11];
+}
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
@@ -229,21 +262,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// partial-1
 		const ctrPartial1 = contour(pt1.cx, pt1.cy);
 		for (let ii = 0; ii < param.Nk; ii++) {
-			ctrPartial1
-				.addSegStrokeA(pts1[ii].cx, pts1[ii].cy - Rks)
-				.addPointA(pts1[ii].cx + Rks, pts1[ii].cy)
-				.addPointA(pts1[ii].cx, pts1[ii].cy + Rks)
-				.addSegArc2()
-				.addSegStrokeA(pts2[ii].cx, pts2[ii].cy - Rkl);
+			let a11 = -Math.PI / 2;
+			//const a12 = Math.PI / 2;
+			//const a21 = -Math.PI / 2;
+			const [a12, a21] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rks, Rkl);
+			let a22 = Math.PI / 2;
+			if (ii > 0) {
+				const [, tmpa11] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rkl, Rks);
+				a11 = tmpa11;
+			}
 			if (ii < param.Nk - 1) {
-				ctrPartial1
-					.addPointA(pts2[ii].cx - Rkl, pts2[ii].cy)
-					.addPointA(pts2[ii].cx, pts2[ii].cy + Rkl)
-					.addSegArc2();
+				const [tmpa22] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rkl, Rks);
+				a22 = tmpa22;
+			}
+			const p11 = pts1[ii].translatePolar(a11, Rks);
+			const p1b = pts1[ii].translatePolar(a11 + withinZeroPi((a12 - a11) / 2), Rks);
+			const p12 = pts1[ii].translatePolar(a12, Rks);
+			const p21 = pts2[ii].translatePolar(a21, Rkl);
+			const p2b = pts2[ii].translatePolar(a21 - withinZeroPi((a21 - a22) / 2), Rkl);
+			const p22 = pts2[ii].translatePolar(a22, Rkl);
+			ctrPartial1
+				.addSegStrokeA(p11.cx, p11.cy)
+				.addPointA(p1b.cx, p1b.cy)
+				.addPointA(p12.cx, p12.cy)
+				.addSegArc2()
+				.addSegStrokeA(p21.cx, p21.cy);
+			if (ii < param.Nk - 1) {
+				ctrPartial1.addPointA(p2b.cx, p2b.cy).addPointA(p22.cx, p22.cy).addSegArc2();
 			}
 		}
-		const a2b = Math.PI + aSpring / 2;
+		const [, lasta21] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rks, Rkl);
 		const a2c = Math.PI / 2 + aSpring;
+		const a2b = lasta21 - withinZeroPi((lasta21 - a2c) / 2);
 		const pt2b = pts2[param.Nk - 1].translatePolar(a2b, Rkl);
 		const pt2c = pts2[param.Nk - 1].translatePolar(a2c, Rkl);
 		const pt3b = pts2[param.Nk - 1].translatePolar(a2b, Rks);
