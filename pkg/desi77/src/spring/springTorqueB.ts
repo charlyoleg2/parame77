@@ -53,9 +53,9 @@ const pDef: tParamDef = {
 		pNumber('aEs', '%', 10, 1, 90, 1),
 		pNumber('Esi', '%', 10, 1, 90, 1),
 		pNumber('Ese', '%', 10, 1, 90, 1),
-		pNumber('Nk', 'zigzag', 2, 1, 100, 1),
-		pNumber('Wk', 'mm', 2, 0.1, 20, 0.1),
-		pNumber('Wc', 'mm', 2, 0.1, 20, 0.1),
+		pNumber('Nk', 'zigzag', 3, 1, 100, 1),
+		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
+		pNumber('Wc', 'mm', 1, 0.1, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
 		pNumber('ate', '%', 52, 1, 99, 1),
 		pNumber('ah', '%', 100, 1, 400, 1),
@@ -115,9 +115,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const RTi = param.DTi / 2;
 		const Rmax = Re + RTe + param.Ee;
 		const Rmin1 = Ri - RTi - param.Ei;
+		const Rse = Re - RTe - param.Ee;
+		const Rsi = Ri + RTi + param.Ei;
+		const dRs = Rse - Rsi;
+		const Esi = (dRs * param.Esi) / 100;
+		const Ese = (dRs * param.Ese) / 100;
+		const dRLs = dRs - Esi - Ese;
+		const aSpringStep = (2 * Math.PI) / param.Ns;
+		const aEs = (aSpringStep * param.aEs) / 100;
+		const aSpring = aSpringStep - aEs;
+		const HLs = (Rse - Ese) * Math.cos(aSpring);
+		const iHLs = HLs / (2 * param.Nk);
+		const Rk = iHLs / 2;
+		const Ek = iHLs - param.Wk;
 		// step-5 : checks on the parameter values
 		if (Rmin1 < 0.1) {
 			throw `err120: Di ${param.Di} is too small compare to DTi ${param.DTi}, Ei ${param.Ei}`;
+		}
+		if (dRLs < 2 * param.Ws) {
+			throw `err133: dRLs ${dRLs} is too small compare to Ws ${param.Ws}`;
+		}
+		if (Esi < 0.6 * param.Ws) {
+			throw `err136: Esi ${Esi} is too small compare to Ws ${param.Ws}`;
+		}
+		if (Ese < 0.6 * param.Ws) {
+			throw `err139: Ese ${Ese} is too small compare to Ws ${param.Ws}`;
+		}
+		if (Ek < 0.1) {
+			throw `err145: Ek ${Ek} is too small`;
+		}
+		if (dRLs < 2 * Rk) {
+			throw `err148: dRLs ${dRLs} is too small compare to Rk ${Rk}`;
 		}
 		// step-5.1 : further calculation
 		const aHMinI = 2 * Math.asin((RTi + 0.5 * param.Ei) / Ri);
@@ -132,6 +160,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin1)} mm\n`;
+		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)}, HLs ${ffix(HLs)} mm\n`;
+		rGeome.logstr += `Spring zigzag: Ek ${ffix(Ek)}, Rk ${ffix(Rk)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
