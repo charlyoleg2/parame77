@@ -34,6 +34,7 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrL } from 'triangule';
+import { ctrPlugExtern } from './libPlugTorque';
 
 const pDef: tParamDef = {
 	partName: 'springTorqueB',
@@ -61,6 +62,9 @@ const pDef: tParamDef = {
 		pNumber('Rrsi', 'mm', 1, 0.1, 20, 0.1),
 		pNumber('Rrse', 'mm', 1, 0.1, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
+		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
+		pNumber('Dt', 'mm', 20, 0.1, 1000, 0.1),
+		pNumber('Ht', 'mm', 2, 0.1, 100, 0.1),
 		pNumber('ate', '%', 52, 1, 99, 1),
 		pNumber('ah', '%', 100, 1, 400, 1),
 		pNumber('dh', '%', 100, 1, 400, 1),
@@ -92,6 +96,9 @@ const pDef: tParamDef = {
 		Wc: 'springTorqueB_profile.svg',
 		Rrsi: 'springTorqueB_profile.svg',
 		Rrse: 'springTorqueB_profile.svg',
+		Nt: 'plugTorque_teeth_radial.svg',
+		Dt: 'plugTorque_teeth_radial.svg',
+		Ht: 'plugTorque_teeth_radial.svg',
 		ate: 'plugTorque_teeth_radial.svg',
 		dh: 'plugTorque_teeth_radial.svg',
 		ah: 'plugTorque_teeth_radial.svg',
@@ -226,14 +233,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Rks = Rk - Wk2;
 		const Rkl = Rk + Wk2;
 		// step-6 : any logs
-		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin ${ffix(2 * Rmin1)} mm\n`;
+		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
 		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)}, HLs ${ffix(HLs)} mm\n`;
 		rGeome.logstr += `Spring zigzag: Ek ${ffix(Ek)}, Rk ${ffix(Rk)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
 		const ctrsH: tContour[] = [];
-		ctrsH.push(contourCircle(0, 0, Rmin1));
+		if (param.Teeth === 1) {
+			const [ctrToothE, logE] = ctrPlugExtern(param, Rmin1);
+			rGeome.logstr += logE;
+			ctrsH.push(ctrToothE);
+		} else {
+			ctrsH.push(contourCircle(0, 0, Rmin1));
+		}
 		for (let ii = 0; ii < param.Ni; ii++) {
 			const p1 = point(0, 0).translatePolar(ii * aHI, Ri);
 			ctrsH.push(contourCircle(p1.cx, p1.cy, RTi));
