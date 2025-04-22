@@ -4,7 +4,7 @@ import type {
 	tContour,
 	//tOuterInner,
 	//tParamDef,
-	tParamVal,
+	tParamVal
 	//tGeom,
 	//tPageDef
 	//tSubInst
@@ -21,7 +21,7 @@ import {
 	//figure,
 	degToRad,
 	radToDeg,
-	ffix,
+	ffix
 	//pNumber,
 	//pCheckbox,
 	//pDropdown,
@@ -37,7 +37,6 @@ function ctrPlugExtern(param: tParamVal, RbEmax: number): [tContour, string] {
 	let rLog = '';
 	const aM = degToRad(param.aM);
 	const Rt = param.Dt / 2;
-	const RTe = param.DTe / 2;
 	const aTooth = (2 * Math.PI) / param.Nt;
 	const aAddenE = (param.ate * aTooth) / 100;
 	const Htde = (param.Ht * param.dh) / 100;
