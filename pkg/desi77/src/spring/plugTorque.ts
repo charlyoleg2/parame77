@@ -33,6 +33,7 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 import { triALLrLAA } from 'triangule';
+import { ctrPlugExtern } from './libPlugTorque';
 
 const pDef: tParamDef = {
 	partName: 'plugTorque',
@@ -166,6 +167,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aDedI = aTooth - 2 * aSlopeI - aAddI;
 		const aDedE = aTooth - 2 * aSlopeE - aAddE;
 		const aSlack = ((param.ate - param.ati) * aTooth) / 100;
+		const RbEmax = Re - RTe - param.Ee;
 		// step-5 : checks on the parameter values
 		if (RminI < 0.1) {
 			throw `err087: RminI ${RminI} is too small because of Di ${param.Di}, DTi ${param.DTi} or Ei ${param.Ei}`;
@@ -182,7 +184,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (RbI < Ri + RTi + param.Ei) {
 			throw `err087: RbI ${RbI} is too small compare to Di ${param.Di}, DTi ${param.DTi} or Ei ${param.Ei}`;
 		}
-		if (RbE > Re - RTe - param.Ee) {
+		if (RbE > RbEmax) {
 			throw `err087: RbE ${RbE} is too large compare to De ${param.De}, DTe ${param.DTe} or Ee ${param.Ee}`;
 		}
 		const tooSmallAngle = 0.0001;
@@ -238,30 +240,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const p1 = point(0, 0).translatePolar(ii * adTe, Re);
 			ctrsE.push(contourCircle(p1.cx, p1.cy, RTe));
 		}
-		const ctrToothE = contour(RminE, 0);
-		for (let ii = 0; ii < param.Nt; ii++) {
-			const aRef = ii * aTooth;
-			ctrToothE.addSegStrokeAP(aRef + aSlopeE, RbE).addCornerRounded(param.Rae);
-			if (param.SnAae === 1) {
-				ctrToothE
-					.addPointAP(aRef + aSlopeE + aAddE / 2, RbE)
-					.addPointAP(aRef + aSlopeE + aAddE, RbE)
-					.addSegArc2();
-			} else {
-				ctrToothE.addSegStrokeAP(aRef + aSlopeE + aAddE, RbE);
-			}
-			ctrToothE.addCornerRounded(param.Rae);
-			ctrToothE.addSegStrokeAP(aRef + 2 * aSlopeE + aAddE, RminE).addCornerRounded(param.Rde);
-			if (param.SnAde === 1) {
-				ctrToothE
-					.addPointAP(aRef + aTooth - aDedE / 2, RminE)
-					.addPointAP(aRef + aTooth, RminE)
-					.addSegArc2();
-			} else {
-				ctrToothE.addSegStrokeAP(aRef + aTooth, RminE);
-			}
-			ctrToothE.addCornerRounded(param.Rde);
-		}
+		const [ctrToothE, logE] = ctrPlugExtern(param, RbEmax);
+		rGeome.logstr += logE;
 		// figIntern
 		figIntern.addMainOI([ctrToothI, ...ctrsI]);
 		figIntern.addSecond(contourCircle(0, 0, Rt));
