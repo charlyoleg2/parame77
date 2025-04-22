@@ -148,6 +148,7 @@ function calcAzag(cx2: number, cx1: number, r2: number, r1: number): [number, nu
 	return [ra22, ra11];
 }
 
+// TODO : param.Wc is not implemented yet
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figProfile = figure();
