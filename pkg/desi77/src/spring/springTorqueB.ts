@@ -305,23 +305,44 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeA(pt2.cx, pt2.cy);
 		//figProfile.addSecond(ctrPartial1);
 		// partial-2
+		const [, firsta22] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rkl, Rks);
+		const firstp22 = pts2[param.Nk - 1].translatePolar(firsta22, Rks);
 		const ctrPartial2 = contour(pt3.cx, pt3.cy)
 			.addSegStrokeA(pt3c.cx, pt3c.cy)
 			.addPointA(pt3b.cx, pt3b.cy)
-			.addPointA(pts2[param.Nk - 1].cx, pts2[param.Nk - 1].cy - Rks)
+			.addPointA(firstp22.cx, firstp22.cy)
 			.addSegArc2();
 		for (let ii = param.Nk - 1; ii >= 0; ii--) {
+			let a21 = Math.PI / 2;
+			//const a22 = -Math.PI / 2;
+			//const a11 = Math.PI / 2;
+			let a12 = -Math.PI / 2;
+			const [a11, a22] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rkl, Rks);
+			if (ii > 0) {
+				const [, tmpa12] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rks, Rkl);
+				a12 = tmpa12;
+			}
+			if (ii < param.Nk - 1) {
+				const [tmpa21] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rks, Rkl);
+				a21 = tmpa21;
+			}
+			const p11 = pts1[ii].translatePolar(a11, Rkl);
+			const p1b = pts1[ii].translatePolar(a11 - withinZeroPi((a11 - a12) / 2), Rkl);
+			const p12 = pts1[ii].translatePolar(a12, Rkl);
+			const p21 = pts2[ii].translatePolar(a21, Rks);
+			const p2b = pts2[ii].translatePolar(a21 + withinZeroPi((a22 - a21) / 2), Rks);
+			const p22 = pts2[ii].translatePolar(a22, Rks);
 			if (ii < param.Nk - 1) {
 				ctrPartial2
-					.addSegStrokeA(pts2[ii].cx, pts2[ii].cy + Rks)
-					.addPointA(pts2[ii].cx - Rks, pts2[ii].cy)
-					.addPointA(pts2[ii].cx, pts2[ii].cy - Rks)
+					.addSegStrokeA(p21.cx, p21.cy)
+					.addPointA(p2b.cx, p2b.cy)
+					.addPointA(p22.cx, p22.cy)
 					.addSegArc2();
 			}
 			ctrPartial2
-				.addSegStrokeA(pts1[ii].cx, pts1[ii].cy + Rkl)
-				.addPointA(pts1[ii].cx + Rkl, pts1[ii].cy)
-				.addPointA(pts1[ii].cx, pts1[ii].cy - Rkl)
+				.addSegStrokeA(p11.cx, p11.cy)
+				.addPointA(p1b.cx, p1b.cy)
+				.addPointA(p12.cx, p12.cy)
 				.addSegArc2();
 		}
 		ctrPartial2.addSegStrokeA(pt4.cx, pt4.cy);
