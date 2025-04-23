@@ -13,7 +13,7 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	withinZeroPi,
+	//withinZeroPi,
 	//withinZero2Pi,
 	//ShapePoint,
 	point,
@@ -56,9 +56,9 @@ const pDef: tParamDef = {
 		pDropdown('zig', ['alt', 'one', 'two']),
 		pDropdown('zag', ['stroke', 'arc']),
 		pNumber('aEs', '%', 10, 1, 90, 1),
-		pNumber('Esi', '%', 10, 1, 90, 1),
-		pNumber('Ese', '%', 10, 1, 90, 1),
-		pNumber('Nk', 'zigzag', 3, 1, 100, 1),
+		pNumber('Esi', '%', 10, 0, 90, 1),
+		pNumber('Ese', '%', 10, 0, 90, 1),
+		pNumber('Nk', 'zigzag', 4, 2, 100, 1),
 		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
 		pNumber('Rrsi', 'mm', 1, 0.1, 20, 0.1),
 		pNumber('Rrse', 'mm', 1, 0.1, 20, 0.1),
@@ -119,36 +119,36 @@ const pDef: tParamDef = {
 };
 
 // helper functions
-function calcAzig(cx1: number, cx2: number, r1: number, r2: number): [number, number] {
-	let ra12 = Math.PI / 2;
-	let ra21 = -Math.PI / 2;
-	if (cx2 > cx1) {
-		const triOpp = cx2 - cx1;
-		const triAdj = r1 + r2;
-		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
-		const aDiag = Math.atan2(triOpp, triAdj);
-		const lDiag1 = (lDiag * r1) / triAdj;
-		const aTri1 = Math.acos(r1 / lDiag1);
-		ra12 = Math.PI / 2 - aDiag - aTri1;
-		ra21 = -Math.PI / 2 - aDiag - aTri1;
-	}
-	return [ra12, ra21];
-}
-function calcAzag(cx2: number, cx1: number, r2: number, r1: number): [number, number] {
-	let ra22 = Math.PI / 2;
-	let ra11 = -Math.PI / 2;
-	if (cx2 > cx1) {
-		const triOpp = cx2 - cx1;
-		const triAdj = r1 + r2;
-		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
-		const aDiag = Math.atan2(triOpp, triAdj);
-		const lDiag2 = (lDiag * r2) / triAdj;
-		const aTri2 = Math.acos(r2 / lDiag2);
-		ra22 = Math.PI / 2 + aDiag + aTri2;
-		ra11 = -Math.PI / 2 + aDiag + aTri2;
-	}
-	return [ra22, ra11];
-}
+//function calcAzig(cx1: number, cx2: number, r1: number, r2: number): [number, number] {
+//	let ra12 = Math.PI / 2;
+//	let ra21 = -Math.PI / 2;
+//	if (cx2 > cx1) {
+//		const triOpp = cx2 - cx1;
+//		const triAdj = r1 + r2;
+//		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
+//		const aDiag = Math.atan2(triOpp, triAdj);
+//		const lDiag1 = (lDiag * r1) / triAdj;
+//		const aTri1 = Math.acos(r1 / lDiag1);
+//		ra12 = Math.PI / 2 - aDiag - aTri1;
+//		ra21 = -Math.PI / 2 - aDiag - aTri1;
+//	}
+//	return [ra12, ra21];
+//}
+//function calcAzag(cx2: number, cx1: number, r2: number, r1: number): [number, number] {
+//	let ra22 = Math.PI / 2;
+//	let ra11 = -Math.PI / 2;
+//	if (cx2 > cx1) {
+//		const triOpp = cx2 - cx1;
+//		const triAdj = r1 + r2;
+//		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
+//		const aDiag = Math.atan2(triOpp, triAdj);
+//		const lDiag2 = (lDiag * r2) / triAdj;
+//		const aTri2 = Math.acos(r2 / lDiag2);
+//		ra22 = Math.PI / 2 + aDiag + aTri2;
+//		ra11 = -Math.PI / 2 + aDiag + aTri2;
+//	}
+//	return [ra22, ra11];
+//}
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
@@ -171,10 +171,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aSpringStep = (2 * Math.PI) / param.Ns;
 		const aEs = (aSpringStep * param.aEs) / 100;
 		const aSpring = aSpringStep - aEs;
-		const HLs = (Rse - Ese) * Math.sin(aSpring);
-		const iHLs = HLs / (2 * param.Nk);
-		const Rk = iHLs / 2;
-		const Ek = iHLs - param.Wk;
+		const Rk = dRLs / (2 * (param.Nk - 1));
+		const Ek = 2 * Rk - param.Wk;
 		// step-5 : checks on the parameter values
 		if (Rmin1 < 0.1) {
 			throw `err120: Di ${param.Di} is too small compare to DTi ${param.DTi}, Ei ${param.Ei}`;
@@ -182,17 +180,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (dRLs < 2 * param.Ws) {
 			throw `err133: dRLs ${dRLs} is too small compare to Ws ${param.Ws}`;
 		}
-		if (Esi < 0.6 * param.Ws) {
-			throw `err136: Esi ${Esi} is too small compare to Ws ${param.Ws}`;
-		}
-		if (Ese < 0.6 * param.Ws) {
-			throw `err139: Ese ${Ese} is too small compare to Ws ${param.Ws}`;
-		}
 		if (Ek < 0.1) {
 			throw `err145: Ek ${Ek} is too small`;
-		}
-		if (dRLs < 2 * Rk) {
-			throw `err148: dRLs ${dRLs} is too small compare to Rk ${Rk}. Increase Nk ${param.Nk}`;
 		}
 		// step-5.1 : further calculation
 		const aHMinI = 2 * Math.asin((RTi + 0.5 * param.Ei) / Ri);
@@ -205,38 +194,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (aHE < aHMinE) {
 			throw `err131: aHE ${ffix(radToDeg(aHE))} is too small compare to aHMinE ${ffix(radToDeg(aHMinE))} degree`;
 		}
-		const pts1: Point[] = [];
-		const Rk1 = Rsi + Esi + dRLs - Rk; // Rse - Ese - Rk
+		const pts: Point[] = [];
+		const k2cos = Math.cos(aSpring);
+		const k2sin = Math.sin(aSpring);
+		const k2cx = Rk * k2sin;
+		const k2cy = -Rk * k2cos;
 		for (let ii = 0; ii < param.Nk; ii++) {
-			const ky = (ii * 4 + 1) * Rk;
-			//const ka = Math.asin(ky / Rk1);
-			const kx = Math.sqrt(Rk1 ** 2 - ky ** 2);
-			pts1.push(point(kx, ky));
-		}
-		const pts2: Point[] = [];
-		const Rk2 = Rsi + Esi + Rk;
-		const ak2 = aSpring < Math.PI / 2 - 0.0001 ? 1 / Math.tan(aSpring) : 0; // cotan(aSpring)
-		const kak2 = Rk / Math.sin(aSpring);
-		for (let ii = 0; ii < param.Nk; ii++) {
-			const ky = (ii * 4 + 3) * Rk;
-			let kx = ak2 * ky + kak2;
-			if (kx ** 2 + ky ** 2 < Rk2 ** 2) {
-				kx = Math.sqrt(Rk2 ** 2 - ky ** 2);
+			const kl = Rsi + Esi + 2 * ii * Rk;
+			if (ii % 2 === 0) {
+				pts.push(point(kl, Rk));
+			} else {
+				const kx = kl * k2cos + k2cx;
+				const ky = kl * k2sin + k2cy;
+				pts.push(point(kx, ky));
 			}
-			pts2.push(point(kx, ky));
 		}
-		const Wk2 = param.Wk / 2;
-		const a14 = Math.asin(Wk2 / Rsi);
-		const a23 = Math.asin(Wk2 / Rse);
-		const pt1 = point(0, 0).translatePolar(a14, Rsi);
-		const pt2 = point(0, 0).translatePolar(aSpring + a23, Rse);
-		const pt3 = point(0, 0).translatePolar(aSpring - a23, Rse);
-		const pt4 = point(0, 0).translatePolar(-a14, Rsi);
-		const Rks = Rk - Wk2;
-		const Rkl = Rk + Wk2;
+		//const Wk2 = param.Wk / 2;
+		//const a14 = Math.asin(Wk2 / Rsi);
+		//const a23 = Math.asin(Wk2 / Rse);
+		//const pt1 = point(0, 0).translatePolar(a14, Rsi);
+		//const pt2 = point(0, 0).translatePolar(aSpring + a23, Rse);
+		//const pt3 = point(0, 0).translatePolar(aSpring - a23, Rse);
+		//const pt4 = point(0, 0).translatePolar(-a14, Rsi);
+		//const Rks = Rk - Wk2;
+		//const Rkl = Rk + Wk2;
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
-		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)}, HLs ${ffix(HLs)} mm\n`;
+		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)} mm\n`;
 		rGeome.logstr += `Spring zigzag: Ek ${ffix(Ek)}, Rk ${ffix(Rk)} mm\n`;
 		// sub-function
 		// figProfile
@@ -271,114 +255,113 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, aSpringStep));
 		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, -aSpringStep));
 		for (let ii = 0; ii < param.Nk; ii++) {
-			figProfile.addSecond(contourCircle(pts1[ii].cx, pts1[ii].cy, Rk));
-			figProfile.addSecond(contourCircle(pts2[ii].cx, pts2[ii].cy, Rk));
+			figProfile.addSecond(contourCircle(pts[ii].cx, pts[ii].cy, Rk));
 		}
 		// partial-1
-		const ctrPartial1 = contour(pt1.cx, pt1.cy);
-		for (let ii = 0; ii < param.Nk; ii++) {
-			let a11 = -Math.PI / 2;
-			//const a12 = Math.PI / 2;
-			//const a21 = -Math.PI / 2;
-			const [a12, a21] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rks, Rkl);
-			let a22 = Math.PI / 2;
-			if (ii > 0) {
-				const [, tmpa11] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rkl, Rks);
-				a11 = tmpa11;
-			}
-			if (ii < param.Nk - 1) {
-				const [tmpa22] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rkl, Rks);
-				a22 = tmpa22;
-			}
-			const p11 = pts1[ii].translatePolar(a11, Rks);
-			const p1b = pts1[ii].translatePolar(a11 + withinZeroPi((a12 - a11) / 2), Rks);
-			const p12 = pts1[ii].translatePolar(a12, Rks);
-			const p21 = pts2[ii].translatePolar(a21, Rkl);
-			const p2b = pts2[ii].translatePolar(a21 - withinZeroPi((a21 - a22) / 2), Rkl);
-			const p22 = pts2[ii].translatePolar(a22, Rkl);
-			ctrPartial1
-				.addSegStrokeA(p11.cx, p11.cy)
-				.addPointA(p1b.cx, p1b.cy)
-				.addPointA(p12.cx, p12.cy)
-				.addSegArc2()
-				.addSegStrokeA(p21.cx, p21.cy);
-			if (ii < param.Nk - 1) {
-				ctrPartial1.addPointA(p2b.cx, p2b.cy).addPointA(p22.cx, p22.cy).addSegArc2();
-			}
-		}
-		const [, lasta21] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rks, Rkl);
-		const a2c = Math.PI / 2 + aSpring;
-		const a2b = lasta21 - withinZeroPi((lasta21 - a2c) / 2);
-		const pt2b = pts2[param.Nk - 1].translatePolar(a2b, Rkl);
-		const pt2c = pts2[param.Nk - 1].translatePolar(a2c, Rkl);
-		const pt3b = pts2[param.Nk - 1].translatePolar(a2b, Rks);
-		const pt3c = pts2[param.Nk - 1].translatePolar(a2c, Rks);
-		ctrPartial1
-			.addPointA(pt2b.cx, pt2b.cy)
-			.addPointA(pt2c.cx, pt2c.cy)
-			.addSegArc2()
-			.addSegStrokeA(pt2.cx, pt2.cy);
-		//figProfile.addSecond(ctrPartial1);
-		// partial-2
-		const [, firsta22] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rkl, Rks);
-		const firstp22 = pts2[param.Nk - 1].translatePolar(firsta22, Rks);
-		const ctrPartial2 = contour(pt3.cx, pt3.cy)
-			.addSegStrokeA(pt3c.cx, pt3c.cy)
-			.addPointA(pt3b.cx, pt3b.cy)
-			.addPointA(firstp22.cx, firstp22.cy)
-			.addSegArc2();
-		for (let ii = param.Nk - 1; ii >= 0; ii--) {
-			let a21 = Math.PI / 2;
-			//const a22 = -Math.PI / 2;
-			//const a11 = Math.PI / 2;
-			let a12 = -Math.PI / 2;
-			const [a11, a22] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rkl, Rks);
-			if (ii > 0) {
-				const [, tmpa12] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rks, Rkl);
-				a12 = tmpa12;
-			}
-			if (ii < param.Nk - 1) {
-				const [tmpa21] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rks, Rkl);
-				a21 = tmpa21;
-			}
-			const p11 = pts1[ii].translatePolar(a11, Rkl);
-			const p1b = pts1[ii].translatePolar(a11 - withinZeroPi((a11 - a12) / 2), Rkl);
-			const p12 = pts1[ii].translatePolar(a12, Rkl);
-			const p21 = pts2[ii].translatePolar(a21, Rks);
-			const p2b = pts2[ii].translatePolar(a21 + withinZeroPi((a22 - a21) / 2), Rks);
-			const p22 = pts2[ii].translatePolar(a22, Rks);
-			if (ii < param.Nk - 1) {
-				ctrPartial2
-					.addSegStrokeA(p21.cx, p21.cy)
-					.addPointA(p2b.cx, p2b.cy)
-					.addPointA(p22.cx, p22.cy)
-					.addSegArc2();
-			}
-			ctrPartial2
-				.addSegStrokeA(p11.cx, p11.cy)
-				.addPointA(p1b.cx, p1b.cy)
-				.addPointA(p12.cx, p12.cy)
-				.addSegArc2();
-		}
-		ctrPartial2.addSegStrokeA(pt4.cx, pt4.cy);
-		//figProfile.addSecond(ctrPartial2);
-		// ctrSpringHollow
-		const ctrSpringHollow = contour(pt1.cx, pt1.cy)
-			.addCornerRounded(param.Rrsi)
-			.addPartial(ctrPartial1)
-			.addCornerRounded(param.Rrse)
-			.addPointAP(aSpring + aSpringStep / 2, Rse)
-			.addPointAP(aSpring + aSpringStep - a23, Rse)
-			.addSegArc2()
-			.addCornerRounded(param.Rrse)
-			.addPartial(ctrPartial2.rotate(0, 0, aSpringStep))
-			.addCornerRounded(param.Rrsi)
-			.addPointAP(aSpringStep / 2, Rsi)
-			.addPointAP(a14, Rsi)
-			.addSegArc2();
-		for (let ii = 0; ii < param.Ns; ii++) {
-			ctrsH.push(ctrSpringHollow.rotate(0, 0, ii * aSpringStep));
-		}
+		//const ctrPartial1 = contour(pt1.cx, pt1.cy);
+		//for (let ii = 0; ii < param.Nk; ii++) {
+		//	let a11 = -Math.PI / 2;
+		//	//const a12 = Math.PI / 2;
+		//	//const a21 = -Math.PI / 2;
+		//	const [a12, a21] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rks, Rkl);
+		//	let a22 = Math.PI / 2;
+		//	if (ii > 0) {
+		//		const [, tmpa11] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rkl, Rks);
+		//		a11 = tmpa11;
+		//	}
+		//	if (ii < param.Nk - 1) {
+		//		const [tmpa22] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rkl, Rks);
+		//		a22 = tmpa22;
+		//	}
+		//	const p11 = pts1[ii].translatePolar(a11, Rks);
+		//	const p1b = pts1[ii].translatePolar(a11 + withinZeroPi((a12 - a11) / 2), Rks);
+		//	const p12 = pts1[ii].translatePolar(a12, Rks);
+		//	const p21 = pts2[ii].translatePolar(a21, Rkl);
+		//	const p2b = pts2[ii].translatePolar(a21 - withinZeroPi((a21 - a22) / 2), Rkl);
+		//	const p22 = pts2[ii].translatePolar(a22, Rkl);
+		//	ctrPartial1
+		//		.addSegStrokeA(p11.cx, p11.cy)
+		//		.addPointA(p1b.cx, p1b.cy)
+		//		.addPointA(p12.cx, p12.cy)
+		//		.addSegArc2()
+		//		.addSegStrokeA(p21.cx, p21.cy);
+		//	if (ii < param.Nk - 1) {
+		//		ctrPartial1.addPointA(p2b.cx, p2b.cy).addPointA(p22.cx, p22.cy).addSegArc2();
+		//	}
+		//}
+		//const [, lasta21] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rks, Rkl);
+		//const a2c = Math.PI / 2 + aSpring;
+		//const a2b = lasta21 - withinZeroPi((lasta21 - a2c) / 2);
+		//const pt2b = pts2[param.Nk - 1].translatePolar(a2b, Rkl);
+		//const pt2c = pts2[param.Nk - 1].translatePolar(a2c, Rkl);
+		//const pt3b = pts2[param.Nk - 1].translatePolar(a2b, Rks);
+		//const pt3c = pts2[param.Nk - 1].translatePolar(a2c, Rks);
+		//ctrPartial1
+		//	.addPointA(pt2b.cx, pt2b.cy)
+		//	.addPointA(pt2c.cx, pt2c.cy)
+		//	.addSegArc2()
+		//	.addSegStrokeA(pt2.cx, pt2.cy);
+		////figProfile.addSecond(ctrPartial1);
+		//// partial-2
+		//const [, firsta22] = calcAzig(pts1[param.Nk - 1].cx, pts2[param.Nk - 1].cx, Rkl, Rks);
+		//const firstp22 = pts2[param.Nk - 1].translatePolar(firsta22, Rks);
+		//const ctrPartial2 = contour(pt3.cx, pt3.cy)
+		//	.addSegStrokeA(pt3c.cx, pt3c.cy)
+		//	.addPointA(pt3b.cx, pt3b.cy)
+		//	.addPointA(firstp22.cx, firstp22.cy)
+		//	.addSegArc2();
+		//for (let ii = param.Nk - 1; ii >= 0; ii--) {
+		//	let a21 = Math.PI / 2;
+		//	//const a22 = -Math.PI / 2;
+		//	//const a11 = Math.PI / 2;
+		//	let a12 = -Math.PI / 2;
+		//	const [a11, a22] = calcAzig(pts1[ii].cx, pts2[ii].cx, Rkl, Rks);
+		//	if (ii > 0) {
+		//		const [, tmpa12] = calcAzag(pts2[ii - 1].cx, pts1[ii].cx, Rks, Rkl);
+		//		a12 = tmpa12;
+		//	}
+		//	if (ii < param.Nk - 1) {
+		//		const [tmpa21] = calcAzag(pts2[ii].cx, pts1[ii + 1].cx, Rks, Rkl);
+		//		a21 = tmpa21;
+		//	}
+		//	const p11 = pts1[ii].translatePolar(a11, Rkl);
+		//	const p1b = pts1[ii].translatePolar(a11 - withinZeroPi((a11 - a12) / 2), Rkl);
+		//	const p12 = pts1[ii].translatePolar(a12, Rkl);
+		//	const p21 = pts2[ii].translatePolar(a21, Rks);
+		//	const p2b = pts2[ii].translatePolar(a21 + withinZeroPi((a22 - a21) / 2), Rks);
+		//	const p22 = pts2[ii].translatePolar(a22, Rks);
+		//	if (ii < param.Nk - 1) {
+		//		ctrPartial2
+		//			.addSegStrokeA(p21.cx, p21.cy)
+		//			.addPointA(p2b.cx, p2b.cy)
+		//			.addPointA(p22.cx, p22.cy)
+		//			.addSegArc2();
+		//	}
+		//	ctrPartial2
+		//		.addSegStrokeA(p11.cx, p11.cy)
+		//		.addPointA(p1b.cx, p1b.cy)
+		//		.addPointA(p12.cx, p12.cy)
+		//		.addSegArc2();
+		//}
+		//ctrPartial2.addSegStrokeA(pt4.cx, pt4.cy);
+		////figProfile.addSecond(ctrPartial2);
+		//// ctrSpringHollow
+		//const ctrSpringHollow = contour(pt1.cx, pt1.cy)
+		//	.addCornerRounded(param.Rrsi)
+		//	.addPartial(ctrPartial1)
+		//	.addCornerRounded(param.Rrse)
+		//	.addPointAP(aSpring + aSpringStep / 2, Rse)
+		//	.addPointAP(aSpring + aSpringStep - a23, Rse)
+		//	.addSegArc2()
+		//	.addCornerRounded(param.Rrse)
+		//	.addPartial(ctrPartial2.rotate(0, 0, aSpringStep))
+		//	.addCornerRounded(param.Rrsi)
+		//	.addPointAP(aSpringStep / 2, Rsi)
+		//	.addPointAP(a14, Rsi)
+		//	.addSegArc2();
+		//for (let ii = 0; ii < param.Ns; ii++) {
+		//	ctrsH.push(ctrSpringHollow.rotate(0, 0, ii * aSpringStep));
+		//}
 		// figProfile Main
 		figProfile.addMainOI([ctrExt, ...ctrsH]);
 		// final figure list
