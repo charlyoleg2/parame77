@@ -180,6 +180,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (dRLs < 2 * param.Ws) {
 			throw `err133: dRLs ${dRLs} is too small compare to Ws ${param.Ws}`;
 		}
+		if (Esi < 0.2 * param.Rrsi) {
+			throw `err136: Esi ${Esi} is too small compare to Rrsi ${param.Rrsi}`;
+		}
+		if (Ese < 0.2 * param.Rrse) {
+			throw `err139: Ese ${Ese} is too small compare to Rrse ${param.Rrse}`;
+		}
 		if (Ek < 0.1) {
 			throw `err145: Ek ${Ek} is too small`;
 		}
@@ -194,19 +200,31 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (aHE < aHMinE) {
 			throw `err131: aHE ${ffix(radToDeg(aHE))} is too small compare to aHMinE ${ffix(radToDeg(aHMinE))} degree`;
 		}
-		const pts: Point[] = [];
+		const pts1: Point[] = [];
+		const pts2: Point[] = [];
+		const ptl: number[] = [];
 		const k2cos = Math.cos(aSpring);
 		const k2sin = Math.sin(aSpring);
 		const k2cx = Rk * k2sin;
 		const k2cy = -Rk * k2cos;
+		const k2Parity1 = param.zig === 2 ? 1 : 0;
 		for (let ii = 0; ii < param.Nk; ii++) {
+			const k2Parity2 = param.zig === 1 ? 0 : 1;
 			const kl = Rsi + Esi + 2 * ii * Rk;
-			if (ii % 2 === 0) {
-				pts.push(point(kl, Rk));
+			ptl.push(kl);
+			if (ii % 2 === k2Parity1) {
+				pts1.push(point(kl, Rk));
 			} else {
 				const kx = kl * k2cos + k2cx;
 				const ky = kl * k2sin + k2cy;
-				pts.push(point(kx, ky));
+				pts1.push(point(kx, ky));
+			}
+			if (ii % 2 === k2Parity2) {
+				pts2.push(point(kl, Rk));
+			} else {
+				const kx = kl * k2cos + k2cx;
+				const ky = kl * k2sin + k2cy;
+				pts2.push(point(kx, ky));
 			}
 		}
 		//const Wk2 = param.Wk / 2;
@@ -255,7 +273,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, aSpringStep));
 		figProfile.addSecond(ctrSpringEnv.rotate(0, 0, -aSpringStep));
 		for (let ii = 0; ii < param.Nk; ii++) {
-			figProfile.addSecond(contourCircle(pts[ii].cx, pts[ii].cy, Rk));
+			figProfile.addSecond(contourCircle(pts1[ii].cx, pts1[ii].cy, Rk));
+			const pt2 = pts2[ii].translatePolar(aSpring, ptl[ii]);
+			figProfile.addSecond(contourCircle(pt2.cx, pt2.cy, Rk));
 		}
 		// partial-1
 		//const ctrPartial1 = contour(pt1.cx, pt1.cy);
