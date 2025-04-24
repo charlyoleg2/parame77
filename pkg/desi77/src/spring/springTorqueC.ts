@@ -339,7 +339,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const rCtr = contour(startPt1.cx, startPt1.cy);
 			for (let ii = 0; ii < param.Nk; ii++) {
 				const iiParity = (ii + iParity) % 2;
-				const aMid = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
+				const apt = Math.atan2(pts[ii].cy, pts[ii].cx);
+				const aMid = iiParity === 0 ? apt - Math.PI / 2 : apt + Math.PI / 2;
 				const aSign = iiParity === 0 ? 1 : -1;
 				const iRk = iiParity === 0 ? Rks : Rkl;
 				if (ii > 0) {
@@ -347,16 +348,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
 					rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
 				}
-				let da3 = 0;
-				let da4 = Math.PI / 2;
+				let da3 = aMid;
+				let da4 = aMid + (aSign * Math.PI) / 2;
 				if (ii === 0) {
-					da3 = Math.PI / 4;
+					da3 = aMid + (aSign * Math.PI) / 4;
 				} else if (ii === param.Nk - 1) {
-					da3 = -Math.PI / 4;
-					da4 = 0;
+					da3 = aMid - (aSign * Math.PI) / 4;
+					da4 = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
 				}
-				const p3 = pts[ii].translatePolar(aMid + aSign * da3, iRk);
-				const p4 = pts[ii].translatePolar(aMid + aSign * da4, iRk);
+				const p3 = pts[ii].translatePolar(da3, iRk);
+				const p4 = pts[ii].translatePolar(da4, iRk);
 				rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
 			}
 			return rCtr;
@@ -372,7 +373,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const rCtr = contour(startPt1.cx, startPt1.cy);
 			for (let ii = param.Nk - 1; ii >= 0; ii--) {
 				const iiParity = (ii + iParity) % 2;
-				const aMid = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
+				const apt = Math.atan2(pts[ii].cy, pts[ii].cx);
+				const aMid = iiParity === 0 ? apt - Math.PI / 2 : apt + Math.PI / 2;
 				const aSign = iiParity === 0 ? -1 : 1;
 				const iRk = iiParity === 0 ? Rkl : Rks;
 				if (ii < param.Nk - 1) {
@@ -380,16 +382,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
 					rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
 				}
-				let da3 = 0;
-				let da4 = Math.PI / 2;
+				let da3 = aMid;
+				let da4 = aMid + (aSign * Math.PI) / 2;
 				if (ii === param.Nk - 1) {
-					da3 = Math.PI / 4;
+					da3 = aMid + (aSign * Math.PI) / 4;
 				} else if (ii === 0) {
-					da3 = -Math.PI / 4;
-					da4 = 0;
+					da3 = aMid - (aSign * Math.PI) / 4;
+					da4 = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
 				}
-				const p3 = pts[ii].translatePolar(aMid + aSign * da3, iRk);
-				const p4 = pts[ii].translatePolar(aMid + aSign * da4, iRk);
+				const p3 = pts[ii].translatePolar(da3, iRk);
+				const p4 = pts[ii].translatePolar(da4, iRk);
 				rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
 			}
 			return rCtr;
