@@ -52,16 +52,16 @@ const pDef: tParamDef = {
 		pNumber('DTi', 'mm', 2, 0.1, 50, 0.1),
 		pNumber('Ei', 'mm', 1, 0.1, 50, 0.1),
 		pSectionSeparator('Spring'),
-		pNumber('Ns', 'spring', 6, 4, 60, 1),
+		pNumber('Ns', 'spring', 6, 1, 60, 1),
 		pDropdown('zig', ['alt', 'one', 'two']),
 		pDropdown('zag', ['stroke', 'arc']),
-		pNumber('aEs', '%', 10, 1, 90, 1),
+		pNumber('aEs', '%', 20, 1, 90, 1),
 		pNumber('Esi', '%', 10, 0, 90, 1),
 		pNumber('Ese', '%', 10, 0, 90, 1),
 		pNumber('Nk', 'zigzag', 4, 2, 100, 1),
 		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
-		pNumber('Rrsi', 'mm', 1, 0.1, 20, 0.1),
-		pNumber('Rrse', 'mm', 1, 0.1, 20, 0.1),
+		pNumber('Rrsi', 'mm', 1, 0, 20, 0.1),
+		pNumber('Rrse', 'mm', 1, 0, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
 		pNumber('Dt', 'mm', 20, 0.1, 1000, 0.1),
@@ -227,15 +227,53 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				pts1.push(point(kx, ky));
 			}
 		}
-		//const Wk2 = param.Wk / 2;
-		//const a14 = Math.asin(Wk2 / Rsi);
-		//const a23 = Math.asin(Wk2 / Rse);
-		//const pt1 = point(0, 0).translatePolar(a14, Rsi);
-		//const pt2 = point(0, 0).translatePolar(aSpring + a23, Rse);
-		//const pt3 = point(0, 0).translatePolar(aSpring - a23, Rse);
-		//const pt4 = point(0, 0).translatePolar(-a14, Rsi);
+		const Wk2 = param.Wk / 2;
+		const a18 = Math.asin(Wk2 / Rsi);
+		const a27 = Math.asin(Wk2 / (Rsi + Esi));
+		const a36 = Math.asin(Wk2 / (Rse - Ese));
+		const a45 = Math.asin(Wk2 / Rse);
+		function pppI(a1: number, iParity: number, l2: number): Point {
+			const a2 = iParity === 0 ? a1 : aSpring - a1;
+			return point(0, 0).translatePolar(a2, l2);
+		}
+		const eParity = param.Nk % 2;
+		function pppE(a1: number, iParity: number, l2: number): Point {
+			const eeParity = (eParity + iParity) % 2;
+			const a2 = eeParity === 1 ? a1 : aSpring - a1;
+			return point(0, 0).translatePolar(a2, l2);
+		}
+		const ppp0: Point[] = [];
+		ppp0.push(pppI(a18, 0, Rsi)); // 0
+		ppp0.push(pppI(a27, 0, Rsi + Esi)); // 1
+		ppp0.push(pppE(-a36, 0, Rse - Ese)); // 2
+		ppp0.push(pppE(-a45, 0, Rse)); // 3
+		ppp0.push(pppE(a45, 0, Rse).rotateOrig(aSpringStep)); // 4
+		ppp0.push(pppE(a36, 0, Rse - Ese).rotateOrig(aSpringStep)); // 5
+		ppp0.push(pppI(-a27, 0, Rsi + Esi).rotateOrig(aSpringStep)); // 6
+		ppp0.push(pppI(-a18, 0, Rsi).rotateOrig(aSpringStep)); // 7
+		const ppp1: Point[] = [];
+		ppp1.push(pppI(-a18, 1, Rsi)); // 0
+		ppp1.push(pppI(-a27, 1, Rsi + Esi)); // 1
+		ppp1.push(pppE(a36, 1, Rse - Ese)); // 2
+		ppp1.push(pppE(a45, 1, Rse)); // 3
+		ppp1.push(pppE(-a45, 1, Rse).rotateOrig(aSpringStep)); // 4
+		ppp1.push(pppE(-a36, 1, Rse - Ese).rotateOrig(aSpringStep)); // 5
+		ppp1.push(pppI(a27, 1, Rsi + Esi).rotateOrig(aSpringStep)); // 6
+		ppp1.push(pppI(a18, 1, Rsi).rotateOrig(aSpringStep)); // 7
 		//const Rks = Rk - Wk2;
 		//const Rkl = Rk + Wk2;
+		function iiParity(ii: number): [number, number] {
+			let ip0 = ii % 2;
+			let ip1 = ii < param.Ns - 1 ? (ii + 1) % 2 : 0;
+			if (param.zig === 1) {
+				ip0 = 0;
+				ip1 = 0;
+			} else if (param.zig === 2) {
+				ip0 = 1;
+				ip1 = 1;
+			}
+			return [ip0, ip1];
+		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
 		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)} mm\n`;
@@ -365,23 +403,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//}
 		//ctrPartial2.addSegStrokeA(pt4.cx, pt4.cy);
 		////figProfile.addSecond(ctrPartial2);
-		//// ctrSpringHollow
-		//const ctrSpringHollow = contour(pt1.cx, pt1.cy)
-		//	.addCornerRounded(param.Rrsi)
-		//	.addPartial(ctrPartial1)
-		//	.addCornerRounded(param.Rrse)
-		//	.addPointAP(aSpring + aSpringStep / 2, Rse)
-		//	.addPointAP(aSpring + aSpringStep - a23, Rse)
-		//	.addSegArc2()
-		//	.addCornerRounded(param.Rrse)
-		//	.addPartial(ctrPartial2.rotate(0, 0, aSpringStep))
-		//	.addCornerRounded(param.Rrsi)
-		//	.addPointAP(aSpringStep / 2, Rsi)
-		//	.addPointAP(a14, Rsi)
-		//	.addSegArc2();
-		//for (let ii = 0; ii < param.Ns; ii++) {
-		//	ctrsH.push(ctrSpringHollow.rotate(0, 0, ii * aSpringStep));
-		//}
+		// ctrSpringHollow
+		function ctrSpringHollow(ii: number): tContour {
+			const [ip1, ip2] = iiParity(ii);
+			const pp1 = ip1 === 0 ? ppp0 : ppp1;
+			const pp2 = ip2 === 0 ? ppp0 : ppp1;
+			const ctr = contour(pp1[0].cx, pp1[0].cy)
+				.addCornerRounded(param.Rrsi)
+				.addSegStrokeA(pp1[1].cx, pp1[1].cy)
+				.addSegStrokeA(pp1[2].cx, pp1[2].cy)
+				.addSegStrokeA(pp1[3].cx, pp1[3].cy)
+				.addCornerRounded(param.Rrse)
+				//.addSegStrokeA(pp2[4].cx, pp2[4].cy)
+				.addPointA(pp2[4].cx, pp2[4].cy)
+				.addSegArc(Rse, false, true)
+				.addCornerRounded(param.Rrse)
+				.addSegStrokeA(pp2[5].cx, pp2[5].cy)
+				.addSegStrokeA(pp2[6].cx, pp2[6].cy)
+				.addSegStrokeA(pp2[7].cx, pp2[7].cy)
+				.addCornerRounded(param.Rrsi)
+				//.closeSegStroke();
+				.closeSegArc(Rsi, false, false);
+			return ctr.rotate(0, 0, ii * aSpringStep);
+		}
+		for (let ii = 0; ii < param.Ns; ii++) {
+			ctrsH.push(ctrSpringHollow(ii));
+		}
 		// figProfile Main
 		figProfile.addMainOI([ctrExt, ...ctrsH]);
 		// final figure list
