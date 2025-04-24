@@ -237,9 +237,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			return point(0, 0).translatePolar(a2, l2);
 		}
 		const eParity = param.Nk % 2;
-		function pppE(a1: number, iParity: number, l2: number): Point {
+		function externParity(iParity: number): number {
 			const eeParity = (eParity + iParity + 1) % 2;
-			const a2 = eeParity === 0 ? a1 : aSpring + a1;
+			return eeParity;
+		}
+		function pppE(a1: number, iParity: number, l2: number): Point {
+			const a2 = externParity(iParity) === 0 ? a1 : aSpring + a1;
 			return point(0, 0).translatePolar(a2, l2);
 		}
 		const ppp0: Point[] = [];
@@ -273,6 +276,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				ip1 = 1;
 			}
 			return [ip0, ip1];
+		}
+		function pppb(ip1: number, ip2: number): [Point, Point] {
+			const ai1 = ip1 === 0 ? 0 : aSpring;
+			const ai2 = ip2 === 0 ? aSpringStep : aSpringStep + aSpring;
+			const aib = ai1 + (ai2 - ai1) / 2;
+			const ae1 = externParity(ip1) === 0 ? 0 : aSpring;
+			const ae2 = externParity(ip2) === 0 ? aSpringStep : aSpringStep + aSpring;
+			const aeb = ae1 + (ae2 - ae1) / 2;
+			const rpib = point(0, 0).translatePolar(aib, Rsi);
+			const rpeb = point(0, 0).translatePolar(aeb, Rse);
+			return [rpib, rpeb];
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
@@ -408,6 +422,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const [ip1, ip2] = iiParity(ii);
 			const pp1 = ip1 === 0 ? ppp0 : ppp1;
 			const pp2 = ip2 === 0 ? ppp0 : ppp1;
+			const [ppib, ppeb] = pppb(ip1, ip2);
 			const ctr = contour(pp1[0].cx, pp1[0].cy)
 				.addCornerRounded(param.Rrsi)
 				.addSegStrokeA(pp1[1].cx, pp1[1].cy)
@@ -415,15 +430,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.addSegStrokeA(pp1[3].cx, pp1[3].cy)
 				.addCornerRounded(param.Rrse)
 				//.addSegStrokeA(pp2[4].cx, pp2[4].cy)
+				.addPointA(ppeb.cx, ppeb.cy)
 				.addPointA(pp2[4].cx, pp2[4].cy)
-				.addSegArc(Rse, false, true)
+				//.addSegArc(Rse, false, true)
+				.addSegArc2()
 				.addCornerRounded(param.Rrse)
 				.addSegStrokeA(pp2[5].cx, pp2[5].cy)
 				.addSegStrokeA(pp2[6].cx, pp2[6].cy)
 				.addSegStrokeA(pp2[7].cx, pp2[7].cy)
 				.addCornerRounded(param.Rrsi)
 				//.closeSegStroke();
-				.closeSegArc(Rsi, false, false);
+				//.closeSegArc(Rsi, false, false);
+				.addPointA(ppib.cx, ppib.cy)
+				.addPointA(pp1[0].cx, pp1[0].cy)
+				.addSegArc2();
 			return ctr.rotate(0, 0, ii * aSpringStep);
 		}
 		for (let ii = 0; ii < param.Ns; ii++) {
