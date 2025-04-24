@@ -60,7 +60,7 @@ const pDef: tParamDef = {
 		pNumber('Ese', '%', 10, 0, 90, 1),
 		pNumber('Nk', 'zigzag', 4, 2, 100, 1),
 		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
-		pNumber('Rrsi', 'mm', 1, 0, 20, 0.1),
+		pNumber('Rrsi', 'mm', 0.2, 0, 20, 0.1),
 		pNumber('Rrse', 'mm', 1, 0, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
@@ -233,33 +233,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const a36 = Math.asin(Wk2 / (Rse - Ese));
 		const a45 = Math.asin(Wk2 / Rse);
 		function pppI(a1: number, iParity: number, l2: number): Point {
-			const a2 = iParity === 0 ? a1 : aSpring - a1;
+			const a2 = iParity === 0 ? a1 : aSpring + a1;
 			return point(0, 0).translatePolar(a2, l2);
 		}
 		const eParity = param.Nk % 2;
 		function pppE(a1: number, iParity: number, l2: number): Point {
-			const eeParity = (eParity + iParity) % 2;
-			const a2 = eeParity === 1 ? a1 : aSpring - a1;
+			const eeParity = (eParity + iParity + 1) % 2;
+			const a2 = eeParity === 0 ? a1 : aSpring + a1;
 			return point(0, 0).translatePolar(a2, l2);
 		}
 		const ppp0: Point[] = [];
 		ppp0.push(pppI(a18, 0, Rsi)); // 0
 		ppp0.push(pppI(a27, 0, Rsi + Esi)); // 1
-		ppp0.push(pppE(-a36, 0, Rse - Ese)); // 2
-		ppp0.push(pppE(-a45, 0, Rse)); // 3
-		ppp0.push(pppE(a45, 0, Rse).rotateOrig(aSpringStep)); // 4
-		ppp0.push(pppE(a36, 0, Rse - Ese).rotateOrig(aSpringStep)); // 5
+		ppp0.push(pppE(a36, 0, Rse - Ese)); // 2
+		ppp0.push(pppE(a45, 0, Rse)); // 3
+		ppp0.push(pppE(-a45, 0, Rse).rotateOrig(aSpringStep)); // 4
+		ppp0.push(pppE(-a36, 0, Rse - Ese).rotateOrig(aSpringStep)); // 5
 		ppp0.push(pppI(-a27, 0, Rsi + Esi).rotateOrig(aSpringStep)); // 6
 		ppp0.push(pppI(-a18, 0, Rsi).rotateOrig(aSpringStep)); // 7
 		const ppp1: Point[] = [];
-		ppp1.push(pppI(-a18, 1, Rsi)); // 0
-		ppp1.push(pppI(-a27, 1, Rsi + Esi)); // 1
+		ppp1.push(pppI(a18, 1, Rsi)); // 0
+		ppp1.push(pppI(a27, 1, Rsi + Esi)); // 1
 		ppp1.push(pppE(a36, 1, Rse - Ese)); // 2
 		ppp1.push(pppE(a45, 1, Rse)); // 3
 		ppp1.push(pppE(-a45, 1, Rse).rotateOrig(aSpringStep)); // 4
 		ppp1.push(pppE(-a36, 1, Rse - Ese).rotateOrig(aSpringStep)); // 5
-		ppp1.push(pppI(a27, 1, Rsi + Esi).rotateOrig(aSpringStep)); // 6
-		ppp1.push(pppI(a18, 1, Rsi).rotateOrig(aSpringStep)); // 7
+		ppp1.push(pppI(-a27, 1, Rsi + Esi).rotateOrig(aSpringStep)); // 6
+		ppp1.push(pppI(-a18, 1, Rsi).rotateOrig(aSpringStep)); // 7
 		//const Rks = Rk - Wk2;
 		//const Rkl = Rk + Wk2;
 		function iiParity(ii: number): [number, number] {
