@@ -61,7 +61,7 @@ const pDef: tParamDef = {
 		pNumber('Ese', '%', 10, 0, 90, 1),
 		pNumber('Nk', 'zigzag', 4, 2, 100, 1),
 		pNumber('Wk', 'mm', 1, 0.1, 20, 0.1),
-		pNumber('Rrsi', 'mm', 0.2, 0, 20, 0.1),
+		pNumber('Rrsi', 'mm', 0.1, 0, 20, 0.1),
 		pNumber('Rrse', 'mm', 1, 0, 20, 0.1),
 		pSectionSeparator('Tooth Profile'),
 		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
@@ -204,34 +204,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const pts0: Point[] = [];
 		const pts1: Point[] = [];
 		const ptl: number[] = [];
-		const k2cos = Math.cos(aSpring);
-		const k2sin = Math.sin(aSpring);
-		const k2cx = Rk * k2sin;
-		const k2cy = -Rk * k2cos;
 		const k2Parity1 = param.zig === 2 ? 1 : 0;
 		for (let ii = 0; ii < param.Nk; ii++) {
 			const k2Parity2 = param.zig === 1 ? 0 : 1;
 			const kl = Rsi + Esi + 2 * ii * Rk;
 			ptl.push(kl);
-			if (ii % 2 === k2Parity1) {
-				pts0.push(point(kl, Rk));
-			} else {
-				const kx = kl * k2cos + k2cx;
-				const ky = kl * k2sin + k2cy;
-				pts0.push(point(kx, ky));
-			}
-			if (ii % 2 === k2Parity2) {
-				pts1.push(point(kl, Rk));
-			} else {
-				const kx = kl * k2cos + k2cx;
-				const ky = kl * k2sin + k2cy;
-				pts1.push(point(kx, ky));
-			}
+			const ka = Math.asin(Rk / kl);
+			const kap1 = ii % 2 === k2Parity1 ? ka : aSpring - ka;
+			pts0.push(point(kl * Math.cos(kap1), kl * Math.sin(kap1)));
+			const kap2 = ii % 2 === k2Parity2 ? ka : aSpring - ka;
+			pts1.push(point(kl * Math.cos(kap2), kl * Math.sin(kap2)));
 		}
 		const Wk2 = param.Wk / 2;
+		function prePoints(ll: number): [number, number] {
+			const ka = Math.asin(Rk / ll);
+			const kx = ll * Math.cos(ka);
+			const ra = Math.atan2(Wk2, kx);
+			const rl = Math.sqrt(kx ** 2 + Wk2 ** 2);
+			return [ra, rl];
+		}
 		const a18 = Math.asin(Wk2 / Rsi);
-		const a27 = Math.asin(Wk2 / (Rsi + Esi));
-		const a36 = Math.asin(Wk2 / (Rse - Ese));
+		//const a27 = Math.asin(Wk2 / (Rsi + Esi));
+		//const a36 = Math.asin(Wk2 / (Rse - Ese));
+		const [a27, l27] = prePoints(Rsi + Esi);
+		const [a36, l36] = prePoints(Rse - Ese);
 		const a45 = Math.asin(Wk2 / Rse);
 		function pppI(a1: number, iParity: number, l2: number): Point {
 			const a2 = iParity === 0 ? a1 : aSpring + a1;
@@ -248,21 +244,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const ppp0: Point[] = [];
 		ppp0.push(pppI(a18, 0, Rsi)); // 0
-		ppp0.push(pppI(a27, 0, Rsi + Esi)); // 1
-		ppp0.push(pppE(a36, 0, Rse - Ese)); // 2
+		ppp0.push(pppI(a27, 0, l27)); // 1
+		ppp0.push(pppE(a36, 0, l36)); // 2
 		ppp0.push(pppE(a45, 0, Rse)); // 3
 		ppp0.push(pppE(-a45, 0, Rse).rotateOrig(aSpringStep)); // 4
-		ppp0.push(pppE(-a36, 0, Rse - Ese).rotateOrig(aSpringStep)); // 5
-		ppp0.push(pppI(-a27, 0, Rsi + Esi).rotateOrig(aSpringStep)); // 6
+		ppp0.push(pppE(-a36, 0, l36).rotateOrig(aSpringStep)); // 5
+		ppp0.push(pppI(-a27, 0, l27).rotateOrig(aSpringStep)); // 6
 		ppp0.push(pppI(-a18, 0, Rsi).rotateOrig(aSpringStep)); // 7
 		const ppp1: Point[] = [];
 		ppp1.push(pppI(a18, 1, Rsi)); // 0
-		ppp1.push(pppI(a27, 1, Rsi + Esi)); // 1
-		ppp1.push(pppE(a36, 1, Rse - Ese)); // 2
+		ppp1.push(pppI(a27, 1, l27)); // 1
+		ppp1.push(pppE(a36, 1, l36)); // 2
 		ppp1.push(pppE(a45, 1, Rse)); // 3
 		ppp1.push(pppE(-a45, 1, Rse).rotateOrig(aSpringStep)); // 4
-		ppp1.push(pppE(-a36, 1, Rse - Ese).rotateOrig(aSpringStep)); // 5
-		ppp1.push(pppI(-a27, 1, Rsi + Esi).rotateOrig(aSpringStep)); // 6
+		ppp1.push(pppE(-a36, 1, l36).rotateOrig(aSpringStep)); // 5
+		ppp1.push(pppI(-a27, 1, l27).rotateOrig(aSpringStep)); // 6
 		ppp1.push(pppI(-a18, 1, Rsi).rotateOrig(aSpringStep)); // 7
 		const Rks = Rk - Wk2;
 		const Rkl = Rk + Wk2;
@@ -329,6 +325,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figProfile.addSecond(contourCircle(pts0[ii].cx, pts0[ii].cy, Rk));
 			const pt1 = pts1[ii].rotateOrig(aSpringStep);
 			figProfile.addSecond(contourCircle(pt1.cx, pt1.cy, Rk));
+			if (ii > 0) {
+				figProfile.addSecond(contourCircle(0, 0, ptl[ii] - Rk));
+			}
 		}
 		// partial-1
 		function ctrPartial1(iParity: number): Contour {
