@@ -56,7 +56,7 @@ const pDef: tParamDef = {
 		pNumber('Ns', 'spring', 6, 1, 60, 1),
 		pDropdown('zig', ['alt', 'one', 'two']),
 		pDropdown('zag', ['arc', 'stroke']),
-		pNumber('aEs', '%', 20, 1, 90, 1),
+		pNumber('aEs', '%', 20, 1, 99, 1),
 		pNumber('Esi', '%', 10, 0, 90, 1),
 		pNumber('Ese', '%', 10, 0, 90, 1),
 		pNumber('Nk', 'zigzag', 4, 2, 100, 1),
@@ -130,36 +130,6 @@ function calcZagP2(pA: Point, pE: Point, lAB: number, lDE: number, iSign: number
 	const rPt = pA.translatePolar(aAE + iSign * aCAB, lAB);
 	return rPt;
 }
-//function calcAzig(cx1: number, cx2: number, r1: number, r2: number): [number, number] {
-//	let ra12 = Math.PI / 2;
-//	let ra21 = -Math.PI / 2;
-//	if (cx2 > cx1) {
-//		const triOpp = cx2 - cx1;
-//		const triAdj = r1 + r2;
-//		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
-//		const aDiag = Math.atan2(triOpp, triAdj);
-//		const lDiag1 = (lDiag * r1) / triAdj;
-//		const aTri1 = Math.acos(r1 / lDiag1);
-//		ra12 = Math.PI / 2 - aDiag - aTri1;
-//		ra21 = -Math.PI / 2 - aDiag - aTri1;
-//	}
-//	return [ra12, ra21];
-//}
-//function calcAzag(cx2: number, cx1: number, r2: number, r1: number): [number, number] {
-//	let ra22 = Math.PI / 2;
-//	let ra11 = -Math.PI / 2;
-//	if (cx2 > cx1) {
-//		const triOpp = cx2 - cx1;
-//		const triAdj = r1 + r2;
-//		const lDiag = Math.sqrt(triAdj ** 2 + triOpp ** 2);
-//		const aDiag = Math.atan2(triOpp, triAdj);
-//		const lDiag2 = (lDiag * r2) / triAdj;
-//		const aTri2 = Math.acos(r2 / lDiag2);
-//		ra22 = Math.PI / 2 + aDiag + aTri2;
-//		ra11 = -Math.PI / 2 + aDiag + aTri2;
-//	}
-//	return [ra22, ra11];
-//}
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
@@ -225,6 +195,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const kap2 = ii % 2 === k2Parity2 ? ka : aSpring - ka;
 			pts1.push(point(kl * Math.cos(kap2), kl * Math.sin(kap2)));
 		}
+		const aArcMin = 2 * Math.asin(Rk / (Rsi + Esi));
+		let zagArc = param.zag === 0;
 		const Wk2 = param.Wk / 2;
 		function prePoints(ll: number): [number, number] {
 			const ka = Math.asin(Rk / ll);
@@ -299,6 +271,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
 		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)} mm\n`;
 		rGeome.logstr += `Spring zigzag: Ek ${ffix(Ek)}, Rk ${ffix(Rk)} mm\n`;
+		if (aSpring < aArcMin) {
+			zagArc = false;
+			rGeome.logstr += `Spring zigzag forced to stroke because of aArcMin ${ffix(radToDeg(aArcMin))} degree\n`;
+		}
 		// sub-function
 		// figProfile
 		const ctrExt = contourCircle(0, 0, Rmax);
@@ -354,7 +330,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const iRk = iiParity === 0 ? Rks : Rkl;
 				const iRk2 = iiParity === 0 ? Rkl : Rks;
 				if (ii > 0) {
-					if (param.zag === 0) {
+					if (zagArc) {
 						const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] - iRk);
 						const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
 						rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
@@ -374,7 +350,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				if (ii === param.Nk - 1) {
 					const p4 = pts[ii].translatePolar(da4, iRk);
 					rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 0);
-				} else if (param.zag === 0) {
+				} else if (zagArc) {
 					const p3 = pts[ii].translatePolar(da3, iRk);
 					const p4 = pts[ii].translatePolar(da4, iRk);
 					rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
@@ -407,7 +383,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const iRk = iiParity === 0 ? Rkl : Rks;
 				const iRk2 = iiParity === 0 ? Rks : Rkl;
 				if (ii < param.Nk - 1) {
-					if (param.zag === 0) {
+					if (zagArc) {
 						const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] + iRk);
 						const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
 						rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
@@ -427,7 +403,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				if (ii === 0) {
 					const p4 = pts[ii].translatePolar(da4, iRk);
 					rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 1);
-				} else if (param.zag === 0) {
+				} else if (zagArc) {
 					const p3 = pts[ii].translatePolar(da3, iRk);
 					const p4 = pts[ii].translatePolar(da4, iRk);
 					rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
