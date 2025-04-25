@@ -55,7 +55,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Spring'),
 		pNumber('Ns', 'spring', 6, 1, 60, 1),
 		pDropdown('zig', ['alt', 'one', 'two']),
-		pDropdown('zag', ['stroke', 'arc']),
+		pDropdown('zag', ['arc', 'stroke']),
 		pNumber('aEs', '%', 20, 1, 90, 1),
 		pNumber('Esi', '%', 10, 0, 90, 1),
 		pNumber('Ese', '%', 10, 0, 90, 1),
@@ -120,6 +120,16 @@ const pDef: tParamDef = {
 };
 
 // helper functions
+function calcZagP2(pA: Point, pE: Point, lAB: number, lDE: number, iSign: number): Point {
+	const xAE = pE.cx - pA.cx;
+	const yAE = pE.cy - pA.cy;
+	const lAE = Math.sqrt(xAE ** 2 + yAE ** 2);
+	const aAE = Math.atan2(yAE, xAE);
+	const lAC = (lAB * lAE) / (lAB + lDE);
+	const aCAB = Math.acos(lAB / lAC);
+	const rPt = pA.translatePolar(aAE + iSign * aCAB, lAB);
+	return rPt;
+}
 //function calcAzig(cx1: number, cx2: number, r1: number, r2: number): [number, number] {
 //	let ra12 = Math.PI / 2;
 //	let ra21 = -Math.PI / 2;
@@ -342,10 +352,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const aMid = iiParity === 0 ? apt - Math.PI / 2 : apt + Math.PI / 2;
 				const aSign = iiParity === 0 ? 1 : -1;
 				const iRk = iiParity === 0 ? Rks : Rkl;
+				const iRk2 = iiParity === 0 ? Rkl : Rks;
 				if (ii > 0) {
-					const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] - iRk);
-					const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
-					rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
+					if (param.zag === 0) {
+						const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] - iRk);
+						const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
+						rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
+					} else {
+						const p2 = calcZagP2(pts[ii], pts[ii - 1], iRk, iRk2, aSign);
+						rCtr.addSegStrokeA(p2.cx, p2.cy);
+					}
 				}
 				let da3 = aMid;
 				let da4 = aMid + (aSign * Math.PI) / 2;
@@ -355,9 +371,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					da3 = aMid - (aSign * Math.PI) / 4;
 					da4 = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
 				}
-				const p3 = pts[ii].translatePolar(da3, iRk);
-				const p4 = pts[ii].translatePolar(da4, iRk);
-				rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+				if (ii === param.Nk - 1) {
+					const p4 = pts[ii].translatePolar(da4, iRk);
+					rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 0);
+				} else if (param.zag === 0) {
+					const p3 = pts[ii].translatePolar(da3, iRk);
+					const p4 = pts[ii].translatePolar(da4, iRk);
+					rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+				} else {
+					const p3 = pts[ii].translatePolar(da3, iRk);
+					const p4 = calcZagP2(pts[ii], pts[ii + 1], iRk, iRk2, -aSign);
+					if (ii > 0) {
+						rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+					} else {
+						rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 0);
+					}
+				}
 			}
 			return rCtr;
 		}
@@ -376,10 +405,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const aMid = iiParity === 0 ? apt - Math.PI / 2 : apt + Math.PI / 2;
 				const aSign = iiParity === 0 ? -1 : 1;
 				const iRk = iiParity === 0 ? Rkl : Rks;
+				const iRk2 = iiParity === 0 ? Rks : Rkl;
 				if (ii < param.Nk - 1) {
-					const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] + iRk);
-					const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
-					rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
+					if (param.zag === 0) {
+						const p1 = point(0, 0).translatePolar(aSpring / 2, ptl[ii] + iRk);
+						const p2 = pts[ii].translatePolar(aMid - (aSign * Math.PI) / 2, iRk);
+						rCtr.addPointA(p1.cx, p1.cy).addPointA(p2.cx, p2.cy).addSegArc2();
+					} else {
+						const p2 = calcZagP2(pts[ii], pts[ii + 1], iRk, iRk2, aSign);
+						rCtr.addSegStrokeA(p2.cx, p2.cy);
+					}
 				}
 				let da3 = aMid;
 				let da4 = aMid + (aSign * Math.PI) / 2;
@@ -389,9 +424,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					da3 = aMid - (aSign * Math.PI) / 4;
 					da4 = iiParity === 0 ? -Math.PI / 2 : Math.PI / 2 + aSpring;
 				}
-				const p3 = pts[ii].translatePolar(da3, iRk);
-				const p4 = pts[ii].translatePolar(da4, iRk);
-				rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+				if (ii === 0) {
+					const p4 = pts[ii].translatePolar(da4, iRk);
+					rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 1);
+				} else if (param.zag === 0) {
+					const p3 = pts[ii].translatePolar(da3, iRk);
+					const p4 = pts[ii].translatePolar(da4, iRk);
+					rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+				} else {
+					const p3 = pts[ii].translatePolar(da3, iRk);
+					const p4 = calcZagP2(pts[ii], pts[ii - 1], iRk, iRk2, -aSign);
+					if (ii < param.Nk - 1) {
+						rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
+					} else {
+						rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 1);
+					}
+				}
 			}
 			return rCtr;
 		}
