@@ -195,7 +195,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const kap2 = ii % 2 === k2Parity2 ? ka : aSpring - ka;
 			pts1.push(point(kl * Math.cos(kap2), kl * Math.sin(kap2)));
 		}
-		const aArcMin = 2 * Math.asin(Rk / (Rsi + Esi));
+		const aArcMin = Math.asin(Rk / (Rsi + Esi));
 		let zagArc = param.zag === 0;
 		const Wk2 = param.Wk / 2;
 		function prePoints(ll: number): [number, number] {
@@ -271,7 +271,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Dmax ${ffix(2 * Rmax)}, Dmin1 ${ffix(2 * Rmin1)} mm\n`;
 		rGeome.logstr += `Spring area: aSpring ${ffix(radToDeg(aSpring))} degree, dRLs ${ffix(dRLs)} mm\n`;
 		rGeome.logstr += `Spring zigzag: Ek ${ffix(Ek)}, Rk ${ffix(Rk)} mm\n`;
-		if (aSpring < aArcMin) {
+		if (aSpring < 2 * aArcMin) {
 			zagArc = false;
 			rGeome.logstr += `Spring zigzag forced to stroke because of aArcMin ${ffix(radToDeg(aArcMin))} degree\n`;
 		}
@@ -357,7 +357,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				} else {
 					const p3 = pts[ii].translatePolar(da3, iRk);
 					const p4 = calcZagP2(pts[ii], pts[ii + 1], iRk, iRk2, -aSign);
-					if (ii > 0) {
+					if (ii > 0 && aSpring > aArcMin) {
 						rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
 					} else {
 						rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 0);
@@ -410,7 +410,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				} else {
 					const p3 = pts[ii].translatePolar(da3, iRk);
 					const p4 = calcZagP2(pts[ii], pts[ii - 1], iRk, iRk2, -aSign);
-					if (ii < param.Nk - 1) {
+					if (ii < param.Nk - 1 && aSpring > aArcMin) {
 						rCtr.addPointA(p3.cx, p3.cy).addPointA(p4.cx, p4.cy).addSegArc2();
 					} else {
 						rCtr.addPointA(p4.cx, p4.cy).addSegArc(iRk, false, iiParity === 1);
