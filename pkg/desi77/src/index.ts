@@ -6,3 +6,4 @@ export * from './spring/springTorqueA';
 export * from './spring/plugTorque';
 export * from './spring/springTorqueB';
 export * from './spring/springTorqueC';
+export * from './spring/springOne';

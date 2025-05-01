@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.569683"
-     inkscape:cx="257.05827"
-     inkscape:cy="358.35261"
+     inkscape:zoom="3.139366"
+     inkscape:cx="304.36082"
+     inkscape:cy="1193.7124"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -150,8 +150,8 @@
     <rect
        x="184.75069"
        y="416.96317"
-       width="39.179886"
-       height="22.934566"
+       width="54.456085"
+       height="21.911463"
        id="rect20-6" />
     <marker
        style="overflow:visible"
@@ -317,7 +317,10 @@
        width="143.9801"
        height="60.309544"
        x="4.2907972"
-       y="150.41631" />
+       y="150.41631"
+       inkscape:export-filename="springOne_spring.svg"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
     <rect
        style="fill:#d7eef4;stroke:#5fbcd3;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none"
        id="rect21"
@@ -425,7 +428,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect9-7);display:inline;fill:#800080;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="253.61914"
          y="439.03722"
-         id="tspan2">L1</tspan></text>
+         id="tspan1">L1</tspan></text>
     <path
        style="fill:#800080;stroke:#cccccc;stroke-width:0.264582;stroke-linejoin:round"
        d="m 26.800794,162.35358 v 8.04524"
@@ -457,7 +460,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect20-6);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="184.75"
          y="431.19933"
-         id="tspan3">smEx</tspan></text>
+         id="tspan2">smExS</tspan></text>
     <path
        style="fill:#2c89a0;stroke:#5fbcd3;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none;marker-end:url(#ArrowWideRounded-72-7)"
        d="M 67.493972,162.71288 H 62.690057"
@@ -473,15 +476,15 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect20-6-5);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="184.75"
          y="431.19933"
-         id="tspan4">smEx</tspan></text>
+         id="tspan3">smEx</tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,-10.619182,12.136208)"
        id="text21"
-       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect24);fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect24);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="358.67188"
          y="544.27941"
-         id="tspan5">sNx=2</tspan></text>
+         id="tspan4">sNx=2</tspan></text>
     <path
        style="fill:#2c89a0;stroke:#5fbcd3;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none;marker-end:url(#ArrowWideRounded)"
        d="m 86.301924,157.26503 -22.75539,12.13621"
@@ -508,7 +511,7 @@
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect24-0);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="358.67188"
          y="544.27941"
-         id="tspan6">sNy=2</tspan></text>
+         id="tspan5">sNy=2</tspan></text>
     <path
        style="fill:#800080;stroke:#cccccc;stroke-width:0.264581;stroke-linejoin:round"
        d="m 120.86444,177.08134 h 17.13037"
@@ -537,10 +540,10 @@
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,4.129682,8.8493186)"
        id="text46"
-       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect46);fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect46);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="495.32227"
          y="629.00988"
-         id="tspan7">shPr</tspan></text>
+         id="tspan6">shPr</tspan></text>
     <path
        style="fill:#800080;stroke:#cccccc;stroke-width:0.264581;stroke-linejoin:round"
        d="m 15.003422,196.3314 h 17.13037"
@@ -565,9 +568,9 @@
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,0.47675529,-20.619666)"
        id="text47"
-       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect47);fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect47);display:inline;fill:#2c89a0;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="21.623047"
          y="812.03136"
-         id="tspan8">shPy</tspan></text>
+         id="tspan7">shPy</tspan></text>
   </g>
 </svg>
