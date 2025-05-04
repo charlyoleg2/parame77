@@ -35,12 +35,12 @@ import {
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
-	//	tJDir,
-	//	tJSide,
+	// tJDir,
+	// tJSide,
 	contourJ,
 	facet,
-	//	//contourJ2contour,
-	//	//facet2figure
+	// contourJ2contour,
+	facet2figure,
 	sheetFold
 } from 'sheetfold';
 
@@ -48,8 +48,8 @@ const pDef: tParamDef = {
 	partName: 'springOne',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('D1', 'mm', 6, 1, 100, 0.1),
-		pNumber('Dbearing', 'mm', 18, 1, 100, 0.1),
+		pNumber('D1', 'mm', 16, 1, 100, 0.1),
+		pNumber('Dbearing', 'mm', 35, 1, 100, 0.1),
 		pNumber('H1', 'mm', 5, 1, 100, 1),
 		pNumber('H2', 'mm', 15, 1, 100, 1),
 		pNumber('R2', 'mm', 15, 1, 100, 1),
@@ -137,6 +137,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Hwall = param.H1 + param.H2 + param.R2;
 		const aBAC = Math.atan2(param.H2, L12);
 		const lAC = Math.sqrt(L12 ** 2 + param.H2 ** 2);
+		if (param.R2 > lAC) {
+			throw `err141: R2 ${param.R2} is too large comapre to lAC ${ffix(lAC)} mm`;
+		}
 		const aCAD = Math.asin(param.R2 / lAC);
 		const lAD = lAC * Math.cos(aCAD);
 		const xAD = lAD * Math.cos(aBAC + aCAD);
@@ -152,13 +155,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrWall = contourJ(0, 0)
 			.addSegStrokeR(param.L1, 0)
 			.addSegStrokeR(0, param.H1)
+			.addCornerRounded(param.Rc1)
 			.addSegStrokeR(-xAD, yAD)
 			.addPointA(L12, Hwall)
 			.addPointA(xAD, param.H1 + yAD)
 			.addSegArc2()
 			.addSegStrokeR(-xAD, -yAD)
+			.addCornerRounded(param.Rc1)
 			.closeSegStroke();
-		const faWall = facet([ctrWall, contourCircle(L12, param.H1 + param.H2, R1)]);
+		const ctrAxis = contourCircle(L12, param.H1 + param.H2, R1);
+		const ctrBearing = contourCircle(L12, param.H1 + param.H2, param.Dbearing / 2);
+		const faWall = facet([ctrWall, ctrAxis]);
 		// sheetFold
 		//const half1 = ['J1', param.L1];
 		//const half2 = ['J1', param.L1, 'J5', param.L1];
@@ -173,9 +180,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rGeome.partName
 		);
 		// figWall2
-		//figWall2.addMainO();
+		//figWall2.addMainOI([ctrWall, ctrAxis]);
+		const figWall2 = facet2figure(faWall);
+		figWall2.addSecond(ctrBearing);
 		// final figure list
-		//rGeome.fig = {};
+		rGeome.fig = {
+			faceWall2: figWall2
+		};
 		const ffObj = sFold.makeFigures();
 		for (const iFace of Object.keys(ffObj)) {
 			rGeome.fig[iFace] = ffObj[iFace];
