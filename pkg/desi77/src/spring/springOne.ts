@@ -19,7 +19,7 @@ import {
 	//contour,
 	contourCircle,
 	//ctrRectangle,
-	//figure,
+	figure,
 	//degToRad,
 	//radToDeg,
 	ffix,
@@ -35,12 +35,12 @@ import {
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
-	// tJDir,
-	// tJSide,
+	//tJDir,
+	//tJSide,
 	contourJ,
 	facet,
-	// contourJ2contour,
-	facet2figure,
+	contourJ2contour,
+	//facet2figure,
 	sheetFold
 } from 'sheetfold';
 
@@ -128,7 +128,7 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	//const figWall2 = figure();
+	const figWall2 = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -180,8 +180,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rGeome.partName
 		);
 		// figWall2
-		//figWall2.addMainOI([ctrWall, ctrAxis]);
-		const figWall2 = facet2figure(faWall);
+		figWall2.addMainOI([contourJ2contour(ctrWall), ctrAxis]);
+		//const figWall2 = facet2figure(faWall);
 		figWall2.addSecond(ctrBearing);
 		// final figure list
 		rGeome.fig = {
