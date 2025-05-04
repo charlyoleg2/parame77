@@ -133,8 +133,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	try {
 		// step-4 : some preparation calculation
 		const R1 = param.D1 / 2;
-		const L12 = param.L1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
+		const Jneutral = param.Jneutral / 100.0;
+		const Hfoot = param.Jradius + (1 - Jneutral) * param.Th;
+		const xFoot = 2 * param.E3;
+		// wall-1
+		const L12 = param.L1 / 2;
 		const aBAC = Math.atan2(param.H2, L12);
 		const lAC = Math.sqrt(L12 ** 2 + param.H2 ** 2);
 		if (param.R2 > lAC) {
@@ -144,27 +148,35 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lAD = lAC * Math.cos(aCAD);
 		const xAD = lAD * Math.cos(aBAC + aCAD);
 		const yAD = lAD * Math.sin(aBAC + aCAD);
+		// wall-2
+		const L12b = L12 + xFoot;
+		const aBACb = Math.atan2(param.H2, L12b);
+		const lACb = Math.sqrt(L12b ** 2 + param.H2 ** 2);
+		const aCADb = Math.asin(param.R2 / lACb);
+		const lADb = lACb * Math.cos(aCADb);
+		const xADb = lADb * Math.cos(aBACb + aCADb);
+		const yADb = lADb * Math.sin(aBACb + aCADb);
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
 			throw `err087: R1 ${R1} is too small because of D1 ${param.D1}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)} mm\n`;
+		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)}, Hfoot ${ffix(Hfoot)} mm\n`;
 		// sub-function
 		// step-7 : drawing of the figures
-		const ctrWall = contourJ(0, 0)
+		const ctrWall = contourJ(0, Hfoot)
 			.addSegStrokeR(param.L1, 0)
 			.addSegStrokeR(0, param.H1)
 			.addCornerRounded(param.Rc1)
 			.addSegStrokeR(-xAD, yAD)
-			.addPointA(L12, Hwall)
-			.addPointA(xAD, param.H1 + yAD)
+			.addPointA(L12, Hwall + Hfoot)
+			.addPointA(xAD, param.H1 + yAD + Hfoot)
 			.addSegArc2()
 			.addSegStrokeR(-xAD, -yAD)
 			.addCornerRounded(param.Rc1)
 			.closeSegStroke();
-		const ctrAxis = contourCircle(L12, param.H1 + param.H2, R1);
-		const ctrBearing = contourCircle(L12, param.H1 + param.H2, param.Dbearing / 2);
+		const ctrAxis = contourCircle(L12, Hfoot + param.H1 + param.H2, R1);
+		const ctrBearing = contourCircle(L12, Hfoot + param.H1 + param.H2, param.Dbearing / 2);
 		const faWall = facet([ctrWall, ctrAxis]);
 		// sheetFold
 		//const half1 = ['J1', param.L1];
@@ -180,9 +192,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rGeome.partName
 		);
 		// figWall2
-		figWall2.addMainOI([contourJ2contour(ctrWall), ctrAxis]);
+		const ctrWall2 = contourJ(0, 0)
+			.addSegStrokeR(param.L1, 0)
+			.addSegStrokeR(0, Hfoot)
+			.addSegStrokeR(xFoot, 0)
+			.addSegStrokeR(0, param.H1)
+			.addCornerRounded(param.Rc1)
+			.addSegStrokeR(-xADb, yADb)
+			.addPointA(L12, Hwall + Hfoot)
+			.addPointA(xADb - xFoot, param.H1 + yADb + Hfoot)
+			.addSegArc2()
+			.addSegStrokeR(-xADb, -yADb)
+			.addCornerRounded(param.Rc1)
+			.addSegStrokeR(0, -param.H1)
+			.addSegStrokeR(xFoot, 0)
+			.closeSegStroke();
+		figWall2.addMainOI([ctrWall2, ctrAxis]);
+		//figWall2.addMainOI([contourJ2contour(ctrWall), ctrAxis]);
 		//const figWall2 = facet2figure(faWall);
 		figWall2.addSecond(ctrBearing);
+		figWall2.addSecond(contourJ2contour(ctrWall));
 		// final figure list
 		rGeome.fig = {
 			faceWall2: figWall2
