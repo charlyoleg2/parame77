@@ -19,7 +19,7 @@ import {
 	//contour,
 	contourCircle,
 	//ctrRectangle,
-	figure,
+	//figure,
 	//degToRad,
 	//radToDeg,
 	ffix,
@@ -27,12 +27,22 @@ import {
 	pCheckbox,
 	//pDropdown,
 	pSectionSeparator,
-	EExtrude,
-	EBVolume,
+	//EExtrude,
+	//EBVolume,
 	initGeom
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
+//import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
+import {
+	//	tJDir,
+	//	tJSide,
+	contourJ,
+	facet,
+	//	//contourJ2contour,
+	//	//facet2figure
+	sheetFold
+} from 'sheetfold';
 
 const pDef: tParamDef = {
 	partName: 'springOne',
@@ -118,47 +128,64 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figSpring = figure();
+	//const figWall2 = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
 		const R1 = param.D1 / 2;
+		const L12 = param.L1 / 2;
+		const Hwall = param.H1 + param.H2 + param.R2;
+		const aBAC = Math.atan2(param.H2, L12);
+		const lAC = Math.sqrt(L12 ** 2 + param.H2 ** 2);
+		const aCAD = Math.asin(param.R2 / lAC);
+		const lAD = lAC * Math.cos(aCAD);
+		const xAD = lAD * Math.cos(aBAC + aCAD);
+		const yAD = lAD * Math.sin(aBAC + aCAD);
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
 			throw `err087: R1 ${R1} is too small because of D1 ${param.D1}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Extern: D1 ${ffix(2 * R1)} mm\n`;
+		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)} mm\n`;
 		// sub-function
-		// figSpring
-		figSpring.addMainO(contourCircle(0, 0, R1));
-		// final figure list
-		rGeome.fig = {
-			faceSpring: figSpring
-		};
-		// volume
-		const designName = rGeome.partName;
-		rGeome.vol = {
-			extrudes: [
-				{
-					outName: `subpax_${designName}_spring`,
-					face: `${designName}_faceSpring`,
-					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.Th,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				}
+		// step-7 : drawing of the figures
+		const ctrWall = contourJ(0, 0)
+			.addSegStrokeR(param.L1, 0)
+			.addSegStrokeR(0, param.H1)
+			.addSegStrokeR(-xAD, yAD)
+			.addPointA(L12, Hwall)
+			.addPointA(xAD, param.H1 + yAD)
+			.addSegArc2()
+			.addSegStrokeR(-xAD, -yAD)
+			.closeSegStroke();
+		const faWall = facet([ctrWall, contourCircle(L12, param.H1 + param.H2, R1)]);
+		// sheetFold
+		//const half1 = ['J1', param.L1];
+		//const half2 = ['J1', param.L1, 'J5', param.L1];
+		const sFold = sheetFold(
+			[faWall],
+			{},
+			[
+				{ x1: 0, y1: 0, a1: 0, l1: param.L1, ante: [], post: [] },
+				{ x1: 0, y1: 1.5 * param.W1, a1: 0, l1: param.W1, ante: [], post: [] }
 			],
-			volumes: [
-				{
-					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eIdentity,
-					inList: [`subpax_${designName}_spring`]
-				}
-			]
-		};
+			param.Th,
+			rGeome.partName
+		);
+		// figWall2
+		//figWall2.addMainO();
+		// final figure list
+		//rGeome.fig = {};
+		const ffObj = sFold.makeFigures();
+		for (const iFace of Object.keys(ffObj)) {
+			rGeome.fig[iFace] = ffObj[iFace];
+		}
+		// step-8 : recipes of the 3D construction
+		rGeome.vol = sFold.makeVolume();
+		// step-9 : optional sub-design parameter export
 		// sub-design
 		rGeome.sub = {};
+		// step-10 : final log message
 		// finalize
 		rGeome.logstr += 'springOne drawn successfully!\n';
 		rGeome.calcErr = false;
