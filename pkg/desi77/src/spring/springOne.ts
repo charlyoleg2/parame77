@@ -20,7 +20,7 @@ import {
 	contourCircle,
 	//ctrRectangle,
 	figure,
-	//degToRad,
+	degToRad,
 	//radToDeg,
 	ffix,
 	pNumber,
@@ -35,8 +35,8 @@ import {
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
-	//tJDir,
-	//tJSide,
+	tJDir,
+	tJSide,
 	contourJ,
 	facet,
 	contourJ2contour,
@@ -74,7 +74,7 @@ const pDef: tParamDef = {
 		pNumber('E3', 'mm', 1, 0, 20, 0.1),
 		pNumber('W1', 'mm', 20, 1, 200, 1),
 		pNumber('W3', 'mm', 50, 1, 400, 1),
-		pNumber('Rc3', 'mm', 2, 0, 50, 1),
+		pNumber('Rc3', 'mm', 0.5, 0, 10, 0.1),
 		pCheckbox('B2', true),
 		pNumber('A2', 'mm', 10, 1, 200, 1),
 		pNumber('Rc2', 'mm', 5, 0, 50, 1),
@@ -134,8 +134,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const R1 = param.D1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
-		const Jneutral = param.Jneutral / 100.0;
-		const Hfoot = param.Jradius + (1 - Jneutral) * param.Th;
+		const aJa = degToRad(param.Jangle);
+		const aJn = param.Jneutral / 100;
+		const aJr = param.Jradius;
+		const aJm = param.Jmark;
+		const Hfoot = param.Jradius + (1 - aJn) * param.Th;
 		const xFoot = 2 * param.E3;
 		// wall-1
 		const L12 = param.L1 / 2;
@@ -156,15 +159,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lADb = lACb * Math.cos(aCADb);
 		const xADb = lADb * Math.cos(aBACb + aCADb);
 		const yADb = lADb * Math.sin(aBACb + aCADb);
+		// bottom
+		const L2b = param.L2 - param.E3;
+		//const L1b = param.L1 + 2 * param.E3;
+		const W3b = (param.W3 - param.W1) / 2;
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
-			throw `err087: R1 ${R1} is too small because of D1 ${param.D1}`;
+			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
+		}
+		if (L2b < 0.1) {
+			throw `err165: L2b ${ffix(L2b)} is too small because of E3 ${param.E3}`;
+		}
+		if (param.E3 < param.Rc3) {
+			throw `err170: E3 ${param.E3} is too small compare to Rc3 ${param.Rc3}`;
+		}
+		if (W3b < param.Rc3) {
+			throw `err174: W3b ${ffix(W3b)} is too small compare to Rc3 ${param.Rc3}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)}, Hfoot ${ffix(Hfoot)} mm\n`;
 		// sub-function
 		// step-7 : drawing of the figures
+		// facet Wall
 		const ctrWall = contourJ(0, Hfoot)
+			.startJunction('J1', tJDir.eA, tJSide.eABRight)
 			.addSegStrokeR(param.L1, 0)
 			.addSegStrokeR(0, param.H1)
 			.addCornerRounded(param.Rc1)
@@ -178,12 +196,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrAxis = contourCircle(L12, Hfoot + param.H1 + param.H2, R1);
 		const ctrBearing = contourCircle(L12, Hfoot + param.H1 + param.H2, param.Dbearing / 2);
 		const faWall = facet([ctrWall, ctrAxis]);
+		// facet Bottom
+		const ctrBottom = contourJ(0, 0)
+			.addSegStrokeR(L2b, 0)
+			.addSegStrokeR(0, W3b)
+			.addCornerRounded(param.Rc3)
+			.addSegStrokeR(param.E3, 0)
+			.startJunction('J1', tJDir.eA, tJSide.eABLeft)
+			.addSegStrokeR(param.L1, 0)
+			.addSegStrokeR(param.E3, 0)
+			.addCornerRounded(param.Rc3)
+			.addSegStrokeR(0, -W3b)
+			.addSegStrokeR(L2b, 0)
+			.addSegStrokeR(0, param.W3)
+			.addSegStrokeR(-L2b, 0)
+			.addSegStrokeR(0, -W3b)
+			.addCornerRounded(param.Rc3)
+			.addSegStrokeR(-param.E3, 0)
+			.addSegStrokeR(-param.L1, 0)
+			.addSegStrokeR(-param.E3, 0)
+			.addCornerRounded(param.Rc3)
+			.addSegStrokeR(0, W3b)
+			.addSegStrokeR(-L2b, 0)
+			.closeSegStroke();
+		const faBottom = facet([ctrBottom]);
 		// sheetFold
 		//const half1 = ['J1', param.L1];
 		//const half2 = ['J1', param.L1, 'J5', param.L1];
 		const sFold = sheetFold(
-			[faWall],
-			{},
+			[faBottom, faWall],
+			{
+				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.L1, ante: [], post: [] },
 				{ x1: 0, y1: 1.5 * param.W1, a1: 0, l1: param.W1, ante: [], post: [] }
