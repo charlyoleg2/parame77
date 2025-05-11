@@ -2,7 +2,7 @@
 // bearing-holder with integated spring
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -34,7 +34,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ } from 'sheetfold';
+import type { tContourJ, Facet, tJuncs } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -67,9 +67,9 @@ const pDef: tParamDef = {
 		pNumber('smEx', 'mm', 1, 0.1, 10, 0.1),
 		pNumber('smExS', 'mm', 0.5, 0.1, 10, 0.1),
 		pSectionSeparator('Screw holes'),
-		pNumber('D3', 'mm', 2, 1, 100, 1),
-		pNumber('P3', 'mm', 40, 1, 200, 1),
-		pNumber('P4', 'mm', 20, 1, 200, 1),
+		pNumber('D3', 'mm', 6, 1, 100, 1),
+		pNumber('P3', 'mm', 70, 1, 200, 1),
+		pNumber('P4', 'mm', 30, 1, 200, 1),
 		pSectionSeparator('Borders'),
 		pNumber('L2', 'mm', 20, 1, 200, 1),
 		pNumber('E3', 'mm', 1, 0, 20, 0.1),
@@ -134,6 +134,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	try {
 		// step-4 : some preparation calculation
 		const R1 = param.D1 / 2;
+		const R3 = param.D3 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
 		const aJa = degToRad(param.Jangle);
 		const aJn = param.Jneutral / 100;
@@ -162,8 +163,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const yADb = lADb * Math.sin(aBACb + aCADb);
 		// bottom
 		const L2b = param.L2 - param.E3;
-		//const L1b = param.L1 + 2 * param.E3;
+		const L1b = param.L1 + 2 * param.E3;
 		const W3b = (param.W3 - param.W1) / 2;
+		const midBottomX = L2b + L1b / 2;
+		const midBottomY = param.W3 / 2;
+		const P32 = param.P3 / 2;
+		const P42 = param.P4 / 2;
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
@@ -214,7 +219,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(param.E3, 0)
 			.addCornerRounded(param.Rc3)
 			.addSegStrokeR(0, -W3b)
-			.addSegStrokeR(L2b, 0)
+			.addSegStrokeR(L2b, 0);
+		if (param.B2 === 1) {
+			ctrBottom.startJunction('J4', tJDir.eA, tJSide.eABLeft);
+		}
+		ctrBottom
 			.addSegStrokeR(0, param.W3)
 			.addSegStrokeR(-L2b, 0)
 			.addSegStrokeR(0, -W3b)
@@ -225,17 +234,46 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(-param.E3, 0)
 			.addCornerRounded(param.Rc3)
 			.addSegStrokeR(0, W3b)
-			.addSegStrokeR(-L2b, 0)
-			.closeSegStroke();
-		const faBottom = facet([ctrBottom]);
+			.addSegStrokeR(-L2b, 0);
+		if (param.B2 === 1) {
+			ctrBottom.startJunction('J3', tJDir.eA, tJSide.eABLeft);
+		}
+		ctrBottom.closeSegStroke();
+		const hollowBottom: tContour[] = [];
+		hollowBottom.push(contourCircle(midBottomX - P32, midBottomY - P42, R3));
+		hollowBottom.push(contourCircle(midBottomX - P32, midBottomY + P42, R3));
+		hollowBottom.push(contourCircle(midBottomX + P32, midBottomY - P42, R3));
+		hollowBottom.push(contourCircle(midBottomX + P32, midBottomY + P42, R3));
+		const faBottom = facet([ctrBottom, ...hollowBottom]);
+		// facet Side
+		function makeCtrSide(iJunctionName: string): tContourJ {
+			const rCtr = contourJ(0, 0)
+				.startJunction(iJunctionName, tJDir.eB, tJSide.eABRight)
+				.addSegStrokeR(param.W3, 0)
+				.addSegStrokeR(0, param.A2)
+				.addCornerRounded(param.Rc2)
+				.addSegStrokeR(-param.W3, 0)
+				.addCornerRounded(param.Rc2)
+				.closeSegStroke();
+			return rCtr;
+		}
+		const faSide: Facet[] = [];
+		const junctionSide: tJuncs = {};
+		if (param.B2 === 1) {
+			faSide.push(facet([makeCtrSide('J3')]));
+			faSide.push(facet([makeCtrSide('J4')]));
+			junctionSide['J3'] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
+			junctionSide['J4'] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
+		}
 		// sheetFold
 		//const half1 = ['J1', param.L1];
 		//const half2 = ['J1', param.L1, 'J5', param.L1];
 		const sFold = sheetFold(
-			[faBottom, faWall1, faWall2],
+			[faBottom, faWall1, faWall2, ...faSide],
 			{
 				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				...junctionSide
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.L1, ante: [], post: [] },
