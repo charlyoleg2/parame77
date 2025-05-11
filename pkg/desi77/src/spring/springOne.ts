@@ -34,6 +34,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
+import type { tContourJ } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -128,7 +129,7 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figWall2 = figure();
+	const figWallB = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -181,21 +182,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// sub-function
 		// step-7 : drawing of the figures
 		// facet Wall
-		const ctrWall = contourJ(0, Hfoot)
-			.startJunction('J1', tJDir.eA, tJSide.eABRight)
-			.addSegStrokeR(param.L1, 0)
-			.addSegStrokeR(0, param.H1)
-			.addCornerRounded(param.Rc1)
-			.addSegStrokeR(-xAD, yAD)
-			.addPointA(L12, Hwall + Hfoot)
-			.addPointA(xAD, param.H1 + yAD + Hfoot)
-			.addSegArc2()
-			.addSegStrokeR(-xAD, -yAD)
-			.addCornerRounded(param.Rc1)
-			.closeSegStroke();
+		function makeCtrWall(iJunctionName: string): tContourJ {
+			const rCtr = contourJ(0, Hfoot)
+				.startJunction(iJunctionName, tJDir.eB, tJSide.eABRight)
+				.addSegStrokeR(param.L1, 0)
+				.addSegStrokeR(0, param.H1)
+				.addCornerRounded(param.Rc1)
+				.addSegStrokeR(-xAD, yAD)
+				.addPointA(L12, Hwall + Hfoot)
+				.addPointA(xAD, param.H1 + yAD + Hfoot)
+				.addSegArc2()
+				.addSegStrokeR(-xAD, -yAD)
+				.addCornerRounded(param.Rc1)
+				.closeSegStroke();
+			return rCtr;
+		}
+		const ctrWall1 = makeCtrWall('J1');
+		const ctrWall2 = makeCtrWall('J2');
 		const ctrAxis = contourCircle(L12, Hfoot + param.H1 + param.H2, R1);
 		const ctrBearing = contourCircle(L12, Hfoot + param.H1 + param.H2, param.Dbearing / 2);
-		const faWall = facet([ctrWall, ctrAxis]);
+		const faWall1 = facet([ctrWall1, ctrAxis]);
+		const faWall2 = facet([ctrWall2, ctrAxis]);
 		// facet Bottom
 		const ctrBottom = contourJ(0, 0)
 			.addSegStrokeR(L2b, 0)
@@ -213,6 +220,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(0, -W3b)
 			.addCornerRounded(param.Rc3)
 			.addSegStrokeR(-param.E3, 0)
+			.startJunction('J2', tJDir.eA, tJSide.eABLeft)
 			.addSegStrokeR(-param.L1, 0)
 			.addSegStrokeR(-param.E3, 0)
 			.addCornerRounded(param.Rc3)
@@ -224,9 +232,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//const half1 = ['J1', param.L1];
 		//const half2 = ['J1', param.L1, 'J5', param.L1];
 		const sFold = sheetFold(
-			[faBottom, faWall],
+			[faBottom, faWall1, faWall2],
 			{
-				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.L1, ante: [], post: [] },
@@ -235,8 +244,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			param.Th,
 			rGeome.partName
 		);
-		// figWall2
-		const ctrWall2 = contourJ(0, 0)
+		// figWallB
+		const ctrWallB = contourJ(0, 0)
 			.addSegStrokeR(param.L1, 0)
 			.addSegStrokeR(0, Hfoot)
 			.addSegStrokeR(xFoot, 0)
@@ -251,14 +260,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(0, -param.H1)
 			.addSegStrokeR(xFoot, 0)
 			.closeSegStroke();
-		figWall2.addMainOI([ctrWall2, ctrAxis]);
-		//figWall2.addMainOI([contourJ2contour(ctrWall), ctrAxis]);
-		//const figWall2 = facet2figure(faWall);
-		figWall2.addSecond(ctrBearing);
-		figWall2.addSecond(contourJ2contour(ctrWall));
+		figWallB.addMainOI([ctrWallB, ctrAxis]);
+		//figWallB.addMainOI([contourJ2contour(ctrWall1), ctrAxis]);
+		//const figWallB = facet2figure(faWall);
+		figWallB.addSecond(ctrBearing);
+		figWallB.addSecond(contourJ2contour(ctrWall1));
 		// final figure list
 		rGeome.fig = {
-			faceWall2: figWall2
+			faceWallB: figWallB
 		};
 		const ffObj = sFold.makeFigures();
 		for (const iFace of Object.keys(ffObj)) {
