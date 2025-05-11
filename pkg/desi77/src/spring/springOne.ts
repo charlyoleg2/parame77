@@ -16,7 +16,7 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	contourCircle,
 	//ctrRectangle,
 	figure,
@@ -60,10 +60,10 @@ const pDef: tParamDef = {
 		pCheckbox('spring', true),
 		pNumber('E1', 'mm', 2, 1, 100, 1),
 		pNumber('E2', 'mm', 2, 1, 100, 1),
+		pNumber('smEy', 'mm', 1, 0.1, 10, 0.1),
+		pNumber('shEy', 'mm', 1, 0.1, 10, 0.1),
+		pNumber('shPr', '%', 90, 0, 99, 1),
 		pNumber('sNx', 'xHoles', 2, 2, 20, 1),
-		pNumber('sNy', 'yHoles', 5, 1, 100, 1),
-		pNumber('shPy', '%', 50, 1, 99, 1),
-		pNumber('shPr', '%', 100, 0, 100, 1),
 		pNumber('smEx', 'mm', 1, 0.1, 10, 0.1),
 		pNumber('smExS', 'mm', 0.5, 0.1, 10, 0.1),
 		pSectionSeparator('Screw holes'),
@@ -97,10 +97,10 @@ const pDef: tParamDef = {
 		spring: 'springOne_spring.svg',
 		E1: 'springOne_face.svg',
 		E2: 'springOne_face.svg',
-		sNx: 'springOne_spring.svg',
-		sNy: 'springOne_spring.svg',
-		shPy: 'springOne_spring.svg',
+		smEy: 'springOne_spring.svg',
+		shEy: 'springOne_spring.svg',
 		shPr: 'springOne_spring.svg',
+		sNx: 'springOne_spring.svg',
 		smEx: 'springOne_spring.svg',
 		smExS: 'springOne_spring.svg',
 		D3: 'springOne_top.svg',
@@ -169,6 +169,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const midBottomY = param.W3 / 2;
 		const P32 = param.P3 / 2;
 		const P42 = param.P4 / 2;
+		// spring
+		const sHeight = param.H1 + param.H2 - R1 - param.E1 - param.E2;
+		const sStepY = param.smEy + param.shEy;
+		const sNy = Math.floor(sHeight / sStepY);
+		const sRc = (param.shEy * param.shPr) / 200;
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
@@ -182,10 +187,44 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (W3b < param.Rc3) {
 			throw `err174: W3b ${ffix(W3b)} is too small compare to Rc3 ${param.Rc3}`;
 		}
+		if (param.spring === 1) {
+			if (sHeight < 0.1) {
+				throw `err189: sHeight ${ffix(sHeight)} is too small because of E1 ${param.E1} or E2 ${param.E2}`;
+			}
+		}
 		// step-6 : any logs
 		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)}, Hfoot ${ffix(Hfoot)} mm\n`;
+		if (param.spring === 1) {
+			rGeome.logstr += `spring: sNy ${sNy}, sRc ${ffix(sRc)} mm\n`;
+		} else {
+			rGeome.logstr += `No spring\n`;
+		}
 		// sub-function
 		// step-7 : drawing of the figures
+		// spring
+		function makeSpringHollow(iLen: number): tContour {
+			const rCtr = contour(0, 0)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(iLen, 0)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(0, param.shEy)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(-iLen, 0)
+				.addCornerRounded(sRc)
+				.closeSegStroke();
+			return rCtr;
+		}
+		const sW1: tContour[] = [];
+		const sWB: tContour[] = [];
+		if (param.spring === 1) {
+			for (let ii = 0; ii < sNy; ii++) {
+				const yy = Hfoot + param.E1 + ii * sStepY;
+				const ll = param.L1 / 2;
+				const xx = param.L1 / 4;
+				sW1.push(makeSpringHollow(ll).translate(xx, yy));
+				sWB.push(makeSpringHollow(ll).translate(xx, yy));
+			}
+		}
 		// facet Wall
 		function makeCtrWall(iJunctionName: string): tContourJ {
 			const rCtr = contourJ(0, Hfoot)
@@ -206,8 +245,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrWall2 = makeCtrWall('J2');
 		const ctrAxis = contourCircle(L12, Hfoot + param.H1 + param.H2, R1);
 		const ctrBearing = contourCircle(L12, Hfoot + param.H1 + param.H2, param.Dbearing / 2);
-		const faWall1 = facet([ctrWall1, ctrAxis]);
-		const faWall2 = facet([ctrWall2, ctrAxis]);
+		const faWall1 = facet([ctrWall1, ctrAxis, ...sW1]);
+		const faWall2 = facet([ctrWall2, ctrAxis, ...sW1]);
 		// facet Bottom
 		const ctrBottom = contourJ(0, 0)
 			.addSegStrokeR(L2b, 0)
@@ -298,7 +337,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(0, -param.H1)
 			.addSegStrokeR(xFoot, 0)
 			.closeSegStroke();
-		figWallB.addMainOI([ctrWallB, ctrAxis]);
+		figWallB.addMainOI([ctrWallB, ctrAxis, ...sWB]);
 		//figWallB.addMainOI([contourJ2contour(ctrWall1), ctrAxis]);
 		//const figWallB = facet2figure(faWall);
 		figWallB.addSecond(ctrBearing);
