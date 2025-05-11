@@ -34,7 +34,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, Facet, tJuncs } from 'sheetfold';
+import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -169,6 +169,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const midBottomY = param.W3 / 2;
 		const P32 = param.P3 / 2;
 		const P42 = param.P4 / 2;
+		const L122 = param.L1 + 2 * param.L2;
 		// spring
 		const sHeight = param.H1 + param.H2 - R1 - param.E1 - param.E2;
 		const sStepY = param.smEy + param.shEy;
@@ -305,8 +306,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			junctionSide['J4'] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
 		}
 		// sheetFold
-		//const half1 = ['J1', param.L1];
-		//const half2 = ['J1', param.L1, 'J5', param.L1];
+		let half1: tHalfProfile = [];
+		let half2: tHalfProfile = [];
+		if (param.B2 === 1) {
+			half1 = ['J3', param.A2];
+			half2 = ['J4', param.A2];
+		}
 		const sFold = sheetFold(
 			[faBottom, faWall1, faWall2, ...faSide],
 			{
@@ -315,8 +320,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				...junctionSide
 			},
 			[
-				{ x1: 0, y1: 0, a1: 0, l1: param.L1, ante: [], post: [] },
-				{ x1: 0, y1: 1.5 * param.W1, a1: 0, l1: param.W1, ante: [], post: [] }
+				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', Hwall], post: ['J2', Hwall] },
+				{ x1: 0, y1: Hfoot + 1.5 * Hwall, a1: 0, l1: L122, ante: half1, post: half2 }
 			],
 			param.Th,
 			rGeome.partName
