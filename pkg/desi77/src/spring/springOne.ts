@@ -217,18 +217,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
-		function calcXref(iyRef: number, iSel: number, idx: number): [number, number, number] {
+		function calcXref(
+			iyRef: number,
+			iSel: number,
+			idx: number
+		): [number, number, number, number] {
 			const cotan = iSel === 0 ? cotanBAD : cotanBADb;
 			const cL = iSel === 0 ? 2 * L12 : 2 * L12b;
 			const cy = iyRef - Hfoot - param.H1;
 			const cx = cy < 0 ? cL : cL - 2 * cy * cotan;
 			const cx0 = param.L1 / 2 - cx / 2 + param.smExS;
 			const nx = idx % 2 === 0 ? param.sNx + 1 : param.sNx;
-			const lx = (cx - 2 * param.smExS + param.smEx) / nx - param.smEx;
-			if (lx < 2 * sRc) {
-				throw `err228: lx ${ffix(lx)} is too small compare to ${param.sNx} or ${param.smEx}`;
+			const lx = (cx - 2 * param.smExS + param.smEx) / (param.sNx + 1) - param.smEx;
+			const lxAZpre = lx / 2 - param.smEx / 2;
+			const lxAZ = idx % 2 === 0 ? lxAZpre : lx;
+			if (lxAZ < 2 * sRc) {
+				throw `err228: lxAZ ${ffix(lxAZ)} is too small compare to ${param.sNx} or ${param.smEx}`;
 			}
-			return [cx0, lx, nx];
+			return [cx0, lxAZ, lx, nx];
 		}
 		const sW1: tContour[] = [];
 		const sWB: tContour[] = [];
@@ -236,14 +242,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			for (let jj = 0; jj < sNy; jj++) {
 				const yy = Hfoot + param.E1 + jj * sStepY;
 				const yRef = yy + param.shEy / 2;
-				const [xRef, lx, nx] = calcXref(yRef, 0, jj);
-				const [xRefB, lxb] = calcXref(yRef, 1, jj);
-				for (let ii = 0; ii < nx; ii++) {
-					const xx = xRef + ii * (lx + param.smEx);
-					const xxb = xRefB + ii * (lxb + param.smEx);
+				const [xRef, lxAZ, lx, nx] = calcXref(yRef, 0, jj);
+				const [xRefB, lxAZb, lxb] = calcXref(yRef, 1, jj);
+				let xx = xRef;
+				let xxb = xRefB;
+				sW1.push(makeSpringHollow(lxAZ).translate(xx, yy));
+				sWB.push(makeSpringHollow(lxAZb).translate(xxb, yy));
+				xx += lxAZ + param.smEx;
+				xxb += lxAZb + param.smEx;
+				for (let ii = 0; ii < nx - 1; ii++) {
 					sW1.push(makeSpringHollow(lx).translate(xx, yy));
 					sWB.push(makeSpringHollow(lxb).translate(xxb, yy));
+					xx += lx + param.smEx;
+					xxb += lxb + param.smEx;
 				}
+				sW1.push(makeSpringHollow(lxAZ).translate(xx, yy));
+				sWB.push(makeSpringHollow(lxAZb).translate(xxb, yy));
 			}
 		}
 		// facet Wall
