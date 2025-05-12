@@ -173,7 +173,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// spring
 		const sHeight = param.H1 + param.H2 - R1 - param.E1 - param.E2;
 		const sStepY = param.smEy + param.shEy;
-		const sNy = Math.floor(sHeight / sStepY);
+		const sNy = Math.floor((sHeight + param.smEy) / sStepY);
 		const sRc = (param.shEy * param.shPr) / 200;
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
