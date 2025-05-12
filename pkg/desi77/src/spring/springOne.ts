@@ -40,8 +40,8 @@ import {
 	tJSide,
 	contourJ,
 	facet,
-	contourJ2contour,
-	//facet2figure,
+	//contourJ2contour,
+	facet2figure,
 	sheetFold
 } from 'sheetfold';
 
@@ -63,7 +63,7 @@ const pDef: tParamDef = {
 		pNumber('smEy', 'mm', 1, 0.1, 10, 0.1),
 		pNumber('shEy', 'mm', 1, 0.1, 10, 0.1),
 		pNumber('shPr', '%', 90, 0, 99, 1),
-		pNumber('sNx', 'xHoles', 2, 2, 20, 1),
+		pNumber('sNx', 'xHoles', 2, 2, 200, 1),
 		pNumber('smEx', 'mm', 1, 0.1, 10, 0.1),
 		pNumber('smExS', 'mm', 0.5, 0.1, 10, 0.1),
 		pSectionSeparator('Screw holes'),
@@ -153,6 +153,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lAD = lAC * Math.cos(aCAD);
 		const xAD = lAD * Math.cos(aBAC + aCAD);
 		const yAD = lAD * Math.sin(aBAC + aCAD);
+		const cotanBAD = xAD / yAD;
 		// wall-2
 		const L12b = L12 + xFoot;
 		const aBACb = Math.atan2(param.H2, L12b);
@@ -161,6 +162,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lADb = lACb * Math.cos(aCADb);
 		const xADb = lADb * Math.cos(aBACb + aCADb);
 		const yADb = lADb * Math.sin(aBACb + aCADb);
+		const cotanBADb = xADb / yADb;
 		// bottom
 		const L2b = param.L2 - param.E3;
 		const L1b = param.L1 + 2 * param.E3;
@@ -215,15 +217,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
+		function calcXref(iyRef: number, iSel: number, idx: number): [number, number, number] {
+			const cotan = iSel === 0 ? cotanBAD : cotanBADb;
+			const cL = iSel === 0 ? 2 * L12 : 2 * L12b;
+			const cy = iyRef - Hfoot - param.H1;
+			const cx = cy < 0 ? cL : cL - 2 * cy * cotan;
+			const cx0 = param.L1 / 2 - cx / 2 + param.smExS;
+			const nx = idx % 2 === 0 ? param.sNx + 1 : param.sNx;
+			const lx = (cx - 2 * param.smExS + param.smEx) / nx - param.smEx;
+			if (lx < 2 * sRc) {
+				throw `err228: lx ${ffix(lx)} is too small compare to ${param.sNx} or ${param.smEx}`;
+			}
+			return [cx0, lx, nx];
+		}
 		const sW1: tContour[] = [];
 		const sWB: tContour[] = [];
 		if (param.spring === 1) {
-			for (let ii = 0; ii < sNy; ii++) {
-				const yy = Hfoot + param.E1 + ii * sStepY;
-				const ll = param.L1 / 2;
-				const xx = param.L1 / 4;
-				sW1.push(makeSpringHollow(ll).translate(xx, yy));
-				sWB.push(makeSpringHollow(ll).translate(xx, yy));
+			for (let jj = 0; jj < sNy; jj++) {
+				const yy = Hfoot + param.E1 + jj * sStepY;
+				const yRef = yy + param.shEy / 2;
+				const [xRef, lx, nx] = calcXref(yRef, 0, jj);
+				const [xRefB, lxb] = calcXref(yRef, 1, jj);
+				for (let ii = 0; ii < nx; ii++) {
+					const xx = xRef + ii * (lx + param.smEx);
+					const xxb = xRefB + ii * (lxb + param.smEx);
+					sW1.push(makeSpringHollow(lx).translate(xx, yy));
+					sWB.push(makeSpringHollow(lxb).translate(xxb, yy));
+				}
 			}
 		}
 		// facet Wall
@@ -346,7 +366,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//figWallB.addMainOI([contourJ2contour(ctrWall1), ctrAxis]);
 		//const figWallB = facet2figure(faWall);
 		figWallB.addSecond(ctrBearing);
-		figWallB.addSecond(contourJ2contour(ctrWall1));
+		//figWallB.addSecond(contourJ2contour(ctrWall1));
+		figWallB.mergeFigure(facet2figure(faWall1), true);
 		// final figure list
 		rGeome.fig = {
 			faceWallB: figWallB
