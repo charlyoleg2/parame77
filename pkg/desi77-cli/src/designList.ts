@@ -7,6 +7,7 @@ import { springTorqueADef } from 'desi77';
 import { plugTorqueDef } from 'desi77';
 import { springTorqueBDef } from 'desi77';
 import { springTorqueCDef } from 'desi77';
+import { springWormDef } from 'desi77';
 import { springOneDef } from 'desi77';
 
 const designList: tAllPageDef = {
@@ -16,6 +17,7 @@ const designList: tAllPageDef = {
 	'desi77/plugTorque': plugTorqueDef,
 	'desi77/springTorqueB': springTorqueBDef,
 	'desi77/springTorqueC': springTorqueCDef,
+	'desi77/springWorm': springWormDef,
 	'desi77/springOne': springOneDef
 };
 
