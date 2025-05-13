@@ -2,7 +2,7 @@
 // Flex-part for torque transmission between two axis that might not be perfectly co-axial
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -73,8 +73,8 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figTube = figure();
-	//const figGroove1 = figure();
-	//const figGroove2 = figure();
+	const figGroove1 = figure();
+	const figGroove2 = figure();
 	const figLeft = figure();
 	const figRight = figure();
 	const figW1b = figure();
@@ -83,6 +83,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const R1 = param.D1 / 2;
 		const Ri = R1 - param.E1;
+		const R12 = 1.2 * R1;
+		const S12 = param.S1 / 2;
 		const lenMid = (param.N1 + 1) * param.W2 + param.N1 * param.W3;
 		const capsLeftExt = param.leftCaps === 0;
 		const capsRightExt = param.rightCaps === 0;
@@ -101,9 +103,43 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//rGeome.logstr += logE;
 		// figTube
 		figTube.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, Ri)]);
-		figTube.addSecond(ctrRectangle(0, 0, 1.2 * R1, 1.2 * R1));
-		// figGroove1
-		// figGroove2
+		figTube.addSecond(ctrRectangle(S12, -R12, R1, 2 * R12));
+		figTube.addSecond(ctrRectangle(-R1 - S12, -R12, R1, 2 * R12));
+		figTube.addSecond(ctrRectangle(-R12, S12, 2 * R12, R1));
+		figTube.addSecond(ctrRectangle(-R12, -R1 - S12, 2 * R12, R1));
+		// figGroove12 secondary tubes
+		const ctrTubes: tContour[] = [];
+		ctrTubes.push(ctrRectangle(0, -R1, param.W1, param.D1));
+		if (!capsLeftExt) {
+			ctrTubes.push(ctrRectangle(param.W1, -R1, param.W1b, param.D1));
+		}
+		ctrTubes.push(ctrRectangle(lenLeft, -R1, lenMid, param.D1));
+		if (!capsRightExt) {
+			ctrTubes.push(ctrRectangle(lenLeft + lenMid, -R1, param.W1b, param.D1));
+		}
+		ctrTubes.push(ctrRectangle(lenTotal - param.W1, -R1, param.W1, param.D1));
+		for (const iCtr of ctrTubes) {
+			figGroove1.addSecond(iCtr);
+			figGroove2.addSecond(iCtr);
+		}
+		// figGroove1 and figGroove2
+		const xStart = lenLeft + param.W2;
+		const xStep = param.W3 + param.W2;
+		for (let ii = 0; ii < param.N1; ii++) {
+			const ctr1 = ctrRectangle(xStart + ii * xStep, S12, param.W3, R1);
+			const ctr2 = ctrRectangle(xStart + ii * xStep, -R1 - S12, param.W3, R1);
+			if (ii % 2 === 0) {
+				figGroove1.addMainO(ctr1);
+				figGroove1.addMainO(ctr2);
+				figGroove2.addSecond(ctr1);
+				figGroove2.addSecond(ctr2);
+			} else {
+				figGroove1.addSecond(ctr1);
+				figGroove1.addSecond(ctr2);
+				figGroove2.addMainO(ctr1);
+				figGroove2.addMainO(ctr2);
+			}
+		}
 		// figLeft
 		figLeft.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, Ri)]);
 		// figRight
@@ -113,8 +149,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// final figure list
 		rGeome.fig = {
 			faceTube: figTube,
-			//faceGroove1: figGroove1,
-			//faceGroove2: figGroove2,
+			faceGroove1: figGroove1,
+			faceGroove2: figGroove2,
 			faceLeft: figLeft,
 			faceRight: figRight,
 			faceW1b: figW1b
@@ -173,13 +209,39 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.W1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, lenTotal - param.W1]
+				},
+				{
+					outName: `subpax_${designName}_groove1`,
+					face: `${designName}_faceGroove1`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: 2 * R12,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_groove2`,
+					face: `${designName}_faceGroove2`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: 2 * R12,
+					rotate: [0, 0, Math.PI / 2],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
-					outName: `pax_${designName}`,
+					outName: `ipax_${designName}_plus`,
 					boolMethod: EBVolume.eUnion,
 					inList: union_list
+				},
+				{
+					outName: `ipax_${designName}_moins`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_groove1`, `subpax_${designName}_groove2`]
+				},
+				{
+					outName: `pax_${designName}`,
+					boolMethod: EBVolume.eSubstraction,
+					inList: [`ipax_${designName}_plus`, `ipax_${designName}_moins`]
 				}
 			]
 		};
