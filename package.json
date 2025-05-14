@@ -1,6 +1,6 @@
 {
 	"name": "parame77",
-	"version": "0.1.9",
+	"version": "0.1.10",
 	"description": "The mono-repo for desi77, desi77-cli, desi77-ui and desi77-uis",
 	"private": true,
 	"repository": {
