@@ -16,7 +16,7 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	contourCircle,
 	ctrRectangle,
 	figure,
@@ -34,6 +34,36 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import { ctrPlugExtern } from './libPlugTorque';
+
+function makeCtrGroove(
+	x0: number,
+	y0: number,
+	xl: number,
+	yl: number,
+	roundTop: boolean
+): tContour {
+	const xl2 = xl / 2;
+	const yl2 = yl - xl2;
+	if (roundTop) {
+		const rCtr = contour(x0, y0)
+			.addSegStrokeR(xl, 0)
+			.addSegStrokeR(0, yl2)
+			.addPointR(-xl2, xl2)
+			.addPointR(-xl, 0)
+			.addSegArc2()
+			.closeSegStroke();
+		return rCtr;
+	} else {
+		const rCtr = contour(x0, y0 + xl2)
+			.addPointR(xl2, -xl2)
+			.addPointR(xl, 0)
+			.addSegArc2()
+			.addSegStrokeR(0, yl2)
+			.addSegStrokeR(-xl, 0)
+			.closeSegStroke();
+		return rCtr;
+	}
+}
 
 const pDef: tParamDef = {
 	partName: 'springWorm',
@@ -85,6 +115,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Ri = R1 - param.E1;
 		const R12 = 1.2 * R1;
 		const S12 = param.S1 / 2;
+		const W32 = param.W3 / 2;
 		const lenMid = (param.N1 + 1) * param.W2 + param.N1 * param.W3;
 		const capsLeftExt = param.leftCaps === 0;
 		const capsRightExt = param.rightCaps === 0;
@@ -94,6 +125,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-5 : checks on the parameter values
 		if (Ri < 0.1) {
 			throw `err079: D1 ${param.D1} is too small compare to E1 ${param.E1}`;
+		}
+		if (R1 - S12 < W32) {
+			throw `err130: R1 ${R1} is too small compare to S12 ${S12} or W32 ${W32}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Dint ${ffix(2 * Ri)} mm\n`;
@@ -126,8 +160,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const xStart = lenLeft + param.W2;
 		const xStep = param.W3 + param.W2;
 		for (let ii = 0; ii < param.N1; ii++) {
-			const ctr1 = ctrRectangle(xStart + ii * xStep, S12, param.W3, R1);
-			const ctr2 = ctrRectangle(xStart + ii * xStep, -R1 - S12, param.W3, R1);
+			//const ctr1 = ctrRectangle(xStart + ii * xStep, S12, param.W3, R1);
+			//const ctr2 = ctrRectangle(xStart + ii * xStep, -R1 - S12, param.W3, R1);
+			const ctr1 = makeCtrGroove(xStart + ii * xStep, S12, param.W3, R1, false);
+			const ctr2 = makeCtrGroove(xStart + ii * xStep, -R1 - S12, param.W3, R1, true);
 			if (ii % 2 === 0) {
 				figGroove1.addMainO(ctr1);
 				figGroove1.addMainO(ctr2);
