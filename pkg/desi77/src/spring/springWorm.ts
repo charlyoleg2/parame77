@@ -215,16 +215,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					face: `${designName}_faceGroove1`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: 2 * R12,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					rotate: [0, -Math.PI / 2, 0],
+					translate: [R12, 0, 0]
 				},
 				{
 					outName: `subpax_${designName}_groove2`,
 					face: `${designName}_faceGroove2`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: 2 * R12,
-					rotate: [0, 0, Math.PI / 2],
-					translate: [0, 0, 0]
+					rotate: [0, -Math.PI / 2, -Math.PI / 2],
+					translate: [0, -R12, 0]
 				}
 			],
 			volumes: [
