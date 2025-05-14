@@ -33,7 +33,7 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
-//import { ctrPlugExtern } from './libPlugTorque';
+import { ctrPlugExtern } from './libPlugTorque';
 
 function makeCtrGroove(
 	x0: number,
@@ -79,7 +79,21 @@ const pDef: tParamDef = {
 		pDropdown('leftCaps', ['ext', 'int']),
 		pDropdown('rightCaps', ['ext', 'int']),
 		pNumber('W1', 'mm', 2, 0.1, 50, 0.1),
-		pNumber('W1b', 'mm', 1, 0.1, 50, 0.1)
+		pNumber('W1b', 'mm', 1, 0.1, 50, 0.1),
+		pSectionSeparator('Tooth Profile'),
+		pNumber('Nt', 'teeth', 8, 1, 1000, 1),
+		pNumber('Dt', 'mm', 20, 0.1, 1000, 0.1),
+		pNumber('Ht', 'mm', 2, 0.1, 100, 0.1),
+		pNumber('ate', '%', 52, 1, 99, 1),
+		pNumber('ah', '%', 100, 1, 400, 1),
+		pNumber('dh', '%', 100, 1, 400, 1),
+		pNumber('aeh', '%', 10, 0, 100, 1),
+		pNumber('aM', 'degree', 0, -30, 30, 0.1),
+		pSectionSeparator('Tooth profile details'),
+		pDropdown('SnAae', ['stroke', 'arc']),
+		pDropdown('SnAde', ['stroke', 'arc']),
+		pNumber('Rae', 'mm', 1, 0, 50, 0.1),
+		pNumber('Rde', 'mm', 1, 0, 50, 0.1)
 	],
 	paramSvg: {
 		D1: 'springWorm_mid.svg',
@@ -91,7 +105,19 @@ const pDef: tParamDef = {
 		W2: 'springWorm_side.svg',
 		W3: 'springWorm_side.svg',
 		leftCaps: 'springWorm_side.svg',
-		rightCaps: 'springWorm_caps.svg'
+		rightCaps: 'springWorm_caps.svg',
+		Nt: 'plugTorque_teeth_radial.svg',
+		Dt: 'plugTorque_teeth_radial.svg',
+		Ht: 'plugTorque_teeth_radial.svg',
+		ate: 'plugTorque_teeth_radial.svg',
+		dh: 'plugTorque_teeth_radial.svg',
+		ah: 'plugTorque_teeth_radial.svg',
+		aeh: 'plugTorque_teeth_radial.svg',
+		aM: 'plugTorque_teeth_adden.svg',
+		SnAae: 'plugTorque_teeth_radial.svg',
+		SnAde: 'plugTorque_teeth_radial.svg',
+		Rae: 'plugTorque_teeth_radial.svg',
+		Rde: 'plugTorque_teeth_radial.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -133,8 +159,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Dint ${ffix(2 * Ri)} mm\n`;
 		rGeome.logstr += `Total length ${ffix(lenTotal)} mm\n`;
 		// sub-function
-		//const [ctrToothE, logE] = ctrPlugExtern(param, RbEmax);
-		//rGeome.logstr += logE;
+		const [ctrToothE, logE] = ctrPlugExtern(param, R1);
+		rGeome.logstr += logE;
 		// figTube
 		figTube.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, Ri)]);
 		figTube.addSecond(ctrRectangle(S12, -R12, R1, 2 * R12));
@@ -177,9 +203,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figLeft
-		figLeft.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, Ri)]);
+		if (capsLeftExt) {
+			figLeft.addMainOI([contourCircle(0, 0, R1), ctrToothE]);
+		} else {
+			figLeft.addMainO(ctrToothE);
+			figLeft.addSecond(contourCircle(0, 0, R1));
+		}
+		figLeft.addSecond(contourCircle(0, 0, Ri));
 		// figRight
-		figRight.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, Ri)]);
+		if (capsRightExt) {
+			figRight.addMainOI([contourCircle(0, 0, R1), ctrToothE]);
+		} else {
+			figRight.addMainO(ctrToothE);
+			figRight.addSecond(contourCircle(0, 0, R1));
+		}
+		figRight.addSecond(contourCircle(0, 0, Ri));
 		// figW1b
 		figW1b.addMainO(contourCircle(0, 0, R1));
 		// final figure list
