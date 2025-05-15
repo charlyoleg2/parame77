@@ -408,7 +408,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 
 const springOneDef: tPageDef = {
 	pTitle: 'springOne',
-	pDescription: 'bearing-holder with integated spring',
+	pDescription: 'bearing-holder with integrated spring',
 	pDef: pDef,
 	pGeom: pGeom
 };
