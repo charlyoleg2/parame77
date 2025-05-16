@@ -278,7 +278,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//	}
 		//}
 		// bearing axis
-		//const ctrAxis = contourCircle(Li, Hfoot + param.H1 + param.H2, R1);
+		const ctrAxisi = contourCircle(Lih, Hfoot + param.H1 + param.H2, R1);
+		const ctrAxise = contourCircle(Leh, Hfoot + param.H1 + param.H2, R1);
 		// base
 		const ctrBase = contourJ(0, 0)
 			.startJunction('Jbi0', tJDir.eA, tJSide.eABLeft)
@@ -299,8 +300,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N5; ii++) {
 			const Jcond = ii < param.N5 - 1;
 			const iCtr = makeCtrWall(`Ji${ii}`, `Ji${ii + 1}`, `Jbi${ii}`, Li, 0, Jcond, false);
-			//fasInt.push(facet([iCtr, ctrAxis, ...sWi]));
-			fasInt.push(facet([iCtr]));
+			//fasInt.push(facet([iCtr, ctrAxisi, ...sWi]));
+			fasInt.push(facet([iCtr, ctrAxisi]));
 			junctionInt[`Ji${ii}`] = { angle: -a5, radius: aJr, neutral: aJn, mark: aJm };
 			junctionInt[`Jbi${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
 			// bottom-half
@@ -324,8 +325,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N5; ii++) {
 			const Jcond = ii < param.N5 - 1;
 			const iCtr = makeCtrWall(`Je${ii}`, `Je${ii + 1}`, `Jbe${ii}`, Li, Le2, Jcond, true);
-			//fasExt.push(facet([iCtr, ctrAxis, ...sWe]));
-			fasExt.push(facet([iCtr]));
+			//fasExt.push(facet([iCtr, ctrAxise, ...sWe]));
+			fasExt.push(facet([iCtr, ctrAxise]));
 			junctionExt[`Je${ii}`] = { angle: a5, radius: aJr, neutral: aJn, mark: aJm };
 			junctionExt[`Jbe${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
 			// bottom-half
