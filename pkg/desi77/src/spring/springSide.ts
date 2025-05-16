@@ -131,13 +131,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Le2 = (Le - Li) / 2;
 		const R3 = W1 / 8;
 		const D3 = 2 * R3;
+		const Lih = Li / 2;
+		const Leh = Le / 2;
 		//
 		const R1 = param.D1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
 		const Hfoot = aJr + (1 - aJn) * param.Th;
 		// wall-1
-		const aBAC = Math.atan2(param.H2, Li);
-		const lAC = Math.sqrt(Li ** 2 + param.H2 ** 2);
+		const aBAC = Math.atan2(param.H2, Lih);
+		const lAC = Math.sqrt(Lih ** 2 + param.H2 ** 2);
 		if (param.R2 > lAC) {
 			throw `err141: R2 ${param.R2} is too large comapre to lAC ${ffix(lAC)} mm`;
 		}
@@ -147,8 +149,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const yAD = lAD * Math.sin(aBAC + aCAD);
 		//const cotanBAD = xAD / yAD;
 		// wall-2
-		const aBACb = Math.atan2(param.H2, Le);
-		const lACb = Math.sqrt(Le ** 2 + param.H2 ** 2);
+		const aBACb = Math.atan2(param.H2, Leh);
+		const lACb = Math.sqrt(Leh ** 2 + param.H2 ** 2);
 		const aCADb = Math.asin(param.R2 / lACb);
 		const lADb = lACb * Math.cos(aCADb);
 		const xADb = lADb * Math.cos(aBACb + aCADb);
@@ -235,7 +237,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 			rCtr.addSegStrokeR(0, param.H1)
 				.addSegStrokeR(-Xad, Yad)
-				.addPointA(iL / 2, Hwall + Hfoot)
+				.addPointA(iL2 + iL / 2, Hwall + Hfoot)
 				.addPointA(Xad, param.H1 + Yad + Hfoot)
 				.addSegArc2()
 				.addSegStrokeR(-Xad, -Yad);
