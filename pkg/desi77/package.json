@@ -66,11 +66,11 @@
 		"esbuild": "^0.25.4",
 		"eslint": "^9.26.0",
 		"eslint-config-prettier": "^10.1.5",
-		"npm-run-all2": "^8.0.1",
+		"npm-run-all2": "^8.0.2",
 		"prettier": "^3.5.3",
 		"rimraf": "^6.0.1",
 		"svgo": "^3.3.2",
-		"tsup": "^8.4.0",
+		"tsup": "^8.5.0",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.32.1",
 		"vitest": "^3.1.3"
