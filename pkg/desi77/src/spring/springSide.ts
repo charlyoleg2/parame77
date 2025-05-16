@@ -16,7 +16,7 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	contourCircle,
 	//ctrRectangle,
 	//figure,
@@ -147,7 +147,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lAD = lAC * Math.cos(aCAD);
 		const xAD = lAD * Math.cos(aBAC + aCAD);
 		const yAD = lAD * Math.sin(aBAC + aCAD);
-		//const cotanBAD = xAD / yAD;
+		const cotanBAD = xAD / yAD;
 		// wall-2
 		const aBACb = Math.atan2(param.H2, Leh);
 		const lACb = Math.sqrt(Leh ** 2 + param.H2 ** 2);
@@ -155,7 +155,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lADb = lACb * Math.cos(aCADb);
 		const xADb = lADb * Math.cos(aBACb + aCADb);
 		const yADb = lADb * Math.sin(aBACb + aCADb);
-		//const cotanBADb = xADb / yADb;
+		const cotanBADb = xADb / yADb;
 		// spring
 		const sHeight = param.H1 + param.H2 - R1 - param.E1 - param.E2;
 		const sStepY = param.smEy + param.shEy;
@@ -178,37 +178,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rGeome.logstr += `No spring\n`;
 		}
 		// sub-function
-		//function makeSpringHollow(iLen: number): tContour {
-		//	const rCtr = contour(0, 0)
-		//		.addCornerRounded(sRc)
-		//		.addSegStrokeR(iLen, 0)
-		//		.addCornerRounded(sRc)
-		//		.addSegStrokeR(0, param.shEy)
-		//		.addCornerRounded(sRc)
-		//		.addSegStrokeR(-iLen, 0)
-		//		.addCornerRounded(sRc)
-		//		.closeSegStroke();
-		//	return rCtr;
-		//}
-		//function calcXref(
-		//	iyRef: number,
-		//	iSel: number,
-		//	idx: number
-		//): [number, number, number, number] {
-		//	const cotan = iSel === 0 ? cotanBAD : cotanBADb;
-		//	const cL = iSel === 0 ? 2 * Li : 2 * Le;
-		//	const cy = iyRef - Hfoot - param.H1;
-		//	const cx = cy < 0 ? cL : cL - 2 * cy * cotan;
-		//	const cx0 = cL / 2 - cx / 2 + param.smExS;
-		//	const nx = idx % 2 === 0 ? param.sNx + 1 : param.sNx;
-		//	const lx = (cx - 2 * param.smExS + param.smEx) / (param.sNx + 1) - param.smEx;
-		//	const lxAZpre = lx / 2 - param.smEx / 2;
-		//	const lxAZ = idx % 2 === 0 ? lxAZpre : lx;
-		//	if (lxAZ < 2 * sRc) {
-		//		throw `err228: lxAZ ${ffix(lxAZ)} is too small compare to ${param.sNx} or ${param.smEx}`;
-		//	}
-		//	return [cx0, lxAZ, lx, nx];
-		//}
+		function makeSpringHollow(iLen: number): tContour {
+			const rCtr = contour(0, 0)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(iLen, 0)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(0, param.shEy)
+				.addCornerRounded(sRc)
+				.addSegStrokeR(-iLen, 0)
+				.addCornerRounded(sRc)
+				.closeSegStroke();
+			return rCtr;
+		}
+		function calcXref(
+			iyRef: number,
+			iSel: number,
+			idx: number
+		): [number, number, number, number] {
+			const cotan = iSel === 0 ? cotanBAD : cotanBADb;
+			const cL = iSel === 0 ? Li : Le;
+			const cy = iyRef - Hfoot - param.H1;
+			const cx = cy < 0 ? cL : cL - 2 * cy * cotan;
+			const cx0 = cL / 2 - cx / 2 + param.smExS;
+			const nx = idx % 2 === 0 ? param.sNx + 1 : param.sNx;
+			const lx = (cx - 2 * param.smExS + param.smEx) / (param.sNx + 1) - param.smEx;
+			const lxAZpre = lx / 2 - param.smEx / 2;
+			const lxAZ = idx % 2 === 0 ? lxAZpre : lx;
+			if (lxAZ < 2 * sRc) {
+				throw `err228: lxAZ ${ffix(lxAZ)} is too small compare to ${param.sNx} or ${param.smEx}`;
+			}
+			return [cx0, lxAZ, lx, nx];
+		}
 		function makeCtrWall(
 			iJ0: string,
 			iJ1: string,
@@ -253,30 +253,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-7 : drawing of the figures
 		// spring
-		//const sWi: tContour[] = [];
-		//const sWe: tContour[] = [];
-		//if (param.spring === 1) {
-		//	for (let jj = 0; jj < sNy; jj++) {
-		//		const yy = Hfoot + param.E1 + jj * sStepY;
-		//		const yRef = yy + param.shEy / 2;
-		//		const [xRef, lxAZ, lx, nx] = calcXref(yRef, 0, jj);
-		//		const [xRefB, lxAZb, lxb] = calcXref(yRef, 1, jj);
-		//		let xx = xRef;
-		//		let xxb = xRefB;
-		//		sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
-		//		sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
-		//		xx += lxAZ + param.smEx;
-		//		xxb += lxAZb + param.smEx;
-		//		for (let ii = 0; ii < nx - 1; ii++) {
-		//			sWi.push(makeSpringHollow(lx).translate(xx, yy));
-		//			sWe.push(makeSpringHollow(lxb).translate(xxb, yy));
-		//			xx += lx + param.smEx;
-		//			xxb += lxb + param.smEx;
-		//		}
-		//		sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
-		//		sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
-		//	}
-		//}
+		const sWi: tContour[] = [];
+		const sWe: tContour[] = [];
+		if (param.spring === 1) {
+			for (let jj = 0; jj < sNy; jj++) {
+				const yy = Hfoot + param.E1 + jj * sStepY;
+				const yRef = yy + param.shEy / 2;
+				const [xRef, lxAZ, lx, nx] = calcXref(yRef, 0, jj);
+				const [xRefB, lxAZb, lxb] = calcXref(yRef, 1, jj);
+				let xx = xRef;
+				let xxb = xRefB;
+				sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
+				sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
+				xx += lxAZ + param.smEx;
+				xxb += lxAZb + param.smEx;
+				for (let ii = 0; ii < nx - 1; ii++) {
+					sWi.push(makeSpringHollow(lx).translate(xx, yy));
+					sWe.push(makeSpringHollow(lxb).translate(xxb, yy));
+					xx += lx + param.smEx;
+					xxb += lxb + param.smEx;
+				}
+				sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
+				sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
+			}
+		}
 		// bearing axis
 		const ctrAxisi = contourCircle(Lih, Hfoot + param.H1 + param.H2, R1);
 		const ctrAxise = contourCircle(Leh, Hfoot + param.H1 + param.H2, R1);
@@ -300,8 +300,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N5; ii++) {
 			const Jcond = ii < param.N5 - 1;
 			const iCtr = makeCtrWall(`Ji${ii}`, `Ji${ii + 1}`, `Jbi${ii}`, Li, 0, Jcond, false);
-			//fasInt.push(facet([iCtr, ctrAxisi, ...sWi]));
-			fasInt.push(facet([iCtr, ctrAxisi]));
+			fasInt.push(facet([iCtr, ctrAxisi, ...sWi]));
+			//fasInt.push(facet([iCtr, ctrAxisi]));
 			junctionInt[`Ji${ii}`] = { angle: -a5, radius: aJr, neutral: aJn, mark: aJm };
 			junctionInt[`Jbi${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
 			// bottom-half
@@ -325,8 +325,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N5; ii++) {
 			const Jcond = ii < param.N5 - 1;
 			const iCtr = makeCtrWall(`Je${ii}`, `Je${ii + 1}`, `Jbe${ii}`, Li, Le2, Jcond, true);
-			//fasExt.push(facet([iCtr, ctrAxise, ...sWe]));
-			fasExt.push(facet([iCtr, ctrAxise]));
+			fasExt.push(facet([iCtr, ctrAxise, ...sWe]));
+			//fasExt.push(facet([iCtr, ctrAxise]));
 			junctionExt[`Je${ii}`] = { angle: a5, radius: aJr, neutral: aJn, mark: aJm };
 			junctionExt[`Jbe${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
 			// bottom-half
