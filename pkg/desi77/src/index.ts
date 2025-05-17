@@ -9,3 +9,4 @@ export * from './spring/springTorqueC';
 export * from './spring/springWorm';
 export * from './spring/springOne';
 export * from './spring/springSide';
+export * from './spring/springInt';
