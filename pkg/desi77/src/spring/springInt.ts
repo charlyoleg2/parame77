@@ -20,7 +20,7 @@ import {
 	contourCircle,
 	//ctrRectangle,
 	//figure,
-	//degToRad,
+	degToRad,
 	//radToDeg,
 	ffix,
 	pNumber,
@@ -111,8 +111,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const aJa = degToRad(param.Jangle);
-		const pi2 = Math.PI / 2;
+		const aJa = degToRad(param.Jangle);
 		const aJn = param.Jneutral / 100;
 		const aJr = param.Jradius;
 		const aJm = param.Jmark;
@@ -120,19 +119,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const a5 = (2 * Math.PI) / param.N5;
 		const a52 = a5 / 2;
 		//const a55 = Math.PI - a5;
-		const W22 = param.W2 / 2;
-		const Lii = 2 * (R5 - W22) * Math.tan(a52);
-		const Lee = 2 * (R5 + W22) * Math.tan(a52);
+		const Lii = 2 * R5 * Math.tan(a52);
 		const Lm = aJr * Math.tan(a52);
 		const Li = Lii - Lm;
-		const Le = Lee - Lm;
 		const W1 = param.W2 - 2 * aJr;
-		const W12 = W1 / 2;
-		const Le2 = (Le - Li) / 2;
 		const R3 = W1 / 8;
 		const D3 = 2 * R3;
 		const Lih = Li / 2;
-		const Leh = Le / 2;
 		//
 		const R1 = param.D1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
@@ -148,14 +141,6 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const xAD = lAD * Math.cos(aBAC + aCAD);
 		const yAD = lAD * Math.sin(aBAC + aCAD);
 		const cotanBAD = xAD / yAD;
-		// wall-2
-		const aBACb = Math.atan2(param.H2, Leh);
-		const lACb = Math.sqrt(Leh ** 2 + param.H2 ** 2);
-		const aCADb = Math.asin(param.R2 / lACb);
-		const lADb = lACb * Math.cos(aCADb);
-		const xADb = lADb * Math.cos(aBACb + aCADb);
-		const yADb = lADb * Math.sin(aBACb + aCADb);
-		const cotanBADb = xADb / yADb;
 		// spring
 		const sHeight = param.H1 + param.H2 - R1 - param.E1 - param.E2;
 		const sStepY = param.smEy + param.shEy;
@@ -190,13 +175,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
-		function calcXref(
-			iyRef: number,
-			iSel: number,
-			idx: number
-		): [number, number, number, number] {
-			const cotan = iSel === 0 ? cotanBAD : cotanBADb;
-			const cL = iSel === 0 ? Li : Le;
+		function calcXref(iyRef: number, idx: number): [number, number, number, number] {
+			const cotan = cotanBAD;
+			const cL = Li;
 			const cy = iyRef - Hfoot - param.H1;
 			const cx = cy < 0 ? cL : cL - 2 * cy * cotan;
 			const cx0 = cL / 2 - cx / 2 + param.smExS;
@@ -209,153 +190,92 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 			return [cx0, lxAZ, lx, nx];
 		}
-		function makeCtrWall(
-			iJ0: string,
-			iJ1: string,
-			iJb: string,
-			iL: number,
-			iL2: number,
-			iJ1b: boolean,
-			iSel: boolean
-		): tContourJ {
-			const Xad = iSel ? xADb : xAD;
-			const Yad = iSel ? yADb : yAD;
-			const rCtr = contourJ(0, Hfoot);
-			if (iL2 > 0) {
-				rCtr.addSegStrokeR(iL2, 0);
-			}
-			rCtr.startJunction(iJb, tJDir.eB, tJSide.eABRight).addSegStrokeR(Li, 0);
-			if (iL2 > 0) {
-				rCtr.addSegStrokeR(iL2, 0);
-			}
-			if (iSel) {
-				rCtr.startJunction(iJ0, tJDir.eA, tJSide.eABLeft);
-			} else {
-				if (iJ1b) {
-					rCtr.startJunction(iJ1, tJDir.eB, tJSide.eABRight);
-				}
-			}
-			rCtr.addSegStrokeR(0, param.H1)
+		function makeCtrWall(iJb: string): tContourJ {
+			const Xad = xAD;
+			const Yad = yAD;
+			const rCtr = contourJ(0, Hfoot)
+				.startJunction(iJb, tJDir.eB, tJSide.eABRight)
+				.addSegStrokeR(Li, 0)
+				.addSegStrokeR(0, param.H1)
 				.addSegStrokeR(-Xad, Yad)
-				.addPointA(iL2 + iL / 2, Hwall + Hfoot)
+				.addPointA(Li / 2, Hwall + Hfoot)
 				.addPointA(Xad, param.H1 + Yad + Hfoot)
 				.addSegArc2()
-				.addSegStrokeR(-Xad, -Yad);
-			if (iSel) {
-				if (iJ1b) {
-					rCtr.startJunction(iJ1, tJDir.eB, tJSide.eABRight);
-				}
-			} else {
-				rCtr.startJunction(iJ0, tJDir.eA, tJSide.eABLeft);
-			}
-			rCtr.closeSegStroke();
+				.addSegStrokeR(-Xad, -Yad)
+				.closeSegStroke();
 			return rCtr;
+		}
+		function makeFaBottom(
+			iJb0: string,
+			iJb1: string,
+			iJl: string,
+			iJr: string,
+			iJcond: boolean
+		): Facet {
+			const ctrBase = contourJ(0, 0)
+				.startJunction(iJl, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(Li, 0)
+				.startJunction(iJb0, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(0, W1)
+				.startJunction(iJr, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(-Li, 0);
+			if (iJcond) {
+				ctrBase.startJunction(iJb1, tJDir.eB, tJSide.eABRight);
+			}
+			ctrBase.closeSegStroke();
+			const ctrsHole: tContour[] = [];
+			ctrsHole.push(contourCircle(D3, D3, R3));
+			ctrsHole.push(contourCircle(Li - D3, D3, R3));
+			ctrsHole.push(contourCircle(D3, W1 - D3, R3));
+			ctrsHole.push(contourCircle(Li - D3, W1 - D3, R3));
+			const rFa = facet([ctrBase, ...ctrsHole]);
+			return rFa;
 		}
 		// step-7 : drawing of the figures
 		// spring
 		const sWi: tContour[] = [];
-		const sWe: tContour[] = [];
 		if (param.spring === 1) {
 			for (let jj = 0; jj < sNy; jj++) {
 				const yy = Hfoot + param.E1 + jj * sStepY;
 				const yRef = yy + param.shEy / 2;
-				const [xRef, lxAZ, lx, nx] = calcXref(yRef, 0, jj);
-				const [xRefB, lxAZb, lxb] = calcXref(yRef, 1, jj);
+				const [xRef, lxAZ, lx, nx] = calcXref(yRef, jj);
 				let xx = xRef;
-				let xxb = xRefB;
 				sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
-				sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
 				xx += lxAZ + param.smEx;
-				xxb += lxAZb + param.smEx;
 				for (let ii = 0; ii < nx - 1; ii++) {
 					sWi.push(makeSpringHollow(lx).translate(xx, yy));
-					sWe.push(makeSpringHollow(lxb).translate(xxb, yy));
 					xx += lx + param.smEx;
-					xxb += lxb + param.smEx;
 				}
 				sWi.push(makeSpringHollow(lxAZ).translate(xx, yy));
-				sWe.push(makeSpringHollow(lxAZb).translate(xxb, yy));
 			}
 		}
 		// bearing axis
 		const ctrAxisi = contourCircle(Lih, Hfoot + param.H1 + param.H2, R1);
-		const ctrAxise = contourCircle(Leh, Hfoot + param.H1 + param.H2, R1);
 		// base
-		const ctrBase = contourJ(0, 0)
-			.startJunction('Jbi0', tJDir.eA, tJSide.eABLeft)
-			.addSegStrokeR(Li, 0)
-			.addSegStrokeR(0, W1)
-			.startJunction('Jbe0', tJDir.eA, tJSide.eABLeft)
-			.addSegStrokeR(-Li, 0)
-			.closeSegStroke();
-		const ctrsHole: tContour[] = [];
-		ctrsHole.push(contourCircle(D3, D3, R3));
-		ctrsHole.push(contourCircle(Li - D3, D3, R3));
-		ctrsHole.push(contourCircle(D3, W1 - D3, R3));
-		ctrsHole.push(contourCircle(Li - D3, W1 - D3, R3));
-		const faBase = facet([ctrBase, ...ctrsHole]);
 		// interior
-		const fasInt: Facet[] = [];
-		const junctionInt: tJuncs = {};
+		const fas: Facet[] = [];
+		const junction: tJuncs = {};
 		for (let ii = 0; ii < param.N5; ii++) {
 			const Jcond = ii < param.N5 - 1;
-			const iCtr = makeCtrWall(`Ji${ii}`, `Ji${ii + 1}`, `Jbi${ii}`, Li, 0, Jcond, false);
-			fasInt.push(facet([iCtr, ctrAxisi, ...sWi]));
-			//fasInt.push(facet([iCtr, ctrAxisi]));
-			junctionInt[`Ji${ii}`] = { angle: -a5, radius: aJr, neutral: aJn, mark: aJm };
-			junctionInt[`Jbi${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
-			// bottom-half
-			if (ii > 0) {
-				const iCtr2 = contourJ(0, 0)
-					.startJunction(`Jbi${ii}`, tJDir.eA, tJSide.eABLeft)
-					.addSegStrokeR(Li, 0)
-					.addSegStrokeR(0, W12)
-					.addSegStrokeR(-Li, 0)
-					.closeSegStroke();
-				const iCtr2Hole: tContour[] = [];
-				iCtr2Hole.push(contourCircle(D3, D3, R3));
-				iCtr2Hole.push(contourCircle(Li - D3, D3, R3));
-				fasInt.push(facet([iCtr2, ...iCtr2Hole]));
-			}
+			fas.push(makeFaBottom(`Jb${ii}`, `Jb${ii + 1}`, `Jl${ii}`, `Jr${ii}`, Jcond));
+			const ctrL = makeCtrWall(`Jl${ii}`);
+			const ctrR = makeCtrWall(`Jr${ii}`);
+			fas.push(facet([ctrL, ctrAxisi, ...sWi]));
+			fas.push(facet([ctrR, ctrAxisi, ...sWi]));
+			//fas.push(facet([ctrL, ctrAxisi]));
+			junction[`Jb${ii}`] = { angle: -a5, radius: aJr, neutral: aJn, mark: aJm };
+			junction[`Jl${ii}`] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
+			junction[`Jr${ii}`] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
 		}
-		//junctionInt[`Ji${param.N5}`] = { angle: -a5, radius: aJr, neutral: aJn, mark: aJm };
-		// exterior
-		const fasExt: Facet[] = [];
-		const junctionExt: tJuncs = {};
-		for (let ii = 0; ii < param.N5; ii++) {
-			const Jcond = ii < param.N5 - 1;
-			const iCtr = makeCtrWall(`Je${ii}`, `Je${ii + 1}`, `Jbe${ii}`, Li, Le2, Jcond, true);
-			fasExt.push(facet([iCtr, ctrAxise, ...sWe]));
-			//fasExt.push(facet([iCtr, ctrAxise]));
-			junctionExt[`Je${ii}`] = { angle: a5, radius: aJr, neutral: aJn, mark: aJm };
-			junctionExt[`Jbe${ii}`] = { angle: pi2, radius: aJr, neutral: aJn, mark: aJm };
-			// bottom-half
-			if (ii > 0) {
-				const iCtr2 = contourJ(0, 0)
-					.addSegStrokeR(Li, 0)
-					.addSegStrokeR(0, W12)
-					.startJunction(`Jbe${ii}`, tJDir.eA, tJSide.eABLeft)
-					.addSegStrokeR(-Li, 0)
-					.closeSegStroke();
-				const iCtr2Hole: tContour[] = [];
-				iCtr2Hole.push(contourCircle(D3, D3, R3));
-				iCtr2Hole.push(contourCircle(Li - D3, D3, R3));
-				fasExt.push(facet([iCtr2, ...iCtr2Hole]));
-			}
-		}
-		//junctionInt[`Je${param.N5}`] = { angle: a5, radius: aJr, neutral: aJn, mark: aJm };
 		// sheetFold
 		const sFold = sheetFold(
-			[faBase, ...fasInt, ...fasExt],
+			[...fas],
 			{
-				Jbi0: { angle: pi2, radius: aJr, neutral: aJn, mark: aJm },
-				Jbe0: { angle: pi2, radius: aJr, neutral: aJn, mark: aJm },
-				...junctionInt,
-				...junctionExt
+				...junction
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: Li, ante: [], post: [] },
-				{ x1: 0, y1: W1, a1: 0, l1: Le, ante: [], post: [] }
+				{ x1: 0, y1: W1, a1: 0, l1: Li, ante: [], post: [] }
 			],
 			param.Th,
 			rGeome.partName
