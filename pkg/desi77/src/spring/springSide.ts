@@ -34,8 +34,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
-//import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, Facet, tJuncs } from 'sheetfold';
+import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -345,6 +344,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		//junctionInt[`Je${param.N5}`] = { angle: a5, radius: aJr, neutral: aJn, mark: aJm };
 		// sheetFold
+		const postHi: tHalfProfile = [];
+		const postHe: tHalfProfile = [];
+		for (let ii = 1; ii < param.N5; ii++) {
+			postHi.push(...[`Ji${ii}`, Li]);
+			postHe.push(...[`Je${ii}`, Le]);
+		}
+		const deltaY = param.Th + param.W2;
 		const sFold = sheetFold(
 			[faBase, ...fasInt, ...fasExt],
 			{
@@ -354,8 +360,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				...junctionExt
 			},
 			[
-				{ x1: 0, y1: 0, a1: 0, l1: Li, ante: [], post: [] },
-				{ x1: 0, y1: W1, a1: 0, l1: Le, ante: [], post: [] }
+				{ x1: 0, y1: deltaY, a1: 0, l1: W1, ante: ['Jbi0', Hwall], post: ['Jbe0', Hwall] },
+				{ x1: -Le2, y1: 0, a1: 0, l1: Le, ante: ['Je0'], post: postHe },
+				{ x1: 0, y1: -deltaY, a1: 0, l1: Li, ante: ['Ji0'], post: postHi }
 			],
 			param.Th,
 			rGeome.partName
