@@ -59,6 +59,7 @@ const pDef: tParamDef = {
 		pNumber('L3', 'cm', 1500, 200, 2000, 1),
 		pNumber('S1', 'cm', 200, 50, 2000, 1),
 		pNumber('S2', 'cm', 300, 50, 2000, 1),
+		pNumber('S3', 'cm', 100, 50, 2000, 1),
 		pNumber('Ht', 'cm', 400, 50, 2000, 1),
 		pSectionSeparator('M-Lengths'),
 		pNumber('M1', 'cm', 200, 50, 2000, 1),
@@ -66,10 +67,10 @@ const pDef: tParamDef = {
 		pNumber('M3', 'cm', 800, 50, 2000, 1),
 		pNumber('M4', 'cm', 100, 50, 2000, 1),
 		pSectionSeparator('Nest'),
-		pNumber('AE1', 'cm', 200, 50, 2000, 1),
-		pNumber('AE2', 'cm', 200, 50, 2000, 1),
-		pNumber('BE1', 'cm', 200, 50, 2000, 1),
-		pNumber('BE2', 'cm', 200, 50, 2000, 1)
+		pNumber('AE1', 'cm', 400, 50, 2000, 1),
+		pNumber('AE2', 'cm', 300, 50, 2000, 1),
+		pNumber('BE1', 'cm', 400, 50, 2000, 1),
+		pNumber('BE2', 'cm', 400, 50, 2000, 1)
 	],
 	paramSvg: {
 		WA: 'house_top.svg',
@@ -92,6 +93,7 @@ const pDef: tParamDef = {
 		L3: 'house_top.svg',
 		S1: 'house_top.svg',
 		S2: 'house_top.svg',
+		S3: 'house_top.svg',
 		Ht: 'house_top.svg',
 		M1: 'house_top.svg',
 		M2: 'house_top.svg',
@@ -183,17 +185,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const pALenE = WB2 + param.L2;
 		const pBLenN = WA2 + param.M2;
 		const pBLenS = WA2 + param.M3 + param.M4;
+		const pCLenN = WA2 + param.M1;
+		const pCx = -WB2 - WC2;
+		const pD1LenS = WA2;
+		const pD1x = -WB2 - param.L3 + WD2 + param.S3;
+		const pD2LenE = WB2;
+		const pD2y = -WA2 - param.M3 + WD2;
+		const pE1LenS = param.AE1;
+		const pE1x = -param.BE1 - WE2;
+		const pE2LenW = param.AE2;
+		const pE2y = -param.BE2 - WE2;
 		figTerrasse.addMainO(makeCtrPtop(WA2 / 2, param.S1, 3, -xTerrasse1, 0));
 		figTerrasse.addMainO(makeCtrPtop(param.L3 / 2, param.S2, 0, -xTerrasse2, -WA2));
 		figTerrasse.addSecond(makeCtrPtop(WA2, pALenW, 3, 0, 0));
 		figTerrasse.addSecond(makeCtrPtop(WA2, pALenE, 1, 0, 0));
 		figTerrasse.addSecond(makeCtrPtop(WB2, pBLenN, 2, 0, 0));
 		figTerrasse.addSecond(makeCtrPtop(WB2, pBLenS, 0, 0, 0));
+		figTerrasse.addSecond(makeCtrPtop(WC2, pCLenN, 2, pCx, 0));
+		figTerrasse.addSecond(makeCtrPtop(WD2, pD1LenS, 0, pD1x, 0));
+		figTerrasse.addSecond(makeCtrPtop(WD2, pD2LenE, 1, 0, pD2y));
+		figTerrasse.addSecond(makeCtrPtop(WE2, pE1LenS, 0, pE1x, 0));
+		figTerrasse.addSecond(makeCtrPtop(WE2, pE2LenW, 3, 0, pE2y));
 		// final figure list
 		rGeome.fig = {
 			facePA: figPA,
 			facePB: figPB,
-			facePC: figPE,
+			facePC: figPC,
 			facePD: figPD,
 			facePE: figPE,
 			faceTerrasse: figTerrasse
@@ -236,6 +253,46 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					translate: [0, 0, 0]
 				},
 				{
+					outName: `subpax_${designName}_pCn`,
+					face: `${designName}_facePC`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pCLenN,
+					rotate: [pi2, 0, 2 * pi2],
+					translate: [pCx, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pD1s`,
+					face: `${designName}_facePD`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pD1LenS,
+					rotate: [pi2, 0, 0 * pi2],
+					translate: [pD1x, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pD2e`,
+					face: `${designName}_facePD`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pD2LenE,
+					rotate: [pi2, 0, 1 * pi2],
+					translate: [0, pD2y, 0]
+				},
+				{
+					outName: `subpax_${designName}_pE1s`,
+					face: `${designName}_facePE`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pE1LenS,
+					rotate: [pi2, 0, 0 * pi2],
+					translate: [pE1x, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pE2w`,
+					face: `${designName}_facePE`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pE2LenW,
+					rotate: [pi2, 0, 3 * pi2],
+					translate: [0, pE2y, 0]
+				},
+				{
 					outName: `subpax_${designName}_terras`,
 					face: `${designName}_faceTerrasse`,
 					extrudeMethod: EExtrude.eLinearOrtho,
@@ -253,6 +310,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						`subpax_${designName}_pAe`,
 						`subpax_${designName}_pBn`,
 						`subpax_${designName}_pBs`,
+						`subpax_${designName}_pCn`,
+						`subpax_${designName}_pD1s`,
+						`subpax_${designName}_pD2e`,
+						`subpax_${designName}_pE1s`,
+						`subpax_${designName}_pE2w`,
 						`subpax_${designName}_terras`
 					]
 				}
