@@ -17,7 +17,7 @@ import {
 	//point,
 	contour,
 	//contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -41,6 +41,7 @@ const pDef: tParamDef = {
 		pNumber('WB', 'cm', 600, 100, 2000, 1),
 		pNumber('WC', 'cm', 600, 100, 2000, 1),
 		pNumber('WD', 'cm', 600, 100, 2000, 1),
+		pNumber('WE', 'cm', 600, 100, 2000, 1),
 		pSectionSeparator('Heights'),
 		pNumber('HA1', 'cm', 500, 200, 2000, 1),
 		pNumber('HA2', 'cm', 1100, 200, 2000, 1),
@@ -49,13 +50,33 @@ const pDef: tParamDef = {
 		pNumber('HC1', 'cm', 500, 200, 2000, 1),
 		pNumber('HC2', 'cm', 1100, 200, 2000, 1),
 		pNumber('HD1', 'cm', 500, 200, 2000, 1),
-		pNumber('HD2', 'cm', 1100, 200, 2000, 1)
+		pNumber('HD2', 'cm', 1100, 200, 2000, 1),
+		pNumber('HE1', 'cm', 500, 200, 2000, 1),
+		pNumber('HE2', 'cm', 1100, 200, 2000, 1),
+		pSectionSeparator('L-Lengths'),
+		pNumber('L1', 'cm', 1100, 200, 2000, 1),
+		pNumber('L2', 'cm', 1100, 200, 2000, 1),
+		pNumber('L3', 'cm', 1100, 200, 2000, 1),
+		pNumber('S1', 'cm', 200, 50, 2000, 1),
+		pNumber('S2', 'cm', 200, 50, 2000, 1),
+		pNumber('Ht', 'cm', 400, 50, 2000, 1),
+		pSectionSeparator('M-Lengths'),
+		pNumber('M1', 'cm', 200, 50, 2000, 1),
+		pNumber('M2', 'cm', 200, 50, 2000, 1),
+		pNumber('M3', 'cm', 200, 50, 2000, 1),
+		pNumber('M4', 'cm', 200, 50, 2000, 1),
+		pSectionSeparator('Nest'),
+		pNumber('AE1', 'cm', 200, 50, 2000, 1),
+		pNumber('AE2', 'cm', 200, 50, 2000, 1),
+		pNumber('BE1', 'cm', 200, 50, 2000, 1),
+		pNumber('BE2', 'cm', 200, 50, 2000, 1)
 	],
 	paramSvg: {
 		WA: 'house_top.svg',
 		WB: 'house_top.svg',
 		WC: 'house_top.svg',
 		WD: 'house_top.svg',
+		WE: 'house_top.svg',
 		HA1: 'house_pignon.svg',
 		HA2: 'house_pignon.svg',
 		HB1: 'house_pignon.svg',
@@ -63,7 +84,23 @@ const pDef: tParamDef = {
 		HC1: 'house_pignon.svg',
 		HC2: 'house_pignon.svg',
 		HD1: 'house_pignon.svg',
-		HD2: 'house_pignon.svg'
+		HD2: 'house_pignon.svg',
+		HE1: 'house_pignon.svg',
+		HE2: 'house_pignon.svg',
+		L1: 'house_top.svg',
+		L2: 'house_top.svg',
+		L3: 'house_top.svg',
+		S1: 'house_top.svg',
+		S2: 'house_top.svg',
+		Ht: 'house_top.svg',
+		M1: 'house_top.svg',
+		M2: 'house_top.svg',
+		M3: 'house_top.svg',
+		M4: 'house_top.svg',
+		AE1: 'house_top.svg',
+		AE2: 'house_top.svg',
+		BE1: 'house_top.svg',
+		BE2: 'house_top.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -75,26 +112,34 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figPA = figure();
+	const figPB = figure();
+	const figPC = figure();
+	const figPD = figure();
+	const figPE = figure();
+	const figTerrasse = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const WA2 = param.WA / 2;
+		const WA2 = param.WA / 2;
 		//const WB2 = param.WB / 2;
 		//const WC2 = param.WC / 2;
 		//const WD2 = param.WD / 2;
+		//const WE2 = param.WE / 2;
 		const HAtotal = param.HA1 + param.HA2;
 		const HBtotal = param.HB1 + param.HB2;
 		const HCtotal = param.HC1 + param.HC2;
 		const HDtotal = param.HD1 + param.HD2;
+		const HEtotal = param.HE1 + param.HE2;
 		// step-5 : checks on the parameter values
-		if (HAtotal < HBtotal) {
-			throw `err167: HAtotal ${ffix(HAtotal)} is too small compare to HBtotal ${ffix(HBtotal)}`;
+		if (HBtotal < HAtotal) {
+			throw `err167: HBtotal ${ffix(HBtotal)} is too small compare to HAtotal ${ffix(HAtotal)}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `HAtotal ${ffix(HAtotal / 100)} m\n`;
 		rGeome.logstr += `HBtotal ${ffix(HBtotal / 100)} m\n`;
 		rGeome.logstr += `HCtotal ${ffix(HCtotal / 100)} m\n`;
 		rGeome.logstr += `HDtotal ${ffix(HDtotal / 100)} m\n`;
+		rGeome.logstr += `HEtotal ${ffix(HEtotal / 100)} m\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		function makeCtrPignon(iW: number, iH1: number, iH2: number): tContour {
@@ -106,11 +151,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
-		// pA
+		// figPA, figPB, figPC, figPD, figPE
 		figPA.addMainO(makeCtrPignon(param.WA, param.HA1, param.HA2));
+		figPB.addMainO(makeCtrPignon(param.WB, param.HB1, param.HB2));
+		figPC.addMainO(makeCtrPignon(param.WC, param.HC1, param.HC2));
+		figPD.addMainO(makeCtrPignon(param.WD, param.HD1, param.HD2));
+		figPE.addMainO(makeCtrPignon(param.WE, param.HE1, param.HE2));
+		// second contours
+		figPA.mergeFigure(figPB.translate(param.WA, 0), true);
+		figPA.mergeFigure(figPC.translate(param.WA + param.WB, 0), true);
+		figPA.mergeFigure(figPD.translate(param.WA + param.WB + param.WC, 0), true);
+		figPA.mergeFigure(figPE.translate(param.WA + param.WB + param.WC + param.WD, 0), true);
+		figPA.addSecond(ctrRectangle(-param.S2, 0, param.S2, param.Ht));
+		// figTerrasse
+		figTerrasse.addMainO(ctrRectangle(0, 0, WA2, param.S1));
 		// final figure list
 		rGeome.fig = {
-			facePA: figPA
+			facePA: figPA,
+			facePB: figPB,
+			facePC: figPE,
+			facePD: figPD,
+			facePE: figPE,
+			faceTerrasse: figTerrasse
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
