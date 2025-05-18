@@ -120,13 +120,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const a5 = (2 * Math.PI) / param.N5;
 		const a52 = a5 / 2;
 		//const a55 = Math.PI - a5;
-		const W22 = param.W2 / 2;
-		const Lii = 2 * (R5 - W22) * Math.tan(a52);
+		const W22 = (param.W2 + param.Th) / 2;
+		const LiY = R5 - W22;
+		const Lii = 2 * LiY * Math.tan(a52);
 		const Lee = 2 * (R5 + W22) * Math.tan(a52);
 		const Lm = aJr * Math.tan(a52);
 		const Li = Lii - 2 * Lm;
 		const Le = Lee - 2 * Lm;
-		const W1 = param.W2 - 2 * Hfoot;
+		const W1 = param.W2 + 2 * param.Th - 2 * Hfoot;
 		const W12 = W1 / 2;
 		const Le2 = (Le - Li) / 2;
 		const R3 = W1 / 8;
@@ -164,14 +165,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
 		}
-		if (R5 - W22 < 0.1) {
-			throw `err168: R5 ${ffix(R5)} is too small compare to W2 ${ffix(W22)} mm`;
+		if (LiY < 0.1) {
+			throw `err168: R5 ${ffix(R5)} is too small compare to W2 ${ffix(W22)} or Th ${param.Th} mm`;
 		}
 		if (Li < 0.1) {
-			throw `err171: Li ${ffix(Li)} is too small because of aJr ${aJr} mmm`;
+			throw `err171: Li ${ffix(Li)} is too small because of aJr ${aJr} mm`;
 		}
 		if (W1 < 0.1) {
-			throw `err174: W1 ${ffix(W1)} is too small because of Hfoot ${ffix(Hfoot)} mmm`;
+			throw `err174: W1 ${ffix(W1)} is too small because of Hfoot ${ffix(Hfoot)} mm`;
 		}
 		if (param.spring === 1) {
 			if (sHeight < 0.1) {
