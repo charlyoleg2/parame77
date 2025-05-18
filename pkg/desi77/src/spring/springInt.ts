@@ -34,8 +34,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrLAA } from 'triangule';
 //import type { Facet, tJuncs, tHalfProfile } from 'sheetfold';
-//import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, Facet, tJuncs } from 'sheetfold';
+import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -151,6 +150,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
 		}
+		if (param.R2 < R1 + 0.1) {
+			throw `err150: R2 ${ffix(param.R2)} is too small compare to R1 ${R1} mm`;
+		}
 		if (R5b < aJr) {
 			throw `err154: R5b ${ffix(R5b)} is too small because of H2 ${param.D2}, H1 ${param.H1} or Hfoot ${ffix(Hfoot)}`;
 		}
@@ -160,6 +162,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (W1 < 0.1) {
 			throw `err161: W1 ${ffix(W1)} is too small because of Hfoot ${ffix(Hfoot)} mm`;
 		}
+		if (Li < 3 * D3) {
+			throw `err166: D3 ${ffix(D3)} is too large compare to Li ${ffix(Li)} mm`;
+		}
 		if (param.spring === 1) {
 			if (sHeight < 0.1) {
 				throw `err189: sHeight ${ffix(sHeight)} is too small because of E1 ${param.E1} or E2 ${param.E2}`;
@@ -167,6 +172,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)}, Hfoot ${ffix(Hfoot)} mm\n`;
+		rGeome.logstr += `Width of one unit: Lii ${ffix(Lii)}, Li ${ffix(Li)} mm\n`;
+		rGeome.logstr += `Ratio R2/Li ${ffix((100 * param.R2) / Lih)} %\n`;
+		rGeome.logstr += `Width of bottom: W1 ${ffix(W1)}, D3 ${ffix(D3)} mm\n`;
 		if (param.spring === 1) {
 			rGeome.logstr += `spring: sNy ${sNy}, sRc ${ffix(sRc)} mm\n`;
 		} else {
@@ -278,14 +286,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			junction[`Jr${ii}`] = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
 		}
 		// sheetFold
+		const postHalf: tHalfProfile = [];
+		for (let ii = 1; ii < param.N5; ii++) {
+			postHalf.push(...[`Jb${ii}`, Li]);
+		}
 		const sFold = sheetFold(
 			[...fas],
 			{
 				...junction
 			},
 			[
-				{ x1: 0, y1: 0, a1: 0, l1: Li, ante: [], post: [] },
-				{ x1: 0, y1: W1, a1: 0, l1: Li, ante: [], post: [] }
+				{ x1: 0, y1: 0, a1: 0, l1: W1, ante: ['Jl0', Hwall], post: ['Jr0', Hwall] },
+				{ x1: 0, y1: -param.Th - param.W2, a1: 0, l1: Li, ante: ['Jb0'], post: postHalf }
 			],
 			param.Th,
 			rGeome.partName
