@@ -54,17 +54,17 @@ const pDef: tParamDef = {
 		pNumber('HE1', 'cm', 1000, 200, 2000, 1),
 		pNumber('HE2', 'cm', 600, 200, 2000, 1),
 		pSectionSeparator('L-Lengths'),
-		pNumber('L1', 'cm', 1100, 200, 2000, 1),
-		pNumber('L2', 'cm', 1100, 200, 2000, 1),
-		pNumber('L3', 'cm', 1100, 200, 2000, 1),
+		pNumber('L1', 'cm', 1200, 200, 2000, 1),
+		pNumber('L2', 'cm', 200, 200, 2000, 1),
+		pNumber('L3', 'cm', 1500, 200, 2000, 1),
 		pNumber('S1', 'cm', 200, 50, 2000, 1),
-		pNumber('S2', 'cm', 200, 50, 2000, 1),
+		pNumber('S2', 'cm', 300, 50, 2000, 1),
 		pNumber('Ht', 'cm', 400, 50, 2000, 1),
 		pSectionSeparator('M-Lengths'),
 		pNumber('M1', 'cm', 200, 50, 2000, 1),
-		pNumber('M2', 'cm', 200, 50, 2000, 1),
-		pNumber('M3', 'cm', 200, 50, 2000, 1),
-		pNumber('M4', 'cm', 200, 50, 2000, 1),
+		pNumber('M2', 'cm', 400, 50, 2000, 1),
+		pNumber('M3', 'cm', 800, 50, 2000, 1),
+		pNumber('M4', 'cm', 100, 50, 2000, 1),
 		pSectionSeparator('Nest'),
 		pNumber('AE1', 'cm', 200, 50, 2000, 1),
 		pNumber('AE2', 'cm', 200, 50, 2000, 1),
@@ -142,6 +142,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `HEtotal ${ffix(HEtotal / 100)} m\n`;
 		// step-7 : drawing of the figures
 		// sub-function
+		const pi2 = Math.PI / 2;
 		function makeCtrPignon(iW2: number, iH1: number, iH2: number): tContour {
 			const rCtr = contour(-iW2, 0)
 				.addSegStrokeR(2 * iW2, 0)
@@ -149,6 +150,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.addSegStrokeR(-iW2, iH2)
 				.addSegStrokeR(-iW2, -iH2)
 				.closeSegStroke();
+			return rCtr;
+		}
+		function makeCtrPtop(
+			iW2: number,
+			iL: number,
+			iOrientation: number,
+			iX: number,
+			iY: number
+		): tContour {
+			const rCtr = ctrRectangle(-iW2, 0, 2 * iW2, iL)
+				.rotate(0, 0, (2 + iOrientation) * pi2)
+				.translate(iX, iY);
 			return rCtr;
 		}
 		// figPA, figPB, figPC, figPD, figPE
@@ -164,7 +177,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figPA.mergeFigure(figPE.translate(WA2 + 2 * (WB2 + WC2 + WD2) + WE2, 0), true);
 		figPA.addSecond(ctrRectangle(-WA2 - param.S2, 0, param.S2, param.Ht));
 		// figTerrasse
-		figTerrasse.addMainO(ctrRectangle(0, 0, WA2, param.S1));
+		const xTerrasse1 = WB2 + 2 * WC2 + param.L1;
+		const xTerrasse2 = WB2 + param.L3 / 2;
+		const pALenW = xTerrasse1;
+		const pALenE = WB2 + param.L2;
+		const pBLenN = WA2 + param.M2;
+		const pBLenS = WA2 + param.M3 + param.M4;
+		figTerrasse.addMainO(makeCtrPtop(WA2 / 2, param.S1, 3, -xTerrasse1, 0));
+		figTerrasse.addMainO(makeCtrPtop(param.L3 / 2, param.S2, 0, -xTerrasse2, -WA2));
+		figTerrasse.addSecond(makeCtrPtop(WA2, pALenW, 3, 0, 0));
+		figTerrasse.addSecond(makeCtrPtop(WA2, pALenE, 1, 0, 0));
+		figTerrasse.addSecond(makeCtrPtop(WB2, pBLenN, 2, 0, 0));
+		figTerrasse.addSecond(makeCtrPtop(WB2, pBLenS, 0, 0, 0));
 		// final figure list
 		rGeome.fig = {
 			facePA: figPA,
@@ -177,23 +201,60 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
-		const pi2 = Math.PI / 2;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_pA`,
+					outName: `subpax_${designName}_pAw`,
 					face: `${designName}_facePA`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.W2,
+					length: pALenW,
+					rotate: [pi2, 0, 3 * pi2],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pAe`,
+					face: `${designName}_facePA`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pALenE,
+					rotate: [pi2, 0, 1 * pi2],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pBn`,
+					face: `${designName}_facePB`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pBLenN,
+					rotate: [pi2, 0, 2 * pi2],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_pBs`,
+					face: `${designName}_facePB`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: pBLenS,
+					rotate: [pi2, 0, 0 * pi2],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_terras`,
+					face: `${designName}_faceTerrasse`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.Ht,
 					rotate: [0, 0, 0],
-					translate: [pi2, 0, 0]
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_pA`]
+					inList: [
+						`subpax_${designName}_pAw`,
+						`subpax_${designName}_pAe`,
+						`subpax_${designName}_pBn`,
+						`subpax_${designName}_pBs`,
+						`subpax_${designName}_terras`
+					]
 				}
 			]
 		};
