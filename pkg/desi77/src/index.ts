@@ -2,6 +2,7 @@
 
 export * from './stone/door1arc';
 export * from './stone/stoneTower';
+export * from './stone/house';
 export * from './spring/springTorqueA';
 export * from './spring/plugTorque';
 export * from './spring/springTorqueB';
