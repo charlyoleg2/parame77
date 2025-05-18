@@ -50,7 +50,7 @@ const pDef: tParamDef = {
 	partName: 'springInt',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('D5', 'mm', 100, 10, 5000, 1),
+		pNumber('D5', 'mm', 140, 10, 5000, 1),
 		pNumber('N5', 'unit', 8, 3, 100, 1),
 		pNumber('W2', 'mm', 20, 1, 200, 1),
 		pSectionSeparator('One unit'),
@@ -115,21 +115,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aJn = param.Jneutral / 100;
 		const aJr = param.Jradius;
 		const aJm = param.Jmark;
+		const Hfoot = aJr + (1 - aJn) * param.Th;
 		const R5 = param.D5 / 2;
+		const R5b = R5 - (Hfoot + param.H1 + param.H2);
 		const a5 = (2 * Math.PI) / param.N5;
 		const a52 = a5 / 2;
 		//const a55 = Math.PI - a5;
-		const Lii = 2 * R5 * Math.tan(a52);
+		const Lii = 2 * R5b * Math.tan(a52);
 		const Lm = aJr * Math.tan(a52);
-		const Li = Lii - Lm;
-		const W1 = param.W2 - 2 * aJr;
+		const Li = Lii - 2 * Lm;
+		const W1 = param.W2 - 2 * Hfoot;
 		const R3 = W1 / 8;
 		const D3 = 2 * R3;
 		const Lih = Li / 2;
 		//
 		const R1 = param.D1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
-		const Hfoot = aJr + (1 - aJn) * param.Th;
 		// wall-1
 		const aBAC = Math.atan2(param.H2, Lih);
 		const lAC = Math.sqrt(Lih ** 2 + param.H2 ** 2);
@@ -149,6 +150,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-5 : checks on the parameter values
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
+		}
+		if (R5b < aJr) {
+			throw `err154: R5b ${ffix(R5b)} is too small because of H2 ${param.D2}, H1 ${param.H1} or Hfoot ${ffix(Hfoot)}`;
+		}
+		if (Li < 0.1) {
+			throw `err158: Li ${ffix(Li)} is too small because of aJr ${ffix(aJr)} radian`;
+		}
+		if (W1 < 0.1) {
+			throw `err161: W1 ${ffix(W1)} is too small because of Hfoot ${ffix(Hfoot)} mm`;
 		}
 		if (param.spring === 1) {
 			if (sHeight < 0.1) {
