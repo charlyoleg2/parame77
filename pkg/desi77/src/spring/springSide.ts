@@ -115,6 +115,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aJn = param.Jneutral / 100;
 		const aJr = param.Jradius;
 		const aJm = param.Jmark;
+		const Hfoot = aJr + (1 - aJn) * param.Th;
 		const R5 = param.D5 / 2;
 		const a5 = (2 * Math.PI) / param.N5;
 		const a52 = a5 / 2;
@@ -123,9 +124,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Lii = 2 * (R5 - W22) * Math.tan(a52);
 		const Lee = 2 * (R5 + W22) * Math.tan(a52);
 		const Lm = aJr * Math.tan(a52);
-		const Li = Lii - Lm;
-		const Le = Lee - Lm;
-		const W1 = param.W2 - 2 * aJr;
+		const Li = Lii - 2 * Lm;
+		const Le = Lee - 2 * Lm;
+		const W1 = param.W2 - 2 * Hfoot;
 		const W12 = W1 / 2;
 		const Le2 = (Le - Li) / 2;
 		const R3 = W1 / 8;
@@ -135,7 +136,6 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//
 		const R1 = param.D1 / 2;
 		const Hwall = param.H1 + param.H2 + param.R2;
-		const Hfoot = aJr + (1 - aJn) * param.Th;
 		// wall-1
 		const aBAC = Math.atan2(param.H2, Lih);
 		const lAC = Math.sqrt(Lih ** 2 + param.H2 ** 2);
@@ -164,6 +164,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R1 < 0.1) {
 			throw `err087: R1 ${ffix(R1)} is too small because of D1 ${param.D1}`;
 		}
+		if (R5 - W22 < 0.1) {
+			throw `err168: R5 ${ffix(R5)} is too small compare to W2 ${ffix(W22)} mm`;
+		}
+		if (Li < 0.1) {
+			throw `err171: Li ${ffix(Li)} is too small because of aJr ${aJr} mmm`;
+		}
+		if (W1 < 0.1) {
+			throw `err174: W1 ${ffix(W1)} is too small because of Hfoot ${ffix(Hfoot)} mmm`;
+		}
 		if (param.spring === 1) {
 			if (sHeight < 0.1) {
 				throw `err189: sHeight ${ffix(sHeight)} is too small because of E1 ${param.E1} or E2 ${param.E2}`;
@@ -171,6 +180,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bearing holder wall: Hwall ${ffix(Hwall)}, Hfoot ${ffix(Hfoot)} mm\n`;
+		rGeome.logstr += `Width of one unit interior: Lii ${ffix(Lii)}, Li ${ffix(Li)} mm\n`;
+		rGeome.logstr += `Width of one unit exterior: Lee ${ffix(Lee)}, Le ${ffix(Le)} mm\n`;
+		rGeome.logstr += `Ratio R2/Li ${ffix((100 * param.R2) / Lih)} %\n`;
+		rGeome.logstr += `Width of bottom: W1 ${ffix(W1)}, D3 ${ffix(D3)} mm\n`;
 		if (param.spring === 1) {
 			rGeome.logstr += `spring: sNy ${sNy}, sRc ${ffix(sRc)} mm\n`;
 		} else {
