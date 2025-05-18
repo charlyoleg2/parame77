@@ -37,22 +37,22 @@ const pDef: tParamDef = {
 	partName: 'house',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('WA', 'cm', 600, 100, 2000, 1),
-		pNumber('WB', 'cm', 600, 100, 2000, 1),
-		pNumber('WC', 'cm', 600, 100, 2000, 1),
-		pNumber('WD', 'cm', 600, 100, 2000, 1),
-		pNumber('WE', 'cm', 600, 100, 2000, 1),
+		pNumber('WA', 'cm', 1000, 100, 2000, 1),
+		pNumber('WB', 'cm', 800, 100, 2000, 1),
+		pNumber('WC', 'cm', 800, 100, 2000, 1),
+		pNumber('WD', 'cm', 500, 100, 2000, 1),
+		pNumber('WE', 'cm', 400, 100, 2000, 1),
 		pSectionSeparator('Heights'),
-		pNumber('HA1', 'cm', 500, 200, 2000, 1),
-		pNumber('HA2', 'cm', 1100, 200, 2000, 1),
-		pNumber('HB1', 'cm', 500, 200, 2000, 1),
+		pNumber('HA1', 'cm', 400, 200, 2000, 1),
+		pNumber('HA2', 'cm', 1200, 200, 2000, 1),
+		pNumber('HB1', 'cm', 600, 200, 2000, 1),
 		pNumber('HB2', 'cm', 1100, 200, 2000, 1),
-		pNumber('HC1', 'cm', 500, 200, 2000, 1),
-		pNumber('HC2', 'cm', 1100, 200, 2000, 1),
-		pNumber('HD1', 'cm', 500, 200, 2000, 1),
-		pNumber('HD2', 'cm', 1100, 200, 2000, 1),
-		pNumber('HE1', 'cm', 500, 200, 2000, 1),
-		pNumber('HE2', 'cm', 1100, 200, 2000, 1),
+		pNumber('HC1', 'cm', 700, 200, 2000, 1),
+		pNumber('HC2', 'cm', 600, 200, 2000, 1),
+		pNumber('HD1', 'cm', 700, 200, 2000, 1),
+		pNumber('HD2', 'cm', 600, 200, 2000, 1),
+		pNumber('HE1', 'cm', 1000, 200, 2000, 1),
+		pNumber('HE2', 'cm', 600, 200, 2000, 1),
 		pSectionSeparator('L-Lengths'),
 		pNumber('L1', 'cm', 1100, 200, 2000, 1),
 		pNumber('L2', 'cm', 1100, 200, 2000, 1),
@@ -121,10 +121,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	try {
 		// step-4 : some preparation calculation
 		const WA2 = param.WA / 2;
-		//const WB2 = param.WB / 2;
-		//const WC2 = param.WC / 2;
-		//const WD2 = param.WD / 2;
-		//const WE2 = param.WE / 2;
+		const WB2 = param.WB / 2;
+		const WC2 = param.WC / 2;
+		const WD2 = param.WD / 2;
+		const WE2 = param.WE / 2;
 		const HAtotal = param.HA1 + param.HA2;
 		const HBtotal = param.HB1 + param.HB2;
 		const HCtotal = param.HC1 + param.HC2;
@@ -142,27 +142,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `HEtotal ${ffix(HEtotal / 100)} m\n`;
 		// step-7 : drawing of the figures
 		// sub-function
-		function makeCtrPignon(iW: number, iH1: number, iH2: number): tContour {
-			const rCtr = contour(0, 0)
-				.addSegStrokeR(iW, 0)
+		function makeCtrPignon(iW2: number, iH1: number, iH2: number): tContour {
+			const rCtr = contour(-iW2, 0)
+				.addSegStrokeR(2 * iW2, 0)
 				.addSegStrokeR(0, iH1)
-				.addSegStrokeR(-iW / 2, iH2)
-				.addSegStrokeR(-iW / 2, -iH2)
+				.addSegStrokeR(-iW2, iH2)
+				.addSegStrokeR(-iW2, -iH2)
 				.closeSegStroke();
 			return rCtr;
 		}
 		// figPA, figPB, figPC, figPD, figPE
-		figPA.addMainO(makeCtrPignon(param.WA, param.HA1, param.HA2));
-		figPB.addMainO(makeCtrPignon(param.WB, param.HB1, param.HB2));
-		figPC.addMainO(makeCtrPignon(param.WC, param.HC1, param.HC2));
-		figPD.addMainO(makeCtrPignon(param.WD, param.HD1, param.HD2));
-		figPE.addMainO(makeCtrPignon(param.WE, param.HE1, param.HE2));
+		figPA.addMainO(makeCtrPignon(WA2, param.HA1, param.HA2));
+		figPB.addMainO(makeCtrPignon(WB2, param.HB1, param.HB2));
+		figPC.addMainO(makeCtrPignon(WC2, param.HC1, param.HC2));
+		figPD.addMainO(makeCtrPignon(WD2, param.HD1, param.HD2));
+		figPE.addMainO(makeCtrPignon(WE2, param.HE1, param.HE2));
 		// second contours
-		figPA.mergeFigure(figPB.translate(param.WA, 0), true);
-		figPA.mergeFigure(figPC.translate(param.WA + param.WB, 0), true);
-		figPA.mergeFigure(figPD.translate(param.WA + param.WB + param.WC, 0), true);
-		figPA.mergeFigure(figPE.translate(param.WA + param.WB + param.WC + param.WD, 0), true);
-		figPA.addSecond(ctrRectangle(-param.S2, 0, param.S2, param.Ht));
+		figPA.mergeFigure(figPB.translate(WA2 + WB2, 0), true);
+		figPA.mergeFigure(figPC.translate(WA2 + 2 * WB2 + WC2, 0), true);
+		figPA.mergeFigure(figPD.translate(WA2 + 2 * (WB2 + WC2) + WD2, 0), true);
+		figPA.mergeFigure(figPE.translate(WA2 + 2 * (WB2 + WC2 + WD2) + WE2, 0), true);
+		figPA.addSecond(ctrRectangle(-WA2 - param.S2, 0, param.S2, param.Ht));
 		// figTerrasse
 		figTerrasse.addMainO(ctrRectangle(0, 0, WA2, param.S1));
 		// final figure list
