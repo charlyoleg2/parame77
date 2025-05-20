@@ -2,7 +2,7 @@
 // the skeleton of the heliostat
 
 import type {
-	tContour,
+	//tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -15,12 +15,12 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	//point,
-	contour,
-	//contourCircle,
+	//contour,
+	contourCircle,
 	//ctrRectangle,
 	figure,
 	//degToRad,
-	//radToDeg,
+	radToDeg,
 	ffix,
 	pNumber,
 	//pCheckbox,
@@ -37,72 +37,21 @@ const pDef: tParamDef = {
 	partName: 'heliostat',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('WA', 'cm', 1000, 100, 2000, 1),
-		pNumber('WB', 'cm', 800, 100, 2000, 1),
-		pNumber('WC', 'cm', 800, 100, 2000, 1),
-		pNumber('WD', 'cm', 500, 100, 2000, 1),
-		pNumber('WE', 'cm', 400, 100, 2000, 1),
-		pSectionSeparator('Heights'),
-		pNumber('HA1', 'cm', 400, 200, 2000, 1),
-		pNumber('HA2', 'cm', 1200, 200, 2000, 1),
-		pNumber('HB1', 'cm', 600, 200, 2000, 1),
-		pNumber('HB2', 'cm', 1100, 200, 2000, 1),
-		pNumber('HC1', 'cm', 700, 200, 2000, 1),
-		pNumber('HC2', 'cm', 600, 200, 2000, 1),
-		pNumber('HD1', 'cm', 700, 200, 2000, 1),
-		pNumber('HD2', 'cm', 600, 200, 2000, 1),
-		pNumber('HE1', 'cm', 1000, 200, 2000, 1),
-		pNumber('HE2', 'cm', 600, 200, 2000, 1),
-		pSectionSeparator('L-Lengths'),
-		pNumber('L1', 'cm', 1200, 200, 2000, 1),
-		pNumber('L2', 'cm', 200, 200, 2000, 1),
-		pNumber('L3', 'cm', 1500, 200, 2000, 1),
-		pNumber('S1', 'cm', 200, 50, 2000, 1),
-		pNumber('S2', 'cm', 300, 50, 2000, 1),
-		pNumber('S3', 'cm', 100, 50, 2000, 1),
-		pNumber('Ht', 'cm', 400, 50, 2000, 1),
-		pSectionSeparator('M-Lengths'),
-		pNumber('M1', 'cm', 200, 50, 2000, 1),
-		pNumber('M2', 'cm', 400, 50, 2000, 1),
-		pNumber('M3', 'cm', 800, 50, 2000, 1),
-		pNumber('M4', 'cm', 100, 50, 2000, 1),
-		pSectionSeparator('Nest'),
-		pNumber('AE1', 'cm', 400, 50, 2000, 1),
-		pNumber('AE2', 'cm', 300, 50, 2000, 1),
-		pNumber('BE1', 'cm', 400, 50, 2000, 1),
-		pNumber('BE2', 'cm', 400, 50, 2000, 1)
+		pNumber('L1', 'mm', 8000, 1000, 20000, 1),
+		pNumber('D1', 'mm', 1000, 100, 4000, 1),
+		pNumber('D3', 'mm', 600, 100, 2000, 1),
+		pSectionSeparator('Door'),
+		pNumber('H1H', 'mm', 1500, 100, 3000, 1),
+		pNumber('H1W', 'mm', 600, 100, 1000, 1),
+		pNumber('H1P', 'mm', 300, 100, 2000, 1)
 	],
 	paramSvg: {
-		WA: 'heliostat_bottom.svg',
-		WB: 'heliostat_bottom.svg',
-		WC: 'heliostat_bottom.svg',
-		WD: 'heliostat_bottom.svg',
-		WE: 'heliostat_bottom.svg',
-		HA1: 'heliostat_bottom.svg',
-		HA2: 'heliostat_bottom.svg',
-		HB1: 'heliostat_bottom.svg',
-		HB2: 'heliostat_bottom.svg',
-		HC1: 'heliostat_bottom.svg',
-		HC2: 'heliostat_bottom.svg',
-		HD1: 'heliostat_bottom.svg',
-		HD2: 'heliostat_bottom.svg',
-		HE1: 'heliostat_bottom.svg',
-		HE2: 'heliostat_bottom.svg',
 		L1: 'heliostat_bottom.svg',
-		L2: 'heliostat_bottom.svg',
-		L3: 'heliostat_bottom.svg',
-		S1: 'heliostat_bottom.svg',
-		S2: 'heliostat_bottom.svg',
-		S3: 'heliostat_bottom.svg',
-		Ht: 'heliostat_bottom.svg',
-		M1: 'heliostat_bottom.svg',
-		M2: 'heliostat_bottom.svg',
-		M3: 'heliostat_bottom.svg',
-		M4: 'heliostat_bottom.svg',
-		AE1: 'heliostat_bottom.svg',
-		AE2: 'heliostat_bottom.svg',
-		BE1: 'heliostat_bottom.svg',
-		BE2: 'heliostat_bottom.svg'
+		D1: 'heliostat_bottom.svg',
+		D3: 'heliostat_bottom.svg',
+		H1H: 'heliostat_bottom.svg',
+		H1W: 'heliostat_bottom.svg',
+		H1P: 'heliostat_bottom.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -113,35 +62,39 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figPA = figure();
+	const figBottomDisc = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const WA2 = param.WA / 2;
-		const HAtotal = param.HA1 + param.HA2;
+		const H1W2 = param.H1W / 2;
+		const H1h = param.H1H - 2 * H1W2;
+		const R1 = param.D1 / 2;
+		const R3 = param.D3 / 2;
+		const inclination = Math.atan2(param.L1, R1 - R3);
+		const S1b = param.E2 / Math.cos(inclination);
+		const S1c = param.S1 + S1b;
+		const R1b = R1 - S1c;
+		//const pi2 = Math.PI / 2;
 		// step-5 : checks on the parameter values
-		if (1 > HAtotal) {
-			throw `err167: HBtotal ${ffix(HAtotal)} is too small compare to HAtotal ${ffix(HAtotal)}`;
+		if (R1 < R3) {
+			throw `err176: D1 ${ffix(param.D1)} is too small compare to D3 ${ffix(param.D3)} mm`;
+		}
+		if (R1b < 0.1) {
+			throw `err183: R1b ${ffix(R1b)} is too small because of ${ffix(param.E2)} or ${ffix(param.S1)} mm`;
+		}
+		if (H1h < 0.1) {
+			throw `err167: H1H ${ffix(param.H1H)} is too small compare to H1W ${ffix(param.H1W)} mm`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `HAtotal ${ffix(HAtotal / 100)} m\n`;
+		rGeome.logstr += `Cone inclination: ${ffix(radToDeg(inclination))} deg\n`;
 		// step-7 : drawing of the figures
 		// sub-function
-		const pi2 = Math.PI / 2;
-		function makeCtrPignon(iW2: number, iH1: number, iH2: number): tContour {
-			const rCtr = contour(-iW2, 0)
-				.addSegStrokeR(2 * iW2, 0)
-				.addSegStrokeR(0, iH1)
-				.addSegStrokeR(-iW2, iH2)
-				.addSegStrokeR(-iW2, -iH2)
-				.closeSegStroke();
-			return rCtr;
-		}
-		// figPA
-		figPA.addMainO(makeCtrPignon(WA2, param.HA1, param.HA2));
+		// figBottomDisc
+		//figBottomDisc.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, R1b)]);
+		figBottomDisc.addMainO(contourCircle(0, 0, R1));
 		// final figure list
 		rGeome.fig = {
-			facePA: figPA
+			faceBottomDisc: figBottomDisc
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -149,11 +102,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_pAw`,
-					face: `${designName}_facePA`,
+					outName: `subpax_${designName}_bottomDisc`,
+					face: `${designName}_faceBottomDisc`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: 100,
-					rotate: [pi2, 0, 3 * pi2],
+					length: param.E1,
+					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				}
 			],
@@ -161,7 +114,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_pAw`]
+					inList: [`subpax_${designName}_bottomDisc`]
 				}
 			]
 		};
