@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	contourCircle,
 	//ctrRectangle,
 	figure,
@@ -74,6 +74,8 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figBottomDisc = figure();
+	const figBottomPole = figure();
+	const figDoor = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -82,10 +84,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H1h = param.H1H - 2 * H1W2;
 		const R1 = param.D1 / 2;
 		const R3 = param.D3 / 2;
-		const inclination = Math.atan2(param.L1, R1 - R3);
+		const L1b = param.L1 - param.E1;
+		const inclination = Math.atan2(L1b, R1 - R3);
 		const S1b = param.E2 / Math.cos(pi2 - inclination);
 		const S1c = param.S1 + S1b;
 		const R1b = R1 - S1c;
+		const S3b = param.E3 / Math.tan(inclination);
+		const S3c = param.S3 + S1b - S3b;
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -103,9 +108,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// sub-function
 		// figBottomDisc
 		figBottomDisc.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, R1b)]);
+		// figBottomPole
+		const ctrBottomPole = contour(R1, 0)
+			.addSegStrokeR(0, param.E1)
+			.addSegStrokeR(R3 - R1, L1b)
+			.addSegStrokeR(-S3c, 0)
+			.addSegStrokeR(0, -param.E3)
+			.addSegStrokeR(param.S3, 0)
+			.addSegStrokeA(R1 - S1b, param.E1)
+			.addSegStrokeR(0, -param.E1)
+			.closeSegStroke();
+		figBottomPole.addMainO(ctrBottomPole);
+		// figDoor
+		const ctrDoor = contour(H1W2, param.H1P + H1W2)
+			.addSegStrokeR(0, H1h)
+			.addPointR(-H1W2, H1W2)
+			.addPointR(-2 * H1W2, 0)
+			.addSegArc2()
+			.addSegStrokeR(0, -H1h)
+			.addPointR(H1W2, -H1W2)
+			.addPointR(2 * H1W2, 0)
+			.addSegArc2();
+		figDoor.addMainO(ctrDoor);
 		// final figure list
 		rGeome.fig = {
-			faceBottomDisc: figBottomDisc
+			faceBottomDisc: figBottomDisc,
+			faceBottomPole: figBottomPole,
+			faceDoor: figDoor
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -119,13 +148,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.E1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_bottomPole`,
+					face: `${designName}_faceBottomPole`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_door`,
+					face: `${designName}_faceDoor`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: 2 * R1,
+					rotate: [pi2, 0, 0],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
-					outName: `pax_${designName}`,
+					outName: `ipax_${designName}_pole`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_bottomDisc`]
+					inList: [`subpax_${designName}_bottomDisc`, `subpax_${designName}_bottomPole`]
+				},
+				{
+					outName: `pax_${designName}`,
+					boolMethod: EBVolume.eSubstraction,
+					inList: [`ipax_${designName}_pole`, `subpax_${designName}_door`]
 				}
 			]
 		};
