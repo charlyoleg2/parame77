@@ -12,6 +12,7 @@ import { springWormDef } from 'desi77';
 import { springOneDef } from 'desi77';
 import { springSideDef } from 'desi77';
 import { springIntDef } from 'desi77';
+import { heliostatDef } from 'desi77';
 
 const designList: tAllPageDef = {
 	'desi77/door1arc': door1arcDef,
@@ -24,7 +25,8 @@ const designList: tAllPageDef = {
 	'desi77/springWorm': springWormDef,
 	'desi77/springOne': springOneDef,
 	'desi77/springSide': springSideDef,
-	'desi77/springInt': springIntDef
+	'desi77/springInt': springIntDef,
+	'desi77/heliostat': heliostatDef
 };
 
 export { designList };
