@@ -40,6 +40,12 @@ const pDef: tParamDef = {
 		pNumber('L1', 'mm', 8000, 1000, 20000, 1),
 		pNumber('D1', 'mm', 1000, 100, 4000, 1),
 		pNumber('D3', 'mm', 600, 100, 2000, 1),
+		pSectionSeparator('Bottom details'),
+		pNumber('E1', 'mm', 10, 1, 100, 1),
+		pNumber('E2', 'mm', 10, 1, 100, 1),
+		pNumber('E3', 'mm', 10, 1, 100, 1),
+		pNumber('S1', 'mm', 100, 1, 500, 1),
+		pNumber('S3', 'mm', 100, 1, 500, 1),
 		pSectionSeparator('Door'),
 		pNumber('H1H', 'mm', 1500, 100, 3000, 1),
 		pNumber('H1W', 'mm', 600, 100, 1000, 1),
@@ -49,6 +55,11 @@ const pDef: tParamDef = {
 		L1: 'heliostat_bottom.svg',
 		D1: 'heliostat_bottom.svg',
 		D3: 'heliostat_bottom.svg',
+		E1: 'heliostat_bottom.svg',
+		E2: 'heliostat_bottom.svg',
+		E3: 'heliostat_bottom.svg',
+		S1: 'heliostat_bottom.svg',
+		S3: 'heliostat_bottom.svg',
 		H1H: 'heliostat_bottom.svg',
 		H1W: 'heliostat_bottom.svg',
 		H1P: 'heliostat_bottom.svg'
@@ -66,15 +77,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const H1W2 = param.H1W / 2;
 		const H1h = param.H1H - 2 * H1W2;
 		const R1 = param.D1 / 2;
 		const R3 = param.D3 / 2;
 		const inclination = Math.atan2(param.L1, R1 - R3);
-		const S1b = param.E2 / Math.cos(inclination);
+		const S1b = param.E2 / Math.cos(pi2 - inclination);
 		const S1c = param.S1 + S1b;
 		const R1b = R1 - S1c;
-		//const pi2 = Math.PI / 2;
+		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
 			throw `err176: D1 ${ffix(param.D1)} is too small compare to D3 ${ffix(param.D3)} mm`;
@@ -90,8 +102,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-7 : drawing of the figures
 		// sub-function
 		// figBottomDisc
-		//figBottomDisc.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, R1b)]);
-		figBottomDisc.addMainO(contourCircle(0, 0, R1));
+		figBottomDisc.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, R1b)]);
 		// final figure list
 		rGeome.fig = {
 			faceBottomDisc: figBottomDisc
