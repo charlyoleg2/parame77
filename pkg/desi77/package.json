@@ -52,7 +52,8 @@
 		"svgo2": "svgo --config ./svgo.config.js -f src/spring/svg -o dist/pgdsvg/",
 		"svgo3": "svgo --config ./svgo.config.js -f src/heliostat/svg -o dist/pgdsvg/",
 		"svgo4": "svgo --config ./svgo.config.js -f src/rccar/svg -o dist/pgdsvg/",
-		"svgo": "run-s svgo1 svgo2 svgo3 svgo4",
+		"svgo5": "svgo --config ./svgo.config.js -f src/capsule/svg -o dist/pgdsvg/",
+		"svgo": "run-s svgo1 svgo2 svgo3 svgo4 svgo5",
 		"browserBundleA": "esbuild src/stone/door1arc.ts --bundle --format=esm --outfile=dist2/door1arc.js",
 		"browserBundleAll": "esbuild dist/index.js --bundle --format=esm --outfile=dist2/desi77.js",
 		"clean": "rimraf dist dist2 node_modules"
