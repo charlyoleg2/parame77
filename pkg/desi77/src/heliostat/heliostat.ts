@@ -2,7 +2,7 @@
 // the skeleton of the heliostat
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -14,7 +14,7 @@ import type {
 import {
 	//withinZeroPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	contourCircle,
 	//ctrRectangle,
@@ -47,6 +47,10 @@ const pDef: tParamDef = {
 		pNumber('E3', 'mm', 10, 1, 100, 1),
 		pNumber('S1', 'mm', 100, 1, 500, 1),
 		pNumber('S3', 'mm', 100, 1, 500, 1),
+		pSectionSeparator('Fixation'),
+		pNumber('N2', 'holes', 24, 1, 500, 1),
+		pNumber('D2', 'mm', 40, 1, 400, 1),
+		pNumber('W1', 'mm', 20, 1, 400, 1),
 		pSectionSeparator('Door'),
 		pNumber('H1H', 'mm', 1500, 100, 3000, 1),
 		pNumber('H1W', 'mm', 600, 100, 1000, 1),
@@ -76,6 +80,9 @@ const pDef: tParamDef = {
 		E3: 'heliostat_bottom.svg',
 		S1: 'heliostat_bottom.svg',
 		S3: 'heliostat_bottom.svg',
+		N2: 'heliostat_fixation.svg',
+		D2: 'heliostat_fixation.svg',
+		W1: 'heliostat_fixation.svg',
 		H1H: 'heliostat_bottom.svg',
 		H1W: 'heliostat_bottom.svg',
 		H1P: 'heliostat_bottom.svg',
@@ -119,6 +126,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R1b = R1 - S1c;
 		const S3b = param.E3 / Math.tan(inclination);
 		const S3c = param.S3 + S1b - S3b;
+		// fixation
+		const R2 = param.D2 / 2;
+		const lFixation = R1b + param.W1 + R2;
+		const aFixation = (2 * Math.PI) / param.N2;
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -135,7 +146,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-7 : drawing of the figures
 		// sub-function
 		// figBottomDisc
-		figBottomDisc.addMainOI([contourCircle(0, 0, R1), contourCircle(0, 0, R1b)]);
+		const fixationHoles: tContour[] = [];
+		for (let ii = 0; ii < param.N2; ii++) {
+			const pt = point(0, 0).translatePolar(ii * aFixation, lFixation);
+			fixationHoles.push(contourCircle(pt.cx, pt.cy, R2));
+		}
+		figBottomDisc.addMainOI([
+			contourCircle(0, 0, R1),
+			contourCircle(0, 0, R1b),
+			...fixationHoles
+		]);
 		// figBottomPole
 		const ctrBottomPole = contour(R1, 0)
 			.addSegStrokeR(0, param.E1)
