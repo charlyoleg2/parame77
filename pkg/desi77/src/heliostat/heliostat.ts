@@ -127,6 +127,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figHorizPole = figure();
 	const figHorizPoleInt = figure();
 	const figDiag3 = figure();
+	const figDiagE = figure();
+	const figDiagI = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -312,6 +314,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figDiag3.addSecond(ctrDiag(posX4, RR4i, diagA));
 		figDiag3.addSecond(ctrDiag(-posX4, RR4e, -diagA));
 		figDiag3.addSecond(ctrDiag(-posX4, RR4i, -diagA));
+		// figDiagE
+		const ctrDiagE = contourCircle(0, 0, RR4e);
+		const ctrDiagI = contourCircle(0, 0, RR4i);
+		figDiagE.addMainOI([ctrDiagE, ctrDiagI]);
+		// figDiagI
+		figDiagI.addMainO(ctrDiagI);
+		figDiagI.addSecond(ctrDiagE);
 		// final figure list
 		rGeome.fig = {
 			faceBottomPole: figBottomPole,
@@ -320,7 +329,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTopPole: figTopPole,
 			faceHorizPole: figHorizPole,
 			faceHorizPoleInt: figHorizPoleInt,
-			faceDiag3: figDiag3
+			faceDiag3: figDiag3,
+			faceDiagE: figDiagE,
+			faceDiagI: figDiagI
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -379,6 +390,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.L9,
 					rotate: [pi2, 0, 0],
 					translate: [0, L92, 0]
+				},
+				{
+					outName: `subpax_${designName}_diag1e`,
+					face: `${designName}_faceDiagE`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: diagL,
+					rotate: [diagA, 0, 0],
+					translate: [0, posX4, posY4]
+				},
+				{
+					outName: `subpax_${designName}_diag1i`,
+					face: `${designName}_faceDiagI`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: diagL,
+					rotate: [diagA, 0, 0],
+					translate: [0, posX4, posY4]
+				},
+				{
+					outName: `subpax_${designName}_diag2e`,
+					face: `${designName}_faceDiagE`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: diagL,
+					rotate: [-diagA, 0, 0],
+					translate: [0, -posX4, posY4]
+				},
+				{
+					outName: `subpax_${designName}_diag2i`,
+					face: `${designName}_faceDiagI`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: diagL,
+					rotate: [-diagA, 0, 0],
+					translate: [0, -posX4, posY4]
 				}
 			],
 			volumes: [
@@ -395,12 +438,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `ipax_${designName}_topPlus`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_topPole`, `subpax_${designName}_horizPole`]
+					inList: [
+						`subpax_${designName}_topPole`,
+						`subpax_${designName}_horizPole`,
+						`subpax_${designName}_diag1e`,
+						`subpax_${designName}_diag2e`
+					]
 				},
 				{
 					outName: `ipax_${designName}_topMinus`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_horizPoleInt`]
+					inList: [
+						`subpax_${designName}_horizPoleInt`,
+						`subpax_${designName}_diag1i`,
+						`subpax_${designName}_diag2i`
+					]
 				},
 				{
 					outName: `ipax_${designName}_topPart`,
