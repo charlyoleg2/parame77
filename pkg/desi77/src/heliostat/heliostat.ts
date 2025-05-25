@@ -17,7 +17,7 @@ import {
 	point,
 	contour,
 	contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	radToDeg,
@@ -31,7 +31,7 @@ import {
 	initGeom
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
-//import { triALLrL } from 'triangule';
+import { triLALrL, triLLLrA } from 'triangule';
 
 const pDef: tParamDef = {
 	partName: 'heliostat',
@@ -126,6 +126,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTopPole = figure();
 	const figHorizPole = figure();
 	const figHorizPoleInt = figure();
+	const figDiag3 = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -171,6 +172,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R6i = R6e - param.E6;
 		const posY6 = param.L1 + param.Z3 + param.E5 + param.H6 / 2;
 		const L92 = param.L9 / 2;
+		// diagonal
+		const diagHeight = param.L4 + param.E5 + param.H6 / 2;
+		const diagHeight2 = diagHeight - R6e;
+		const diagV = diagHeight2 / Math.sin(inclination);
+		const diagH = L92 - (R4e - diagHeight2 / Math.tan(inclination));
+		const triL1 = diagH - param.R4h;
+		const triL2 = diagV - param.R4v;
+		const [triL3, triLog1] = triLALrL(triL1, inclination, triL2);
+		const [triA31, triLog2] = triLLLrA(triL1, triL2, triL3);
+		rGeome.logstr += triLog1 + triLog2;
+		const diagA = pi2 - triA31;
+		const diagDX = diagHeight2 / Math.tan(triA31);
+		const RR4e = param.D4 / 2;
+		const RR4i = RR4e - param.EE4;
+		const diagDX2 = RR4e / Math.cos(diagA);
+		const posX4 = -L92 + param.R4h + diagDX + diagDX2;
+		const diagL = diagHeight / Math.cos(diagA);
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -194,8 +212,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R6i < 0.1) {
 			throw `err185: R6i ${ffix(R6i)} is too small because to E6 ${ffix(param.E6)} mm`;
 		}
+		if (param.H6 < param.D6) {
+			throw `err200: H6 ${ffix(param.H6)} is too small compare to D6 ${ffix(param.D6)} mm`;
+		}
 		// step-6 : any logs
-		rGeome.logstr += `Cone inclination: ${ffix(radToDeg(inclination))} deg\n`;
+		rGeome.logstr += `Cone inclination ${ffix(radToDeg(inclination))}, diagonal ${ffix(radToDeg(diagA))} deg\n`;
 		rGeome.logstr += `Diameters: D1 ${ffix(2 * R1)}, D1b ${ffix(2 * R1)}, D3 ${ffix(2 * R3)}, D5 ${ffix(2 * R5)} mm\n`;
 		rGeome.logstr += `TopPole: posY4 ${ffix(posY4)}, D4 ${ffix(2 * R4e)} mm\n`;
 		// step-7 : drawing of the figures
@@ -276,6 +297,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figHorizPoleInt.addSecond(ctrHorizExt);
 		figHorizPoleInt.addSecond(ctrTopPole(-1));
 		figHorizPoleInt.addSecond(ctrTopPole(1));
+		// figDiag3
+		figDiag3.addMainOI([
+			ctrRectangle(-L92, posY6 - R6e, 2 * L92, 2 * R6e),
+			ctrRectangle(-L92, posY6 - R6i, 2 * L92, 2 * R6i)
+		]);
+		figDiag3.addSecond(ctrTopPole(-1));
+		figDiag3.addSecond(ctrTopPole(1));
+		function ctrDiag(posX: number, RR: number, AA: number): tContour {
+			const rCtr = ctrRectangle(posX - RR, posY4, 2 * RR, diagL).rotate(posX, posY4, AA);
+			return rCtr;
+		}
+		figDiag3.addSecond(ctrDiag(posX4, RR4e, diagA));
+		figDiag3.addSecond(ctrDiag(posX4, RR4i, diagA));
+		figDiag3.addSecond(ctrDiag(-posX4, RR4e, -diagA));
+		figDiag3.addSecond(ctrDiag(-posX4, RR4i, -diagA));
 		// final figure list
 		rGeome.fig = {
 			faceBottomPole: figBottomPole,
@@ -283,7 +319,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceBottomDisc: figBottomDisc,
 			faceTopPole: figTopPole,
 			faceHorizPole: figHorizPole,
-			faceHorizPoleInt: figHorizPoleInt
+			faceHorizPoleInt: figHorizPoleInt,
+			faceDiag3: figDiag3
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
