@@ -19,7 +19,7 @@ import {
 	contourCircle,
 	ctrRectangle,
 	figure,
-	//degToRad,
+	degToRad,
 	radToDeg,
 	ffix,
 	pNumber,
@@ -71,6 +71,10 @@ const pDef: tParamDef = {
 		pNumber('D6', 'mm', 400, 100, 2000, 1),
 		pNumber('W8', 'mm', 300, 100, 2000, 1),
 		pNumber('L8', 'mm', 6000, 100, 20000, 1),
+		pNumber('H8', 'mm', 1000, 100, 3000, 1),
+		pNumber('G8', 'mm', 500, 100, 2000, 1),
+		pNumber('F8', 'mm', 200, 10, 1000, 1),
+		pNumber('a8', 'degre', 140, 30, 200, 1),
 		pSectionSeparator('Top-diagonal'),
 		pNumber('D4', 'mm', 300, 10, 2000, 1),
 		pNumber('EE4', 'mm', 10, 1, 100, 1),
@@ -106,6 +110,10 @@ const pDef: tParamDef = {
 		D7: 'heliostat_top.svg',
 		W8: 'heliostat_top.svg',
 		L8: 'heliostat_top.svg',
+		H8: 'heliostat_hand.svg',
+		G8: 'heliostat_hand.svg',
+		F8: 'heliostat_hand.svg',
+		a8: 'heliostat_hand.svg',
 		D4: 'heliostat_top.svg',
 		EE4: 'heliostat_top.svg',
 		R4v: 'heliostat_top.svg',
@@ -130,6 +138,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figDiagE = figure();
 	const figDiagI = figure();
 	const figCleanDiag = figure();
+	const figHand = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -192,6 +201,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const diagDX2 = RR4e / Math.cos(diagA);
 		const posX4 = -L92 + param.R4h + diagDX + diagDX2;
 		const diagL = diagHeight / Math.cos(diagA);
+		// hand
+		const R8 = param.G8 / 2;
+		const R82 = R8 + param.F8;
+		const a82 = degToRad(param.a8) / 2;
+		const posY8 = posY6 + param.H8;
+		const a62 = pi2;
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -335,6 +350,31 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figCleanDiag.addMainO(ctrCleanDiag(1));
 		figCleanDiag.addSecond(ctrTopPole(1));
 		figCleanDiag.addSecond(ctrTopPole(-1));
+		// figHand
+		const p1 = point(0, posY8).translatePolar(a82 - pi2, R82);
+		const p2 = point(0, posY8).translatePolar(a82 - pi2, R8);
+		const p3 = point(0, posY8).translatePolar(-a82 - pi2, R8);
+		const p4 = point(0, posY8).translatePolar(-a82 - pi2, R82);
+		const p5 = point(0, posY6).translatePolar(pi2 + a62, R6e);
+		const p6 = point(0, posY6).translatePolar(pi2 - a62, R6e);
+		const ctrHand = contour(p1.cx, p1.cy)
+			.addSegStrokeA(p2.cx, p2.cy)
+			.addPointA(0, posY8 - R8)
+			.addPointA(p3.cx, p3.cy)
+			.addSegArc2()
+			.addSegStrokeA(p4.cx, p4.cy)
+			.addSegStrokeA(p5.cx, p5.cy)
+			.addPointA(0, posY6 + R6e)
+			.addPointA(p6.cx, p6.cy)
+			.addSegArc2()
+			.closeSegStroke();
+		figHand.addMainO(ctrHand);
+		figHand.addSecond(contourCircle(0, posY6, R6e));
+		figHand.addSecond(contourCircle(0, posY6, R6i));
+		figHand.addSecond(contourCircle(0, posY8, R8));
+		figHand.addSecond(contourCircle(0, posY8, R82));
+		figHand.addSecond(ctrTopPole(1));
+		figHand.addSecond(ctrTopPole(-1));
 		// final figure list
 		rGeome.fig = {
 			faceBottomPole: figBottomPole,
@@ -346,7 +386,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceDiag3: figDiag3,
 			faceDiagE: figDiagE,
 			faceDiagI: figDiagI,
-			faceCleanDiag: figCleanDiag
+			faceCleanDiag: figCleanDiag,
+			faceHand: figHand
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
