@@ -59,18 +59,23 @@ const pDef: tParamDef = {
 		pNumber('Z3', 'mm', 200, 1, 500, 1),
 		pNumber('Z4', 'mm', 200, 1, 500, 1),
 		pDropdown('gen3D', ['Both', 'Top', 'Bottom']),
-		pSectionSeparator('Top-trunk details'),
+		pSectionSeparator('Top-trunk'),
 		pNumber('L4', 'mm', 2000, 100, 20000, 1),
 		pNumber('E4', 'mm', 10, 1, 100, 1),
 		pNumber('E5', 'mm', 10, 1, 100, 1),
 		pNumber('H6', 'mm', 600, 100, 2000, 1),
 		pNumber('E7', 'mm', 10, 1, 100, 1),
 		pNumber('D7', 'mm', 200, 10, 2000, 1),
-		pSectionSeparator('Top-branch details'),
+		pSectionSeparator('Top-branch'),
 		pNumber('E6', 'mm', 10, 1, 100, 1),
 		pNumber('D6', 'mm', 400, 100, 2000, 1),
 		pNumber('W8', 'mm', 300, 100, 2000, 1),
-		pNumber('L8', 'mm', 6000, 100, 20000, 1)
+		pNumber('L8', 'mm', 6000, 100, 20000, 1),
+		pSectionSeparator('Top-diagonal'),
+		pNumber('D4', 'mm', 300, 10, 2000, 1),
+		pNumber('EE4', 'mm', 10, 1, 100, 1),
+		pNumber('R4v', 'mm', 400, 10, 5000, 1),
+		pNumber('R4h', 'mm', 400, 10, 5000, 1)
 	],
 	paramSvg: {
 		L1: 'heliostat_bottom.svg',
@@ -100,7 +105,11 @@ const pDef: tParamDef = {
 		E7: 'heliostat_top.svg',
 		D7: 'heliostat_top.svg',
 		W8: 'heliostat_top.svg',
-		L8: 'heliostat_top.svg'
+		L8: 'heliostat_top.svg',
+		D4: 'heliostat_top.svg',
+		EE4: 'heliostat_top.svg',
+		R4v: 'heliostat_top.svg',
+		R4h: 'heliostat_top.svg'
 	},
 	sim: {
 		tMax: 180,
