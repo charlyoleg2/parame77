@@ -24,7 +24,7 @@ import {
 	ffix,
 	pNumber,
 	//pCheckbox,
-	//pDropdown,
+	pDropdown,
 	pSectionSeparator,
 	EExtrude,
 	EBVolume,
@@ -58,6 +58,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Junction'),
 		pNumber('Z3', 'mm', 200, 1, 500, 1),
 		pNumber('Z4', 'mm', 200, 1, 500, 1),
+		pDropdown('gen3D', ['Both', 'Top', 'Bottom']),
 		pSectionSeparator('Top-trunk details'),
 		pNumber('L4', 'mm', 2000, 100, 20000, 1),
 		pNumber('E4', 'mm', 10, 1, 100, 1),
@@ -89,6 +90,7 @@ const pDef: tParamDef = {
 		H1P: 'heliostat_bottom.svg',
 		Z3: 'heliostat_junction.svg',
 		Z4: 'heliostat_junction.svg',
+		gen3D: 'heliostat_junction.svg',
 		L4: 'heliostat_top.svg',
 		E4: 'heliostat_top.svg',
 		E5: 'heliostat_top.svg',
@@ -150,6 +152,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R7i = param.D7 / 2;
 		//const S7b = R7b - R7i;
 		//const S7t = R7t - R7i;
+		// gen3D
+		const genTop = param.gen3D === 2 ? false : true;
+		const genBottom = param.gen3D === 1 ? false : true;
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -251,16 +256,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
+		const selectedList: string[] = [];
+		if (genTop) {
+			selectedList.push(`ipax_${designName}_topPolePlus`);
+		}
+		if (genBottom) {
+			selectedList.push(`ipax_${designName}_bottomPole`);
+		}
 		rGeome.vol = {
 			extrudes: [
-				{
-					outName: `subpax_${designName}_bottomDisc`,
-					face: `${designName}_faceBottomDisc`,
-					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.E1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				},
 				{
 					outName: `subpax_${designName}_bottomPole`,
 					face: `${designName}_faceBottomPole`,
@@ -275,18 +279,43 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: 2 * R1,
 					rotate: [pi2, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_bottomDisc`,
+					face: `${designName}_faceBottomDisc`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.E1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_topPole`,
+					face: `${designName}_faceTopPole`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
-					outName: `ipax_${designName}_pole`,
+					outName: `ipax_${designName}_bottomPolePlus`,
 					boolMethod: EBVolume.eUnion,
 					inList: [`subpax_${designName}_bottomDisc`, `subpax_${designName}_bottomPole`]
 				},
 				{
-					outName: `pax_${designName}`,
+					outName: `ipax_${designName}_bottomPole`,
 					boolMethod: EBVolume.eSubstraction,
-					inList: [`ipax_${designName}_pole`, `subpax_${designName}_door`]
+					inList: [`ipax_${designName}_bottomPolePlus`, `subpax_${designName}_door`]
+				},
+				{
+					outName: `ipax_${designName}_topPolePlus`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_topPole`]
+				},
+				{
+					outName: `pax_${designName}`,
+					boolMethod: EBVolume.eUnion,
+					inList: selectedList
 				}
 			]
 		};
