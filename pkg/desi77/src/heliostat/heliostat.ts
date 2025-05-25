@@ -70,7 +70,7 @@ const pDef: tParamDef = {
 		pNumber('E6', 'mm', 10, 1, 100, 1),
 		pNumber('D6', 'mm', 400, 100, 2000, 1),
 		pNumber('W8', 'mm', 300, 100, 2000, 1),
-		pNumber('L8', 'mm', 6000, 100, 20000, 1),
+		pNumber('L8', 'mm', 2000, 100, 20000, 1),
 		pNumber('H8', 'mm', 1000, 100, 3000, 1),
 		pNumber('G8', 'mm', 500, 100, 2000, 1),
 		pNumber('F8', 'mm', 200, 10, 1000, 1),
@@ -206,7 +206,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R82 = R8 + param.F8;
 		const a82 = degToRad(param.a8) / 2;
 		const posY8 = posY6 + param.H8;
-		const a62 = pi2;
+		const [t2iL3, triLog3] = triLALrL(param.H8, a82, R82);
+		const [t2iA31, triLog4] = triLLLrA(param.H8, R82, t2iL3);
+		rGeome.logstr += triLog3 + triLog4;
+		const t3iA = Math.acos(R6e / t2iL3);
+		const a62pre = t2iA31 + t3iA;
+		const a62 = Math.min(pi2, a62pre);
+		const L82 = param.L8 / 2;
+		const posX9 = [-L92, -L82 - param.W8, L82, L92 - param.W8];
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -330,6 +337,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figDiag3.addSecond(ctrDiag(posX4, RR4i, diagA));
 		figDiag3.addSecond(ctrDiag(-posX4, RR4e, -diagA));
 		figDiag3.addSecond(ctrDiag(-posX4, RR4i, -diagA));
+		for (let ii = 0; ii < 4; ii++) {
+			figDiag3.addSecond(ctrRectangle(posX9[ii], posY6, param.W8, param.H8));
+		}
 		// figDiagE
 		const ctrDiagE = contourCircle(0, 0, RR4e);
 		const ctrDiagI = contourCircle(0, 0, RR4i);
@@ -485,6 +495,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					extrudeMethod: EExtrude.eRotate,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_hand1`,
+					face: `${designName}_faceHand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W8,
+					rotate: [pi2, 0, 0],
+					translate: [0, posX9[0] + param.W8, 0]
+				},
+				{
+					outName: `subpax_${designName}_hand2`,
+					face: `${designName}_faceHand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W8,
+					rotate: [pi2, 0, 0],
+					translate: [0, posX9[1] + param.W8, 0]
+				},
+				{
+					outName: `subpax_${designName}_hand3`,
+					face: `${designName}_faceHand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W8,
+					rotate: [pi2, 0, 0],
+					translate: [0, posX9[2] + param.W8, 0]
+				},
+				{
+					outName: `subpax_${designName}_hand4`,
+					face: `${designName}_faceHand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W8,
+					rotate: [pi2, 0, 0],
+					translate: [0, posX9[3] + param.W8, 0]
 				}
 			],
 			volumes: [
@@ -505,7 +547,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						`subpax_${designName}_topPole`,
 						`subpax_${designName}_horizPole`,
 						`subpax_${designName}_diag1e`,
-						`subpax_${designName}_diag2e`
+						`subpax_${designName}_diag2e`,
+						`subpax_${designName}_hand1`,
+						`subpax_${designName}_hand2`,
+						`subpax_${designName}_hand3`,
+						`subpax_${designName}_hand4`
 					]
 				},
 				{
