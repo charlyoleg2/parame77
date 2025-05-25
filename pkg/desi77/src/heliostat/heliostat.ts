@@ -129,6 +129,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figDiag3 = figure();
 	const figDiagE = figure();
 	const figDiagI = figure();
+	const figCleanDiag = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -321,6 +322,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figDiagI
 		figDiagI.addMainO(ctrDiagI);
 		figDiagI.addSecond(ctrDiagE);
+		// figCleanDiag
+		function ctrCleanDiag(sig: number): tContour {
+			const rCtr = contour(-sig * R4i, posY4)
+				.addSegStrokeR(sig * (R4i - R5b), param.L4)
+				.addSegStrokeR(sig * R5b, 0)
+				.addSegStrokeR(0, -param.L4 - 2 * param.D6)
+				.addSegStrokeR(-sig * R4i, 0)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figCleanDiag.addMainO(ctrCleanDiag(1));
+		figCleanDiag.addSecond(ctrTopPole(1));
+		figCleanDiag.addSecond(ctrTopPole(-1));
 		// final figure list
 		rGeome.fig = {
 			faceBottomPole: figBottomPole,
@@ -331,7 +345,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHorizPoleInt: figHorizPoleInt,
 			faceDiag3: figDiag3,
 			faceDiagE: figDiagE,
-			faceDiagI: figDiagI
+			faceDiagI: figDiagI,
+			faceCleanDiag: figCleanDiag
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -422,6 +437,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: diagL,
 					rotate: [-diagA, 0, 0],
 					translate: [0, -posX4, posY4]
+				},
+				{
+					outName: `subpax_${designName}_cleanDiag`,
+					face: `${designName}_faceCleanDiag`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
@@ -451,7 +473,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					inList: [
 						`subpax_${designName}_horizPoleInt`,
 						`subpax_${designName}_diag1i`,
-						`subpax_${designName}_diag2i`
+						`subpax_${designName}_diag2i`,
+						`subpax_${designName}_cleanDiag`
 					]
 				},
 				{
