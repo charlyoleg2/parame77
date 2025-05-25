@@ -115,6 +115,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figBottomPole = figure();
 	const figDoor = figure();
 	const figTopPole = figure();
+	const figHorizPole = figure();
+	const figHorizPoleInt = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -155,6 +157,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// gen3D
 		const genTop = param.gen3D === 2 ? false : true;
 		const genBottom = param.gen3D === 1 ? false : true;
+		// horizPole
+		const R6e = param.D6 / 2;
+		const R6i = R6e - param.E6;
+		const posY6 = param.L1 + param.Z3 + param.E5 + param.H6 / 2;
+		const L92 = param.L9 / 2;
 		//rGeome.logstr += `dbg082: ${S1b} ${S1c} ${R1b}\n`;
 		// step-5 : checks on the parameter values
 		if (R1 < R3) {
@@ -174,6 +181,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (R7b < R7i) {
 			throw `err169: R7b ${ffix(2 * R7b)} is too small because to D7 ${ffix(2 * R7i)} mm`;
+		}
+		if (R6i < 0.1) {
+			throw `err185: R6i ${ffix(R6i)} is too small because to E6 ${ffix(param.E6)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Cone inclination: ${ffix(radToDeg(inclination))} deg\n`;
@@ -246,22 +256,35 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTopPole.addSecond(ctrDoor);
 		figBottomPole.addSecond(ctrTopPole(-1));
 		figBottomPole.addSecond(ctrTopPole(1));
+		// figHorizPole
+		const ctrHorizExt = contourCircle(0, posY6, R6e);
+		const ctrHorizInt = contourCircle(0, posY6, R6i);
+		figHorizPole.addMainOI([ctrHorizExt, ctrHorizInt]);
+		figHorizPole.addSecond(ctrTopPole(-1));
+		figHorizPole.addSecond(ctrTopPole(1));
+		// figHorizPoleInt
+		figHorizPoleInt.addMainO(ctrHorizInt);
+		figHorizPoleInt.addSecond(ctrHorizExt);
+		figHorizPoleInt.addSecond(ctrTopPole(-1));
+		figHorizPoleInt.addSecond(ctrTopPole(1));
 		// final figure list
 		rGeome.fig = {
 			faceBottomPole: figBottomPole,
 			faceDoor: figDoor,
 			faceBottomDisc: figBottomDisc,
-			faceTopPole: figTopPole
+			faceTopPole: figTopPole,
+			faceHorizPole: figHorizPole,
+			faceHorizPoleInt: figHorizPoleInt
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
 		const selectedList: string[] = [];
 		if (genTop) {
-			selectedList.push(`ipax_${designName}_topPolePlus`);
+			selectedList.push(`ipax_${designName}_topPart`);
 		}
 		if (genBottom) {
-			selectedList.push(`ipax_${designName}_bottomPole`);
+			selectedList.push(`ipax_${designName}_bottomPart`);
 		}
 		rGeome.vol = {
 			extrudes: [
@@ -294,6 +317,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					extrudeMethod: EExtrude.eRotate,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_horizPole`,
+					face: `${designName}_faceHorizPole`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.L9,
+					rotate: [pi2, 0, 0],
+					translate: [0, L92, 0]
+				},
+				{
+					outName: `subpax_${designName}_horizPoleInt`,
+					face: `${designName}_faceHorizPoleInt`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.L9,
+					rotate: [pi2, 0, 0],
+					translate: [0, L92, 0]
 				}
 			],
 			volumes: [
@@ -303,14 +342,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					inList: [`subpax_${designName}_bottomDisc`, `subpax_${designName}_bottomPole`]
 				},
 				{
-					outName: `ipax_${designName}_bottomPole`,
+					outName: `ipax_${designName}_bottomPart`,
 					boolMethod: EBVolume.eSubstraction,
 					inList: [`ipax_${designName}_bottomPolePlus`, `subpax_${designName}_door`]
 				},
 				{
-					outName: `ipax_${designName}_topPolePlus`,
+					outName: `ipax_${designName}_topPlus`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_topPole`]
+					inList: [`subpax_${designName}_topPole`, `subpax_${designName}_horizPole`]
+				},
+				{
+					outName: `ipax_${designName}_topMinus`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_horizPoleInt`]
+				},
+				{
+					outName: `ipax_${designName}_topPart`,
+					boolMethod: EBVolume.eSubstraction,
+					inList: [`ipax_${designName}_topPlus`, `ipax_${designName}_topMinus`]
 				},
 				{
 					outName: `pax_${designName}`,
