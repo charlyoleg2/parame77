@@ -14,10 +14,10 @@ import type {
 import {
 	//withinZeroPi,
 	//ShapePoint,
-	//point,
-	//contour,
+	point,
+	contour,
 	//contourCircle,
-	ctrRectangle,
+	//ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -38,6 +38,8 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('L1', 'mm', 5000, 1000, 20000, 1),
+		pNumber('WW1', 'mm', 1800, 100, 4000, 1),
+		pNumber('WW2', 'mm', 1000, 100, 4000, 1),
 		pNumber('H0', 'mm', 600, 100, 2000, 1),
 		pNumber('E1', 'mm', 10, 1, 100, 1),
 		pSectionSeparator('Nose'),
@@ -94,26 +96,77 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figPlatform = figure();
+	const figNoseExt = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const pi2 = Math.PI / 2;
-		const W12 = param.W1 / 2;
-		const platSurface = (param.L1 * param.W1) / 10 ** 6;
+		const pi2 = Math.PI / 2;
+		const platSurface = (param.L1 * param.WW1) / 10 ** 6;
+		const L12 = param.L1 / 2;
+		const E1 = param.E1;
+		const Wwheels = param.W6 + param.W7 + param.W8;
+		const Hbatterie = param.H0 - param.H6;
+		const Wbatterie = param.L1 - 2 * Wwheels;
+		const Lroof = param.L1 + 2 * param.W1 - 2 * param.W3;
+		const aN1 = Math.atan2(param.H3, -param.W3);
+		const p1 = point(0, 0)
+			.translate(-param.W3 / 2, param.H3 / 2)
+			.translatePolar(aN1 - pi2, param.C3);
+		const aN2 = Math.atan2(-param.H3, -param.W3);
+		const p2 = point(0, 0)
+			.translate(-param.W3 / 2, -param.H3 / 2)
+			.translatePolar(aN2 - pi2, param.C3);
 		// step-5 : checks on the parameter values
-		if (param.L1 < param.W1) {
-			throw `err176: L1 ${ffix(param.L1)} is too small compare to W1 ${ffix(param.W1)} mm`;
+		if (param.L1 - 2 * Wwheels < 2 * E1) {
+			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
+		}
+		if (Hbatterie < E1) {
+			throw `err114: Hbatterie ${ffix(Hbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
+		}
+		if (Wbatterie < 2 * E1) {
+			throw `err118: Wbatterie ${ffix(Wbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
+		}
+		if (Lroof < 2 * param.W4) {
+			throw `err122: Lroof ${ffix(Lroof)} is too small compare to W4 ${ffix(param.W4)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2\n`;
+		rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
 		// sub-function
-		// figPlatform
-		figPlatform.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.E1));
+		// figNoseExt
+		const ctrNoseExt = contour(-L12, param.H0)
+			.addSegStrokeR(Wwheels, 0)
+			.addSegStrokeR(0, -Hbatterie)
+			.addSegStrokeR(Wbatterie, 0)
+			.addSegStrokeR(0, Hbatterie)
+			.addSegStrokeR(Wwheels, 0)
+			.addCornerRounded(param.R1)
+			.addSegStrokeR(param.W1, param.H1)
+			.addCornerRounded(param.R2)
+			.addSegStrokeR(0, param.H2)
+			.addCornerRounded(param.R3)
+			//.addSegStrokeR(-param.W3, param.H3)
+			.addPointR(p1.cx, p1.cy)
+			.addPointR(-param.W3, param.H3)
+			.addSegArc2()
+			.addCornerRounded(param.R4)
+			.addSegStrokeR(-Lroof, 0)
+			.addCornerRounded(param.R4)
+			//.addSegStrokeR(-param.W3, -param.H3)
+			.addPointR(p2.cx, p2.cy)
+			.addPointR(-param.W3, -param.H3)
+			.addSegArc2()
+			.addCornerRounded(param.R3)
+			.addSegStrokeR(0, -param.H2)
+			.addCornerRounded(param.R2)
+			//.addSegStrokeR(param.W1, -param.H1)
+			.closeSegStroke()
+			.addCornerRounded(param.R1);
+		figNoseExt.addMainO(ctrNoseExt);
 		// final figure list
 		rGeome.fig = {
-			facePlatform: figPlatform
+			faceNoseExt: figNoseExt
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -121,10 +174,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_platform`,
-					face: `${designName}_facePlatform`,
+					outName: `subpax_${designName}_noseExt`,
+					face: `${designName}_faceNoseExt`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.L1,
+					length: param.WW1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				}
@@ -133,7 +186,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_platform`]
+					inList: [`subpax_${designName}_noseExt`]
 				}
 			]
 		};
