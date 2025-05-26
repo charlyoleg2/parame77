@@ -16,7 +16,7 @@ import {
 	//ShapePoint,
 	point,
 	contour,
-	//contourCircle,
+	contourCircle,
 	//ctrRectangle,
 	figure,
 	//degToRad,
@@ -56,7 +56,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Wheels'),
 		pNumber('D7', 'mm', 500, 10, 2000, 1),
 		pNumber('D8', 'mm', 100, 10, 2000, 1),
-		pNumber('W6', 'mm', 300, 10, 2000, 1),
+		pNumber('W6', 'mm', 500, 10, 2000, 1),
 		pNumber('W7', 'mm', 600, 10, 2000, 1),
 		pNumber('W8', 'mm', 300, 10, 2000, 1),
 		pNumber('H6', 'mm', 300, 10, 2000, 1),
@@ -116,6 +116,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const p2 = point(0, 0)
 			.translate(-param.W3 / 2, -param.H3 / 2)
 			.translatePolar(aN2 - pi2, param.C3);
+		// wheels
+		const R7 = param.D7 / 2;
+		const R8 = param.D8 / 2;
+		const posXwheel1 = L12 - param.W8;
+		const posXwheel2 = posXwheel1 - param.W7;
 		// step-5 : checks on the parameter values
 		if (param.L1 - 2 * Wwheels < 2 * E1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
@@ -131,7 +136,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2\n`;
-		rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
+		//rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// figNoseExt
@@ -164,6 +169,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke()
 			.addCornerRounded(param.R1);
 		figNoseExt.addMainO(ctrNoseExt);
+		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R7));
+		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R8));
+		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R7));
+		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R8));
+		figNoseExt.addSecond(contourCircle(posXwheel1, R7, R7));
+		figNoseExt.addSecond(contourCircle(posXwheel1, R7, R8));
+		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R7));
+		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R8));
 		// final figure list
 		rGeome.fig = {
 			faceNoseExt: figNoseExt
