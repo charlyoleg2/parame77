@@ -17,7 +17,7 @@ import {
 	point,
 	contour,
 	contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -62,10 +62,15 @@ const pDef: tParamDef = {
 		pNumber('H6', 'mm', 300, 10, 2000, 1),
 		pSectionSeparator('Top'),
 		pNumber('H5', 'mm', 300, 10, 2000, 1),
-		pNumber('W4', 'mm', 1000, 10, 5000, 1)
+		pNumber('W4', 'mm', 500, 10, 5000, 1),
+		pNumber('W5', 'mm', 1000, 10, 5000, 1),
+		pNumber('R5', 'mm', 50, 1, 500, 1),
+		pNumber('S5', 'mm', 200, 10, 500, 1)
 	],
 	paramSvg: {
 		L1: 'capsule_side.svg',
+		WW1: 'capsule_top.svg',
+		WW2: 'capsule_top.svg',
 		H0: 'capsule_side.svg',
 		E1: 'capsule_nose.svg',
 		H1: 'capsule_nose.svg',
@@ -85,7 +90,10 @@ const pDef: tParamDef = {
 		W8: 'capsule_side.svg',
 		H6: 'capsule_side.svg',
 		H5: 'capsule_nose.svg',
-		W4: 'capsule_nose.svg'
+		W4: 'capsule_nose.svg',
+		W5: 'capsule_top.svg',
+		R5: 'capsule_top.svg',
+		S5: 'capsule_top.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -106,7 +114,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const E1 = param.E1;
 		const Wwheels = param.W6 + param.W7 + param.W8;
 		const Hbatterie = param.H0 - param.H6;
-		const Wbatterie = param.L1 - 2 * Wwheels;
+		const Lbatterie = param.L1 - 2 * Wwheels;
 		const Lroof = param.L1 + 2 * param.W1 - 2 * param.W3;
 		const aN1 = Math.atan2(param.H3, -param.W3);
 		const p1 = point(0, 0)
@@ -121,6 +129,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R8 = param.D8 / 2;
 		const posXwheel1 = L12 - param.W8;
 		const posXwheel2 = posXwheel1 - param.W7;
+		// top
+		const L5 = Lroof - 2 * param.W4;
+		const L52 = L5 / 2;
+		const posYtop = param.H0 + param.H1 + param.H2 + param.H3;
+		const posYtop2 = posYtop + param.H5;
+		const heightTot = posYtop2 + E1;
+		// batterie
+		const posYbatterie = param.H6 + E1;
+		const LbatInt = Lbatterie - 2 * E1;
+		const LbatInt2 = LbatInt / 2;
+		const HbatInt = Hbatterie - E1;
 		// step-5 : checks on the parameter values
 		if (param.L1 - 2 * Wwheels < 2 * E1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
@@ -128,14 +147,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (Hbatterie < E1) {
 			throw `err114: Hbatterie ${ffix(Hbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
 		}
-		if (Wbatterie < 2 * E1) {
-			throw `err118: Wbatterie ${ffix(Wbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
+		if (Lbatterie < 2 * E1) {
+			throw `err118: Lbatterie ${ffix(Lbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
 		}
-		if (Lroof < 2 * param.W4) {
-			throw `err122: Lroof ${ffix(Lroof)} is too small compare to W4 ${ffix(param.W4)} mm`;
+		if (L5 < 3 * param.R5 + param.W5) {
+			throw `err122: L5 ${ffix(L5)} is too small compare to W5 ${ffix(param.W5)} and R5 ${ffix(param.R5)}mm`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2\n`;
+		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2, height: ${ffix(heightTot / 1000)} m\n`;
+		rGeome.logstr += `Lroof: ${ffix(Lroof)}, L5: ${ffix(L5)} mm\n`;
+		rGeome.logstr += `Batterie: LbatInt ${ffix(LbatInt)}, HbatInt: ${ffix(HbatInt)}, WW1 ${ffix(param.WW1)} mm\n`;
 		//rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
 		// sub-function
@@ -143,7 +164,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrNoseExt = contour(-L12, param.H0)
 			.addSegStrokeR(Wwheels, 0)
 			.addSegStrokeR(0, -Hbatterie)
-			.addSegStrokeR(Wbatterie, 0)
+			.addSegStrokeR(Lbatterie, 0)
 			.addSegStrokeR(0, Hbatterie)
 			.addSegStrokeR(Wwheels, 0)
 			.addCornerRounded(param.R1)
@@ -168,7 +189,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			//.addSegStrokeR(param.W1, -param.H1)
 			.closeSegStroke()
 			.addCornerRounded(param.R1);
-		figNoseExt.addMainO(ctrNoseExt);
+		const ctrBatterie = ctrRectangle(-LbatInt2, posYbatterie, LbatInt, HbatInt);
+		figNoseExt.addMainOI([ctrNoseExt, ctrBatterie]);
 		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R7));
 		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R8));
 		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R7));
@@ -177,6 +199,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figNoseExt.addSecond(contourCircle(posXwheel1, R7, R8));
 		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R7));
 		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R8));
+		figNoseExt.addSecond(ctrRectangle(-L52, posYtop, L5, param.H5));
+		figNoseExt.addSecond(ctrRectangle(-L52 - param.S5, posYtop2, L5 + 2 * param.S5, E1));
 		// final figure list
 		rGeome.fig = {
 			faceNoseExt: figNoseExt
