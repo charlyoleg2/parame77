@@ -124,6 +124,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const p2 = point(0, 0)
 			.translate(-param.W3 / 2, -param.H3 / 2)
 			.translatePolar(aN2 - pi2, param.C3);
+		// noseInt
+		const aN3 = Math.atan2(param.H1, -param.W1);
+		const L1dx = E1 / Math.tan(aN3 / 2);
+		const H2dy = E1 / Math.tan((3 * pi2 - aN3) / 2);
+		const aN4 = pi2 + Math.atan2(param.W3, param.H3);
+		const H3dy = E1 / Math.tan(aN4 / 2);
+		const W3dx = E1 / Math.tan((3 * pi2 - aN4) / 2);
+		const W3b = param.W3 - E1 + W3dx;
+		const H3b = param.H3 - E1 + H3dy;
+		const p1b = point(0, 0)
+			.translate(-W3b / 2, H3b / 2)
+			.translatePolar(aN1 - pi2, param.C3);
+		const p2b = point(0, 0)
+			.translate(-W3b / 2, -H3b / 2)
+			.translatePolar(aN2 - pi2, param.C3);
+		const iR1 = Math.max(0, param.R1 - E1);
+		const iR2 = Math.max(0, param.R2 - E1);
+		const iR3 = Math.max(0, param.R3 - E1);
+		const iR4 = Math.max(0, param.R4 - E1);
 		// wheels
 		const R7 = param.D7 / 2;
 		const R8 = param.D8 / 2;
@@ -189,8 +208,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			//.addSegStrokeR(param.W1, -param.H1)
 			.closeSegStroke()
 			.addCornerRounded(param.R1);
+		const ctrNoseInt = contour(-L12 + L1dx, param.H0 + E1)
+			.addSegStrokeR(2 * L12 - 2 * L1dx, 0)
+			.addCornerRounded(iR1)
+			.addSegStrokeR(param.W1 - E1 + L1dx, param.H1 - E1 + H2dy)
+			.addCornerRounded(iR2)
+			.addSegStrokeR(0, param.H2 - 2 * H2dy)
+			.addCornerRounded(iR3)
+			//.addSegStrokeR(-W3b, H3b)
+			.addPointR(p1b.cx, p1b.cy)
+			.addPointR(-W3b, H3b)
+			.addSegArc2()
+			.addCornerRounded(iR4)
+			.addSegStrokeR(-Lroof + 2 * W3dx, 0)
+			.addCornerRounded(iR4)
+			//.addSegStrokeR(-W3b, -H3b)
+			.addPointR(p2b.cx, p2b.cy)
+			.addPointR(-W3b, -H3b)
+			.addSegArc2()
+			.addCornerRounded(iR3)
+			.addSegStrokeR(0, -param.H2 + 2 * H2dy)
+			.addCornerRounded(iR2)
+			//.addSegStrokeR(param.W1 - E1 + L1dx, -param.H1 + E1 - H2dy)
+			.closeSegStroke()
+			.addCornerRounded(iR1);
 		const ctrBatterie = ctrRectangle(-LbatInt2, posYbatterie, LbatInt, HbatInt);
-		figNoseExt.addMainOI([ctrNoseExt, ctrBatterie]);
+		figNoseExt.addMainOI([ctrNoseExt, ctrNoseInt, ctrBatterie]);
 		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R7));
 		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R8));
 		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R7));
