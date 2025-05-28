@@ -109,6 +109,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figNoseExt = figure();
 	const figWheels = figure();
+	const figFront = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -116,6 +117,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const platSurface = (param.L1 * param.WW1) / 10 ** 6;
 		const L12 = param.L1 / 2;
 		const E1 = param.E1;
+		const E12 = 2 * E1;
 		const Wwheels = param.W6 + param.W7 + param.W8;
 		const Hbatterie = param.H0 - param.H6;
 		const Lbatterie = param.L1 - 2 * Wwheels;
@@ -152,6 +154,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R8 = param.D8 / 2;
 		const posXwheel1 = L12 - param.W8;
 		const posXwheel2 = posXwheel1 - param.W7;
+		const WW12 = param.WW1 / 2;
+		const WW22 = param.WW2 / 2;
+		const posYwheels = WW12 - WW22 - param.WW3;
+		const posXwheels = [-posXwheel1, -posXwheel2, posXwheel1, posXwheel2];
 		// top
 		const L5 = Lroof - 2 * param.W4;
 		const L52 = L5 / 2;
@@ -159,16 +165,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const posYtop2 = posYtop + param.H5;
 		const heightTot = posYtop2 + E1;
 		const Ltotal = param.L1 + 2 * param.W1;
+		const W52 = param.W5 / 2;
+		const Htotal = param.H1 + param.H2 + param.H3;
 		// batterie
 		const posYbatterie = param.H6 + E1;
 		const LbatInt = Lbatterie - 2 * E1;
 		const LbatInt2 = LbatInt / 2;
 		const HbatInt = Hbatterie - E1;
-		// wheels
-		const WW12 = param.WW1 / 2;
-		const WW22 = param.WW2 / 2;
-		const posYwheels = WW12 - WW22 - param.WW3;
-		const posXwheels = [-posXwheel1, -posXwheel2, posXwheel1, posXwheel2];
+		// front
+		const posYH3 = param.H0 + param.H1 + param.H2;
 		// step-5 : checks on the parameter values
 		if (param.L1 - 2 * Wwheels < 2 * E1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
@@ -185,7 +190,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2, height: ${ffix(heightTot / 1000)} m\n`;
 		rGeome.logstr += `Lroof: ${ffix(Lroof)}, L5: ${ffix(L5)} mm\n`;
-		rGeome.logstr += `Ltotal: ${ffix(Ltotal / 1000)} m\n`;
+		rGeome.logstr += `Ltotal: ${ffix(Ltotal / 1000)}, Htotal: ${ffix(Htotal / 1000)} m\n`;
 		rGeome.logstr += `Batterie: LbatInt ${ffix(LbatInt)}, HbatInt: ${ffix(HbatInt)}, WW1 ${ffix(param.WW1)} mm\n`;
 		//rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
@@ -270,10 +275,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		figWheels.addMainO(ctrWheels(1));
 		figWheels.addSecond(ctrWheels(-1));
+		// figFront
+		figFront.addSecond(ctrWheels(1).rotate(0, 0, pi2).translate(WW12, R7));
+		figFront.addSecond(ctrWheels(-1).rotate(0, 0, pi2).translate(WW12, R7));
+		figFront.addSecond(ctrRectangle(-WW12, param.H6, param.WW1, Hbatterie));
+		figFront.addSecond(ctrRectangle(-WW12, param.H0, param.WW1, param.H1));
+		figFront.addSecond(ctrRectangle(-WW12, param.H0 + param.H1, param.WW1, param.H2));
+		figFront.addSecond(ctrRectangle(-WW12, posYH3, param.WW1, param.H3));
+		figFront.addSecond(ctrRectangle(-W52, posYtop, param.W5, param.H5));
+		figFront.addSecond(ctrRectangle(-W52 - param.S5, posYtop2, param.W5 + 2 * param.S5, E1));
+		figFront.addSecond(ctrRectangle(-WW12 + E1, param.H0 + E1, param.WW1 - E12, Htotal - E12));
 		// final figure list
 		rGeome.fig = {
 			faceNoseExt: figNoseExt,
-			faceWheels: figWheels
+			faceWheels: figWheels,
+			faceFront: figFront
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
