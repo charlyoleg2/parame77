@@ -2,7 +2,7 @@
 // a concept train for 2, 4 or 6 people
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -39,8 +39,6 @@ const pDef: tParamDef = {
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('L1', 'mm', 5000, 1000, 20000, 1),
 		pNumber('WW1', 'mm', 1800, 100, 4000, 1),
-		pNumber('WW2', 'mm', 1000, 100, 4000, 1),
-		pNumber('H0', 'mm', 600, 100, 2000, 1),
 		pNumber('E1', 'mm', 10, 1, 100, 1),
 		pSectionSeparator('Nose'),
 		pNumber('H1', 'mm', 300, 10, 4000, 1),
@@ -54,8 +52,12 @@ const pDef: tParamDef = {
 		pNumber('R3', 'mm', 100, 0, 500, 1),
 		pNumber('R4', 'mm', 100, 0, 500, 1),
 		pSectionSeparator('Wheels'),
+		pNumber('H0', 'mm', 600, 100, 2000, 1),
 		pNumber('D7', 'mm', 500, 10, 2000, 1),
 		pNumber('D8', 'mm', 100, 10, 2000, 1),
+		pNumber('WW2', 'mm', 1000, 100, 4000, 1),
+		pNumber('WW3', 'mm', 100, 1, 500, 1),
+		pSectionSeparator('Wheels details'),
 		pNumber('W6', 'mm', 500, 10, 2000, 1),
 		pNumber('W7', 'mm', 600, 10, 2000, 1),
 		pNumber('W8', 'mm', 300, 10, 2000, 1),
@@ -70,8 +72,6 @@ const pDef: tParamDef = {
 	paramSvg: {
 		L1: 'capsule_side.svg',
 		WW1: 'capsule_top.svg',
-		WW2: 'capsule_top.svg',
-		H0: 'capsule_side.svg',
 		E1: 'capsule_nose.svg',
 		H1: 'capsule_nose.svg',
 		H2: 'capsule_nose.svg',
@@ -83,8 +83,11 @@ const pDef: tParamDef = {
 		R2: 'capsule_nose.svg',
 		R3: 'capsule_nose.svg',
 		R4: 'capsule_nose.svg',
+		H0: 'capsule_side.svg',
 		D7: 'capsule_side.svg',
 		D8: 'capsule_side.svg',
+		WW2: 'capsule_wheels.svg',
+		WW3: 'capsule_wheels.svg',
 		W6: 'capsule_side.svg',
 		W7: 'capsule_side.svg',
 		W8: 'capsule_side.svg',
@@ -105,6 +108,7 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figNoseExt = figure();
+	const figWheels = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -154,11 +158,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const posYtop = param.H0 + param.H1 + param.H2 + param.H3;
 		const posYtop2 = posYtop + param.H5;
 		const heightTot = posYtop2 + E1;
+		const Ltotal = param.L1 + 2 * param.W1;
 		// batterie
 		const posYbatterie = param.H6 + E1;
 		const LbatInt = Lbatterie - 2 * E1;
 		const LbatInt2 = LbatInt / 2;
 		const HbatInt = Hbatterie - E1;
+		// wheels
+		const WW12 = param.WW1 / 2;
+		const WW22 = param.WW2 / 2;
+		const posYwheels = WW12 - WW22 - param.WW3;
+		const posXwheels = [-posXwheel1, -posXwheel2, posXwheel1, posXwheel2];
 		// step-5 : checks on the parameter values
 		if (param.L1 - 2 * Wwheels < 2 * E1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
@@ -175,6 +185,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2, height: ${ffix(heightTot / 1000)} m\n`;
 		rGeome.logstr += `Lroof: ${ffix(Lroof)}, L5: ${ffix(L5)} mm\n`;
+		rGeome.logstr += `Ltotal: ${ffix(Ltotal / 1000)} m\n`;
 		rGeome.logstr += `Batterie: LbatInt ${ffix(LbatInt)}, HbatInt: ${ffix(HbatInt)}, WW1 ${ffix(param.WW1)} mm\n`;
 		//rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
@@ -244,9 +255,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R8));
 		figNoseExt.addSecond(ctrRectangle(-L52, posYtop, L5, param.H5));
 		figNoseExt.addSecond(ctrRectangle(-L52 - param.S5, posYtop2, L5 + 2 * param.S5, E1));
+		// figWheels
+		function ctrWheels(sign: number): tContour {
+			const rCtr = contour(0, posYwheels)
+				.addSegStrokeR(sign * R7, 0)
+				.addSegStrokeR(0, param.WW3)
+				.addSegStrokeR(sign * (R8 - R7), 0)
+				.addSegStrokeR(0, 2 * WW22)
+				.addSegStrokeR(-sign * (R8 - R7), 0)
+				.addSegStrokeR(0, param.WW3)
+				.addSegStrokeR(-sign * R7, 0)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figWheels.addMainO(ctrWheels(1));
+		figWheels.addSecond(ctrWheels(-1));
 		// final figure list
 		rGeome.fig = {
-			faceNoseExt: figNoseExt
+			faceNoseExt: figNoseExt,
+			faceWheels: figWheels
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -260,13 +287,47 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.WW1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel1`,
+					face: `${designName}_faceWheels`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [posXwheels[0], R7, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel2`,
+					face: `${designName}_faceWheels`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [posXwheels[1], R7, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel3`,
+					face: `${designName}_faceWheels`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [posXwheels[2], R7, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel4`,
+					face: `${designName}_faceWheels`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [posXwheels[3], R7, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_noseExt`]
+					inList: [
+						`subpax_${designName}_noseExt`,
+						`subpax_${designName}_wheel1`,
+						`subpax_${designName}_wheel2`,
+						`subpax_${designName}_wheel3`,
+						`subpax_${designName}_wheel4`
+					]
 				}
 			]
 		};
