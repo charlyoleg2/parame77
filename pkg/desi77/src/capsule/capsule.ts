@@ -62,6 +62,13 @@ const pDef: tParamDef = {
 		pNumber('W7', 'mm', 600, 10, 2000, 1),
 		pNumber('W8', 'mm', 300, 10, 2000, 1),
 		pNumber('H6', 'mm', 300, 10, 2000, 1),
+		pSectionSeparator('Front window'),
+		pNumber('FH1', 'mm', 600, 10, 3000, 1),
+		pNumber('FW1', 'mm', 100, 10, 3000, 1),
+		pNumber('FR1', 'mm', 100, 0, 500, 1),
+		pNumber('FH3', 'mm', 100, 10, 3000, 1),
+		pNumber('FW3', 'mm', 300, 10, 3000, 1),
+		pNumber('FR3', 'mm', 100, 0, 500, 1),
 		pSectionSeparator('Top'),
 		pNumber('H5', 'mm', 300, 10, 2000, 1),
 		pNumber('W4', 'mm', 500, 10, 5000, 1),
@@ -92,6 +99,12 @@ const pDef: tParamDef = {
 		W7: 'capsule_side.svg',
 		W8: 'capsule_side.svg',
 		H6: 'capsule_side.svg',
+		FH1: 'capsule_wheels.svg',
+		FW1: 'capsule_wheels.svg',
+		FR1: 'capsule_wheels.svg',
+		FH3: 'capsule_wheels.svg',
+		FW3: 'capsule_wheels.svg',
+		FR3: 'capsule_wheels.svg',
 		H5: 'capsule_nose.svg',
 		W4: 'capsule_nose.svg',
 		W5: 'capsule_top.svg',
@@ -174,6 +187,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const HbatInt = Hbatterie - E1;
 		// front
 		const posYH3 = param.H0 + param.H1 + param.H2;
+		const FWL1 = param.WW1 - 2 * param.FW1;
+		const FWL3 = param.WW1 - 2 * param.FW3;
+		const HfrontWin = Htotal - param.FH1 - param.FH3;
+		const Ltot2 = Ltotal + 200;
 		// step-5 : checks on the parameter values
 		if (param.L1 - 2 * Wwheels < 2 * E1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to W6 ${ffix(param.W6)}, W7 ${ffix(param.W7)} and W8 ${ffix(param.W8)} mm`;
@@ -276,6 +293,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figWheels.addMainO(ctrWheels(1));
 		figWheels.addSecond(ctrWheels(-1));
 		// figFront
+		const ctrFront = contour(-FWL1 / 2, param.H0 + param.FH1)
+			.addCornerRounded(param.FR1)
+			.addSegStrokeR(FWL1, 0)
+			.addCornerRounded(param.FR1)
+			.addSegStrokeR(param.FW1 - param.FW3, HfrontWin)
+			.addCornerRounded(param.FR3)
+			.addSegStrokeR(-FWL3, 0)
+			.addCornerRounded(param.FR3)
+			.closeSegStroke();
+		figFront.addMainO(ctrFront);
 		figFront.addSecond(ctrWheels(1).rotate(0, 0, pi2).translate(WW12, R7));
 		figFront.addSecond(ctrWheels(-1).rotate(0, 0, pi2).translate(WW12, R7));
 		figFront.addSecond(ctrRectangle(-WW12, param.H6, param.WW1, Hbatterie));
@@ -331,11 +358,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					extrudeMethod: EExtrude.eRotate,
 					rotate: [0, 0, 0],
 					translate: [posXwheels[3], R7, 0]
+				},
+				{
+					outName: `subpax_${designName}_frontWin`,
+					face: `${designName}_faceFront`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: Ltot2,
+					rotate: [0, pi2, 0],
+					translate: [-Ltot2 / 2, 0, WW12]
 				}
 			],
 			volumes: [
 				{
-					outName: `pax_${designName}`,
+					outName: `ipax_${designName}_plus`,
 					boolMethod: EBVolume.eUnion,
 					inList: [
 						`subpax_${designName}_noseExt`,
@@ -344,6 +379,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						`subpax_${designName}_wheel3`,
 						`subpax_${designName}_wheel4`
 					]
+				},
+				{
+					outName: `ipax_${designName}_minus`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_frontWin`]
+				},
+				{
+					outName: `pax_${designName}`,
+					boolMethod: EBVolume.eSubstraction,
+					inList: [`ipax_${designName}_plus`, `ipax_${designName}_minus`]
 				}
 			]
 		};
