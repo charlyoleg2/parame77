@@ -155,6 +155,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTopInt = figure();
 	const figTopTop = figure();
 	const figTopLeg = figure();
+	const figWall = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -254,35 +255,43 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-7 : drawing of the figures
 		// sub-function
 		// figBody
-		const ctrNoseExt = contour(-L12, param.H0)
-			.addSegStrokeR(Wwheels, 0)
-			.addSegStrokeR(0, -Hbatterie)
-			.addSegStrokeR(Lbatterie, 0)
-			.addSegStrokeR(0, Hbatterie)
-			.addSegStrokeR(Wwheels, 0)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(param.W1, param.H1)
-			.addCornerRounded(param.R2)
-			.addSegStrokeR(0, param.H2)
-			.addCornerRounded(param.R3)
-			//.addSegStrokeR(-param.W3, param.H3)
-			.addPointR(p1.cx, p1.cy)
-			.addPointR(-param.W3, param.H3)
-			.addSegArc2()
-			.addCornerRounded(param.R4)
-			.addSegStrokeR(-Lroof, 0)
-			.addCornerRounded(param.R4)
-			//.addSegStrokeR(-param.W3, -param.H3)
-			.addPointR(p2.cx, p2.cy)
-			.addPointR(-param.W3, -param.H3)
-			.addSegArc2()
-			.addCornerRounded(param.R3)
-			.addSegStrokeR(0, -param.H2)
-			.addCornerRounded(param.R2)
-			//.addSegStrokeR(param.W1, -param.H1)
-			.closeSegStroke()
-			.addCornerRounded(param.R1);
-		const ctrNoseInt = contour(-L12 + L1dx, param.H0 + E1)
+		function ctrBody(withBat: boolean): tContour {
+			const rCtr = contour(-L12, param.H0);
+			if (withBat) {
+				rCtr.addSegStrokeR(Wwheels, 0)
+					.addSegStrokeR(0, -Hbatterie)
+					.addSegStrokeR(Lbatterie, 0)
+					.addSegStrokeR(0, Hbatterie)
+					.addSegStrokeR(Wwheels, 0);
+			} else {
+				rCtr.addSegStrokeR(param.L1, 0);
+			}
+			rCtr.addCornerRounded(param.R1)
+				.addSegStrokeR(param.W1, param.H1)
+				.addCornerRounded(param.R2)
+				.addSegStrokeR(0, param.H2)
+				.addCornerRounded(param.R3)
+				//.addSegStrokeR(-param.W3, param.H3)
+				.addPointR(p1.cx, p1.cy)
+				.addPointR(-param.W3, param.H3)
+				.addSegArc2()
+				.addCornerRounded(param.R4)
+				.addSegStrokeR(-Lroof, 0)
+				.addCornerRounded(param.R4)
+				//.addSegStrokeR(-param.W3, -param.H3)
+				.addPointR(p2.cx, p2.cy)
+				.addPointR(-param.W3, -param.H3)
+				.addSegArc2()
+				.addCornerRounded(param.R3)
+				.addSegStrokeR(0, -param.H2)
+				.addCornerRounded(param.R2)
+				//.addSegStrokeR(param.W1, -param.H1)
+				.closeSegStroke()
+				.addCornerRounded(param.R1);
+			return rCtr;
+		}
+		const ctrBodyExt = ctrBody(true);
+		const ctrBodyInt = contour(-L12 + L1dx, param.H0 + E1)
 			.addSegStrokeR(2 * L12 - 2 * L1dx, 0)
 			.addCornerRounded(iR1)
 			.addSegStrokeR(param.W1 - E1 + L1dx, param.H1 - E1 + H2dy)
@@ -307,7 +316,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke()
 			.addCornerRounded(iR1);
 		const ctrBatterie = ctrRectangle(-LbatInt2, posYbatterie, LbatInt, HbatInt);
-		figBody.addMainOI([ctrNoseExt, ctrNoseInt, ctrBatterie]);
+		figBody.addMainOI([ctrBodyExt, ctrBodyInt, ctrBatterie]);
 		figBody.addSecond(contourCircle(-posXwheel1, R7, R7));
 		figBody.addSecond(contourCircle(-posXwheel1, R7, R8));
 		figBody.addSecond(contourCircle(-posXwheel2, R7, R7));
@@ -411,6 +420,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figTopLeg.addMainO(ctrTopLeg);
 		figFront.addSecond(ctrTopLeg);
+		// figWall
+		function ctrSideWindow(sign: number): tContour {
+			const rCtr = contour(sign * (Ltotal / 2 - E1), param.H0 + param.H1 + param.H2 - H2dy)
+				.addCornerRounded(param.JR1)
+				//.addSegStrokeR(-W3b, H3b)
+				.addPointR(sign * p1b.cx, p1b.cy)
+				.addPointR(-sign * W3b, H3b)
+				.addSegArc2()
+				.addCornerRounded(param.JR4)
+				.addSegStrokeR(-sign * param.U2, 0)
+				.addCornerRounded(param.JR3)
+				.addSegStrokeR(0, -H3b)
+				.addCornerRounded(param.JR2)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figWall.addMainOI([ctrBody(false), ctrSideWindow(1), ctrSideWindow(-1)]);
+		figWall.mergeFigure(figBody, true);
 		// final figure list
 		rGeome.fig = {
 			faceBody: figBody,
@@ -419,7 +446,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTop: figTop,
 			faceTopInt: figTopInt,
 			faceTopTop: figTopTop,
-			faceTopLeg: figTopLeg
+			faceTopLeg: figTopLeg,
+			faceWall: figWall
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -443,6 +471,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const roofHoleList: string[] = [];
 		if (param.topStyle !== 2) {
 			roofHoleList.push(`subpax_${designName}_topInt`);
+		}
+		const wallList: string[] = [];
+		if (param.sideWall === 1) {
+			wallList.push(...[`subpax_${designName}_wall1`, `subpax_${designName}_wall2`]);
 		}
 		function volWheel(posX: number, idx: string): tExtrude {
 			return {
@@ -522,7 +554,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				volTopLeg(-L53 / 2 + R52, WW12 - W52, 0, '3'),
 				volTopLeg(-L53 / 2 + R52, WW12 + W52 - E1, 0, '4'),
 				volTopLeg(L53 / 2 - R52, WW12 - W52, 0, '5'),
-				volTopLeg(L53 / 2 - R52, WW12 + W52 - E1, 0, '6')
+				volTopLeg(L53 / 2 - R52, WW12 + W52 - E1, 0, '6'),
+				{
+					outName: `subpax_${designName}_wall1`,
+					face: `${designName}_faceWall`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: E1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wall2`,
+					face: `${designName}_faceWall`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: E1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, param.WW1 - E1]
+				}
 			],
 			volumes: [
 				{
@@ -534,7 +582,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						`subpax_${designName}_wheel2`,
 						`subpax_${designName}_wheel3`,
 						`subpax_${designName}_wheel4`,
-						...miradorList
+						...miradorList,
+						...wallList
 					]
 				},
 				{
