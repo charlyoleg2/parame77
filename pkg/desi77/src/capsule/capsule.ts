@@ -24,7 +24,7 @@ import {
 	ffix,
 	pNumber,
 	//pCheckbox,
-	//pDropdown,
+	pDropdown,
 	pSectionSeparator,
 	EExtrude,
 	EBVolume,
@@ -70,6 +70,7 @@ const pDef: tParamDef = {
 		pNumber('FW3', 'mm', 300, 10, 3000, 1),
 		pNumber('FR3', 'mm', 100, 0, 500, 1),
 		pSectionSeparator('Top'),
+		pDropdown('topStyle', ['mirador', 'sky', 'roof']),
 		pNumber('H5', 'mm', 300, 10, 2000, 1),
 		pNumber('W4', 'mm', 500, 10, 5000, 1),
 		pNumber('W5', 'mm', 1000, 10, 5000, 1),
@@ -105,6 +106,7 @@ const pDef: tParamDef = {
 		FH3: 'capsule_wheels.svg',
 		FW3: 'capsule_wheels.svg',
 		FR3: 'capsule_wheels.svg',
+		topStyle: 'capsule_side.svg',
 		H5: 'capsule_nose.svg',
 		W4: 'capsule_nose.svg',
 		W5: 'capsule_top.svg',
@@ -120,9 +122,12 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figNoseExt = figure();
+	const figBody = figure();
 	const figWheels = figure();
 	const figFront = figure();
+	const figTop = figure();
+	const figTopInt = figure();
+	const figTopTop = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -171,6 +176,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const WW22 = param.WW2 / 2;
 		const posYwheels = WW12 - WW22 - param.WW3;
 		const posXwheels = [-posXwheel1, -posXwheel2, posXwheel1, posXwheel2];
+		const posYwheels2 = -posYwheels - WW22 - param.WW3;
 		// top
 		const L5 = Lroof - 2 * param.W4;
 		const L52 = L5 / 2;
@@ -179,6 +185,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const heightTot = posYtop2 + E1;
 		const Ltotal = param.L1 + 2 * param.W1;
 		const W52 = param.W5 / 2;
+		const R53 = param.R5 * 3;
+		const R52 = R53 / 2;
+		const topR = W52 - R52;
+		const L53 = L5 - 2 * topR;
 		const Htotal = param.H1 + param.H2 + param.H3;
 		// batterie
 		const posYbatterie = param.H6 + E1;
@@ -212,7 +222,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//rGeome.logstr += `dbg134: p1.cx ${ffix(p1.cx)} p2.cx ${ffix(p2.cx)}\n`;
 		// step-7 : drawing of the figures
 		// sub-function
-		// figNoseExt
+		// figBody
 		const ctrNoseExt = contour(-L12, param.H0)
 			.addSegStrokeR(Wwheels, 0)
 			.addSegStrokeR(0, -Hbatterie)
@@ -266,17 +276,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke()
 			.addCornerRounded(iR1);
 		const ctrBatterie = ctrRectangle(-LbatInt2, posYbatterie, LbatInt, HbatInt);
-		figNoseExt.addMainOI([ctrNoseExt, ctrNoseInt, ctrBatterie]);
-		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R7));
-		figNoseExt.addSecond(contourCircle(-posXwheel1, R7, R8));
-		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R7));
-		figNoseExt.addSecond(contourCircle(-posXwheel2, R7, R8));
-		figNoseExt.addSecond(contourCircle(posXwheel1, R7, R7));
-		figNoseExt.addSecond(contourCircle(posXwheel1, R7, R8));
-		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R7));
-		figNoseExt.addSecond(contourCircle(posXwheel2, R7, R8));
-		figNoseExt.addSecond(ctrRectangle(-L52, posYtop, L5, param.H5));
-		figNoseExt.addSecond(ctrRectangle(-L52 - param.S5, posYtop2, L5 + 2 * param.S5, E1));
+		figBody.addMainOI([ctrNoseExt, ctrNoseInt, ctrBatterie]);
+		figBody.addSecond(contourCircle(-posXwheel1, R7, R7));
+		figBody.addSecond(contourCircle(-posXwheel1, R7, R8));
+		figBody.addSecond(contourCircle(-posXwheel2, R7, R7));
+		figBody.addSecond(contourCircle(-posXwheel2, R7, R8));
+		figBody.addSecond(contourCircle(posXwheel1, R7, R7));
+		figBody.addSecond(contourCircle(posXwheel1, R7, R8));
+		figBody.addSecond(contourCircle(posXwheel2, R7, R7));
+		figBody.addSecond(contourCircle(posXwheel2, R7, R8));
+		figBody.addSecond(ctrRectangle(-L52, posYtop, L5, param.H5));
+		figBody.addSecond(ctrRectangle(-L52 - param.S5, posYtop2, L5 + 2 * param.S5, E1));
 		// figWheels
 		function ctrWheels(sign: number): tContour {
 			const rCtr = contour(0, posYwheels)
@@ -312,20 +322,75 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFront.addSecond(ctrRectangle(-W52, posYtop, param.W5, param.H5));
 		figFront.addSecond(ctrRectangle(-W52 - param.S5, posYtop2, param.W5 + 2 * param.S5, E1));
 		figFront.addSecond(ctrRectangle(-WW12 + E1, param.H0 + E1, param.WW1 - E12, Htotal - E12));
+		// figTop
+		function makeCtrTop(radius: number): tContour {
+			const rCtr = contour(-L52 + topR - radius, -R52)
+				.addPointR(radius, -radius)
+				.addSegArc(radius, false, true)
+				.addSegStrokeR(L53, 0)
+				.addPointR(radius, radius)
+				.addSegArc(radius, false, true)
+				.addSegStrokeR(0, R53)
+				.addPointR(-radius, radius)
+				.addSegArc(radius, false, true)
+				.addSegStrokeR(-L53, 0)
+				.addPointR(-radius, -radius)
+				.addSegArc(radius, false, true)
+				.closeSegStroke();
+			return rCtr;
+		}
+		const ctrTopInt = makeCtrTop(topR - E1);
+		const ctrTopExt = makeCtrTop(topR);
+		const ctrTopTop = makeCtrTop(topR + param.S5);
+		figTop.addMainOI([ctrTopExt, ctrTopInt]);
+		figTop.addSecond(ctrTopTop);
+		figTop.addSecond(ctrRectangle(-Lroof / 2, -WW12, Lroof, 2 * WW12));
+		figTop.addSecond(ctrRectangle(-Ltotal / 2, -WW12, Ltotal, 2 * WW12));
+		figTop.addSecond(ctrWheels(1).translate(posXwheels[0], posYwheels2));
+		figTop.addSecond(ctrWheels(1).translate(posXwheels[1], posYwheels2));
+		figTop.addSecond(ctrWheels(1).translate(posXwheels[2], posYwheels2));
+		figTop.addSecond(ctrWheels(1).translate(posXwheels[3], posYwheels2));
+		figTop.addSecond(ctrWheels(-1).translate(posXwheels[0], posYwheels2));
+		figTop.addSecond(ctrWheels(-1).translate(posXwheels[1], posYwheels2));
+		figTop.addSecond(ctrWheels(-1).translate(posXwheels[2], posYwheels2));
+		figTop.addSecond(ctrWheels(-1).translate(posXwheels[3], posYwheels2));
+		// figTopInt
+		figTopInt.addMainO(ctrTopInt);
+		figTopInt.mergeFigure(figTop, true);
+		// figTopTop
+		figTopTop.addMainO(ctrTopTop);
+		figTopTop.mergeFigure(figTop, true);
 		// final figure list
 		rGeome.fig = {
-			faceNoseExt: figNoseExt,
+			faceBody: figBody,
 			faceWheels: figWheels,
-			faceFront: figFront
+			faceFront: figFront,
+			faceTop: figTop,
+			faceTopInt: figTopInt,
+			faceTopTop: figTopTop
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
+		const miradorList: string[] = [];
+		if (param.topStyle === 0) {
+			miradorList.push(
+				...[
+					`subpax_${designName}_top1`,
+					`subpax_${designName}_top2`,
+					`subpax_${designName}_topTop`
+				]
+			);
+		}
+		const roofHoleList: string[] = [];
+		if (param.topStyle === 0) {
+			roofHoleList.push(`subpax_${designName}_topInt`);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_noseExt`,
-					face: `${designName}_faceNoseExt`,
+					outName: `subpax_${designName}_body`,
+					face: `${designName}_faceBody`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.WW1,
 					rotate: [0, 0, 0],
@@ -366,6 +431,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: Ltot2,
 					rotate: [0, pi2, 0],
 					translate: [-Ltot2 / 2, 0, WW12]
+				},
+				{
+					outName: `subpax_${designName}_topInt`,
+					face: `${designName}_faceTopInt`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: 3 * E1,
+					rotate: [-pi2, 0, 0],
+					translate: [0, posYtop - 2 * E1, WW12]
+				},
+				{
+					outName: `subpax_${designName}_top1`,
+					face: `${designName}_faceTop`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.R5,
+					rotate: [-pi2, 0, 0],
+					translate: [0, posYtop, WW12]
+				},
+				{
+					outName: `subpax_${designName}_top2`,
+					face: `${designName}_faceTop`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.R5,
+					rotate: [-pi2, 0, 0],
+					translate: [0, posYtop2 - E1, WW12]
+				},
+				{
+					outName: `subpax_${designName}_topTop`,
+					face: `${designName}_faceTopTop`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: E1,
+					rotate: [-pi2, 0, 0],
+					translate: [0, posYtop2, WW12]
 				}
 			],
 			volumes: [
@@ -373,17 +470,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `ipax_${designName}_plus`,
 					boolMethod: EBVolume.eUnion,
 					inList: [
-						`subpax_${designName}_noseExt`,
+						`subpax_${designName}_body`,
 						`subpax_${designName}_wheel1`,
 						`subpax_${designName}_wheel2`,
 						`subpax_${designName}_wheel3`,
-						`subpax_${designName}_wheel4`
+						`subpax_${designName}_wheel4`,
+						...miradorList
 					]
 				},
 				{
 					outName: `ipax_${designName}_minus`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_frontWin`]
+					inList: [`subpax_${designName}_frontWin`, ...roofHoleList]
 				},
 				{
 					outName: `pax_${designName}`,
