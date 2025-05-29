@@ -7,7 +7,8 @@ import type {
 	tParamDef,
 	tParamVal,
 	tGeom,
-	tPageDef
+	tPageDef,
+	tExtrude
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';
@@ -128,6 +129,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTop = figure();
 	const figTopInt = figure();
 	const figTopTop = figure();
+	const figTopLeg = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -189,6 +191,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R52 = R53 / 2;
 		const topR = W52 - R52;
 		const L53 = L5 - 2 * topR;
+		const H53 = param.H5 - 4 * param.R5;
 		const Htotal = param.H1 + param.H2 + param.H3;
 		// batterie
 		const posYbatterie = param.H6 + E1;
@@ -212,7 +215,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err118: Lbatterie ${ffix(Lbatterie)} is too small compare to E1 ${ffix(E1)} mm`;
 		}
 		if (L5 < 3 * param.R5 + param.W5) {
-			throw `err122: L5 ${ffix(L5)} is too small compare to W5 ${ffix(param.W5)} and R5 ${ffix(param.R5)}mm`;
+			throw `err122: L5 ${ffix(L5)} is too small compare to W5 ${ffix(param.W5)} and R5 ${ffix(param.R5)} mm`;
+		}
+		if (H53 < 0.1) {
+			throw `err220: H5 ${ffix(param.H5)} is too small compare to R5 ${ffix(param.R5)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2, height: ${ffix(heightTot / 1000)} m\n`;
@@ -360,6 +366,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figTopTop
 		figTopTop.addMainO(ctrTopTop);
 		figTopTop.mergeFigure(figTop, true);
+		// figTopLeg
+		const ctrTopLeg = contour(-R52, posYtop)
+			.addSegStrokeR(R53, 0)
+			.addSegStrokeR(0, param.R5)
+			.addPointR(-param.R5, param.R5)
+			.addSegArc(param.R5, false, false)
+			.addSegStrokeR(0, H53)
+			.addPointR(param.R5, param.R5)
+			.addSegArc(param.R5, false, false)
+			.addSegStrokeR(0, param.R5)
+			.addSegStrokeR(-R53, 0)
+			.addSegStrokeR(0, -param.R5)
+			.addPointR(param.R5, -param.R5)
+			.addSegArc(param.R5, false, false)
+			.addSegStrokeR(0, -H53)
+			.addPointR(-param.R5, -param.R5)
+			.addSegArc(param.R5, false, false)
+			.closeSegStroke();
+		figTopLeg.addMainO(ctrTopLeg);
+		figFront.addSecond(ctrTopLeg);
 		// final figure list
 		rGeome.fig = {
 			faceBody: figBody,
@@ -367,7 +393,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceFront: figFront,
 			faceTop: figTop,
 			faceTopInt: figTopInt,
-			faceTopTop: figTopTop
+			faceTopTop: figTopTop,
+			faceTopLeg: figTopLeg
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -378,13 +405,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				...[
 					`subpax_${designName}_top1`,
 					`subpax_${designName}_top2`,
-					`subpax_${designName}_topTop`
+					`subpax_${designName}_topTop`,
+					`subpax_${designName}_topLeg1`
 				]
 			);
 		}
 		const roofHoleList: string[] = [];
 		if (param.topStyle !== 2) {
 			roofHoleList.push(`subpax_${designName}_topInt`);
+		}
+		function volWheel(posX: number, idx: string): tExtrude {
+			return {
+				outName: `subpax_${designName}_wheel${idx}`,
+				face: `${designName}_faceWheels`,
+				extrudeMethod: EExtrude.eRotate,
+				rotate: [0, 0, 0],
+				translate: [posX, R7, 0]
+			};
+		}
+		function volTopLeg(posX: number, posY: number, idx: string): tExtrude {
+			return {
+				outName: `subpax_${designName}_topLeg${idx}`,
+				face: `${designName}_faceTopLeg`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: E1,
+				rotate: [0, pi2, 0],
+				translate: [posX, posY, 0]
+			};
 		}
 		rGeome.vol = {
 			extrudes: [
@@ -396,34 +443,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				},
-				{
-					outName: `subpax_${designName}_wheel1`,
-					face: `${designName}_faceWheels`,
-					extrudeMethod: EExtrude.eRotate,
-					rotate: [0, 0, 0],
-					translate: [posXwheels[0], R7, 0]
-				},
-				{
-					outName: `subpax_${designName}_wheel2`,
-					face: `${designName}_faceWheels`,
-					extrudeMethod: EExtrude.eRotate,
-					rotate: [0, 0, 0],
-					translate: [posXwheels[1], R7, 0]
-				},
-				{
-					outName: `subpax_${designName}_wheel3`,
-					face: `${designName}_faceWheels`,
-					extrudeMethod: EExtrude.eRotate,
-					rotate: [0, 0, 0],
-					translate: [posXwheels[2], R7, 0]
-				},
-				{
-					outName: `subpax_${designName}_wheel4`,
-					face: `${designName}_faceWheels`,
-					extrudeMethod: EExtrude.eRotate,
-					rotate: [0, 0, 0],
-					translate: [posXwheels[3], R7, 0]
-				},
+				volWheel(posXwheels[0], '1'),
+				volWheel(posXwheels[1], '2'),
+				volWheel(posXwheels[2], '3'),
+				volWheel(posXwheels[3], '4'),
 				{
 					outName: `subpax_${designName}_frontWin`,
 					face: `${designName}_faceFront`,
@@ -463,7 +486,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: E1,
 					rotate: [-pi2, 0, 0],
 					translate: [0, posYtop2, WW12]
-				}
+				},
+				volTopLeg(0, 0, '1')
 			],
 			volumes: [
 				{
