@@ -19,7 +19,7 @@ import {
 	//contourCircle,
 	ctrRectangle,
 	figure,
-	//degToRad,
+	degToRad,
 	//radToDeg,
 	ffix,
 	pNumber,
@@ -43,7 +43,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('General'),
 		pDropdown('gen3D', ['all', 'platform', 'bone', 'hand', 'motor', 'wheel']),
 		pNumber('F1', 'mm', 180, 1, 1000, 1),
-		pNumber('H1', 'mm', 200, 1, 2000, 1),
+		pNumber('H1', 'mm', 200, 10, 2000, 1),
 		pNumber('T1', 'mm', 10, 1, 100, 1),
 		pNumber('E1', 'mm', 10, 1, 100, 1),
 		pSectionSeparator('Platform'),
@@ -55,11 +55,23 @@ const pDef: tParamDef = {
 		pNumber('D2', 'mm', 40, 1, 200, 1),
 		pNumber('W3', 'mm', 30, 1, 200, 1),
 		pNumber('L2', 'mm', 150, 1, 200, 1),
+		pNumber('E2', 'mm', 10, 1, 500, 1),
+		pSectionSeparator('Unit'),
+		pNumber('Dwheel', 'mm', 200, 10, 2000, 1),
+		pNumber('Z1', 'mm', 100, 10, 2000, 1),
+		pNumber('Z2', 'mm', 160, 10, 2000, 1),
+		pNumber('Lwheel', 'mm', 100, 10, 2000, 1),
+		pNumber('E3', 'mm', 30, 1, 500, 1),
+		pNumber('Lmotor', 'mm', 120, 10, 1000, 1),
+		pNumber('Dsteering', 'mm', 40, 1, 500, 1),
+		pNumber('Daxis', 'mm', 20, 1, 500, 1),
 		pSectionSeparator('Angles'),
 		pNumber('a1x', 'degree', 45, 10, 80, 1),
 		pNumber('a2x', 'degree', 45, 10, 80, 1),
 		pNumber('a11', 'degree', 45, 10, 80, 1),
-		pNumber('a21', 'degree', 45, 10, 80, 1)
+		pNumber('a21', 'degree', 45, 10, 80, 1),
+		pNumber('rx', 'cm', 0, -1000, 1000, 1),
+		pNumber('ry', 'cm', 0, -1000, 1000, 1)
 	],
 	paramSvg: {
 		W1: 'rccar_all_xz.svg',
@@ -77,10 +89,21 @@ const pDef: tParamDef = {
 		D2: 'rccar_bone.svg',
 		W3: 'rccar_bone.svg',
 		L2: 'rccar_bone.svg',
+		E2: 'rccar_motor_xz.svg',
+		Dwheel: 'rccar_motor_xz.svg',
+		Z1: 'rccar_motor_xz.svg',
+		Z2: 'rccar_motor_xz.svg',
+		Lwheel: 'rccar_motor_xz.svg',
+		E3: 'rccar_motor_xz.svg',
+		Lmotor: 'rccar_motor_xz.svg',
+		Dsteering: 'rccar_motor_xz.svg',
+		Daxis: 'rccar_motor_xz.svg',
 		a1x: 'rccar_all_xz.svg',
 		a2x: 'rccar_all_xz.svg',
 		a11: 'rccar_all_xz.svg',
-		a21: 'rccar_all_xz.svg'
+		a21: 'rccar_all_xz.svg',
+		rx: 'rccar_all_xy.svg',
+		ry: 'rccar_all_xy.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -97,17 +120,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		//const pi2 = Math.PI / 2;
 		const W12 = param.W1 / 2;
-		const platSurface = (param.L1 * param.W1) / 10 ** 6;
+		const Ltotal = param.N1 * (param.L1 + param.T1) + param.T1;
+		const platSurface = (Ltotal * param.W1) / 10 ** 6;
+		const Rwheel = param.Dwheel / 2;
+		//const Raxis = param.Daxis / 2;
+		//const Rsteering = param.Dsteering / 2;
+		const A1x = degToRad(param.a1x);
+		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(A1x);
+		const Hplatform = posZplatform + param.H1;
 		// step-5 : checks on the parameter values
-		if (param.W1 < param.L1) {
-			throw `err176: L1 ${ffix(param.L1)} is too large compare to W1 ${ffix(param.W1)} mm`;
+		if (param.L1 < param.F1) {
+			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
+		}
+		if (param.H1 < param.Z2 + param.T1) {
+			throw `err130: H1 ${ffix(param.H1)} is too small compare to Z2 ${ffix(param.Z2)} and T1 ${ffix(param.T1)} mm`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2\n`;
+		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
+		rGeome.logstr += `Hplatform ${ffix(Hplatform)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// figPlatform
-		figPlatform.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.E1));
+		figPlatform.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.T1));
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform
