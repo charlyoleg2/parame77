@@ -383,7 +383,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			);
 		}
 		const roofHoleList: string[] = [];
-		if (param.topStyle === 0) {
+		if (param.topStyle !== 2) {
 			roofHoleList.push(`subpax_${designName}_topInt`);
 		}
 		rGeome.vol = {
@@ -454,7 +454,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.R5,
 					rotate: [-pi2, 0, 0],
-					translate: [0, posYtop2 - E1, WW12]
+					translate: [0, posYtop2 - param.R5, WW12]
 				},
 				{
 					outName: `subpax_${designName}_topTop`,
