@@ -83,7 +83,13 @@ const pDef: tParamDef = {
 		pNumber('U2', 'mm', 500, 10, 3000, 1),
 		pNumber('U3', 'mm', 200, 10, 3000, 1),
 		pNumber('V1', 'mm', 600, 10, 3000, 1),
-		pNumber('V2', 'mm', 400, 10, 3000, 1)
+		pNumber('V2', 'mm', 400, 10, 3000, 1),
+		pNumber('JR1', 'mm', 100, 0, 500, 1),
+		pNumber('JR2', 'mm', 100, 0, 500, 1),
+		pNumber('JR3', 'mm', 100, 0, 500, 1),
+		pNumber('JR4', 'mm', 100, 0, 500, 1),
+		pNumber('JR5', 'mm', 100, 0, 500, 1),
+		pNumber('JR6', 'mm', 100, 0, 500, 1)
 	],
 	paramSvg: {
 		L1: 'capsule_side.svg',
@@ -125,7 +131,13 @@ const pDef: tParamDef = {
 		U2: 'capsule_wall.svg',
 		U3: 'capsule_wall.svg',
 		V1: 'capsule_wall.svg',
-		V2: 'capsule_wall.svg'
+		V2: 'capsule_wall.svg',
+		JR1: 'capsule_wall.svg',
+		JR2: 'capsule_wall.svg',
+		JR3: 'capsule_wall.svg',
+		JR4: 'capsule_wall.svg',
+		JR5: 'capsule_wall.svg',
+		JR6: 'capsule_wall.svg'
 	},
 	sim: {
 		tMax: 180,
