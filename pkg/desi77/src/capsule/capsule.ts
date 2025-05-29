@@ -81,15 +81,15 @@ const pDef: tParamDef = {
 		pCheckbox('sideWall', true),
 		pNumber('U1', 'mm', 100, 10, 1000, 1),
 		pNumber('U2', 'mm', 500, 10, 3000, 1),
-		pNumber('U3', 'mm', 200, 10, 3000, 1),
+		pNumber('U3', 'mm', 400, 10, 3000, 1),
 		pNumber('V1', 'mm', 600, 10, 3000, 1),
 		pNumber('V2', 'mm', 400, 10, 3000, 1),
-		pNumber('JR1', 'mm', 100, 0, 500, 1),
-		pNumber('JR2', 'mm', 100, 0, 500, 1),
-		pNumber('JR3', 'mm', 100, 0, 500, 1),
-		pNumber('JR4', 'mm', 100, 0, 500, 1),
-		pNumber('JR5', 'mm', 100, 0, 500, 1),
-		pNumber('JR6', 'mm', 100, 0, 500, 1)
+		pNumber('JR1', 'mm', 100, 0, 2000, 1),
+		pNumber('JR2', 'mm', 100, 0, 2000, 1),
+		pNumber('JR3', 'mm', 100, 0, 2000, 1),
+		pNumber('JR4', 'mm', 100, 0, 2000, 1),
+		pNumber('JR5', 'mm', 100, 0, 2000, 1),
+		pNumber('JR6', 'mm', 100, 0, 2000, 1)
 	],
 	paramSvg: {
 		L1: 'capsule_side.svg',
@@ -195,6 +195,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const iR2 = Math.max(0, param.R2 - E1);
 		const iR3 = Math.max(0, param.R3 - E1);
 		const iR4 = Math.max(0, param.R4 - E1);
+		// wallWindows
+		const UH2dy = param.U1 / Math.tan((3 * pi2 - aN3) / 2);
+		const UW3b = param.W3 - param.U1 + param.U1 / Math.tan((3 * pi2 - aN4) / 2);
+		const UH3b = param.H3 - param.U1 + param.U1 / Math.tan(aN4 / 2);
+		const p1ub = point(0, 0)
+			.translate(-UW3b / 2, UH3b / 2)
+			.translatePolar(aN1 - pi2, param.C3);
+		const Ltotal = param.L1 + 2 * param.W1;
+		const Htotal = param.H1 + param.H2 + param.H3;
+		const LwallDoor = Ltotal - 2 * (param.U1 + UW3b + param.U2 + param.U3);
+		const HwallDoor = Htotal - param.V1 - param.V2;
 		// wheels
 		const R7 = param.D7 / 2;
 		const R8 = param.D8 / 2;
@@ -211,14 +222,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const posYtop = param.H0 + param.H1 + param.H2 + param.H3;
 		const posYtop2 = posYtop + param.H5;
 		const heightTot = posYtop2 + E1;
-		const Ltotal = param.L1 + 2 * param.W1;
 		const W52 = param.W5 / 2;
 		const R53 = param.R5 * 3;
 		const R52 = R53 / 2;
 		const topR = W52 - R52;
 		const L53 = L5 - 2 * topR;
 		const H53 = param.H5 - 4 * param.R5;
-		const Htotal = param.H1 + param.H2 + param.H3;
 		// batterie
 		const posYbatterie = param.H6 + E1;
 		const LbatInt = Lbatterie - 2 * E1;
@@ -422,21 +431,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFront.addSecond(ctrTopLeg);
 		// figWall
 		function ctrSideWindow(sign: number): tContour {
-			const rCtr = contour(sign * (Ltotal / 2 - E1), param.H0 + param.H1 + param.H2 - H2dy)
+			const p0x = sign * (Ltotal / 2 - param.U1);
+			const p0y = param.H0 + param.H1 + param.H2 - UH2dy;
+			const rCtr = contour(p0x, p0y)
 				.addCornerRounded(param.JR1)
-				//.addSegStrokeR(-W3b, H3b)
-				.addPointR(sign * p1b.cx, p1b.cy)
-				.addPointR(-sign * W3b, H3b)
+				//.addSegStrokeR(-UW3b, UH3b)
+				.addPointR(sign * p1ub.cx, p1ub.cy)
+				.addPointR(-sign * UW3b, UH3b)
 				.addSegArc2()
 				.addCornerRounded(param.JR4)
 				.addSegStrokeR(-sign * param.U2, 0)
 				.addCornerRounded(param.JR3)
-				.addSegStrokeR(0, -H3b)
+				.addSegStrokeR(0, -UH3b)
 				.addCornerRounded(param.JR2)
 				.closeSegStroke();
 			return rCtr;
 		}
-		figWall.addMainOI([ctrBody(false), ctrSideWindow(1), ctrSideWindow(-1)]);
+		const ctrDoor = contour(-LwallDoor / 2, param.H0 + param.V1)
+			.addCornerRounded(param.JR5)
+			.addSegStrokeR(LwallDoor, 0)
+			.addCornerRounded(param.JR5)
+			.addSegStrokeR(0, HwallDoor)
+			.addCornerRounded(param.JR6)
+			.addSegStrokeR(-LwallDoor, 0)
+			.addCornerRounded(param.JR6)
+			.closeSegStroke();
+		figWall.addMainOI([ctrBody(false), ctrSideWindow(1), ctrSideWindow(-1), ctrDoor]);
 		figWall.mergeFigure(figBody, true);
 		// final figure list
 		rGeome.fig = {
