@@ -24,7 +24,7 @@ import {
 	//radToDeg,
 	ffix,
 	pNumber,
-	//pCheckbox,
+	pCheckbox,
 	pDropdown,
 	pSectionSeparator,
 	EExtrude,
@@ -76,7 +76,14 @@ const pDef: tParamDef = {
 		pNumber('W4', 'mm', 500, 10, 5000, 1),
 		pNumber('W5', 'mm', 1000, 10, 5000, 1),
 		pNumber('R5', 'mm', 50, 1, 500, 1),
-		pNumber('S5', 'mm', 200, 10, 500, 1)
+		pNumber('S5', 'mm', 200, 10, 500, 1),
+		pSectionSeparator('Wall'),
+		pCheckbox('sideWall', true),
+		pNumber('U1', 'mm', 100, 10, 1000, 1),
+		pNumber('U2', 'mm', 500, 10, 3000, 1),
+		pNumber('U3', 'mm', 200, 10, 3000, 1),
+		pNumber('V1', 'mm', 600, 10, 3000, 1),
+		pNumber('V2', 'mm', 400, 10, 3000, 1)
 	],
 	paramSvg: {
 		L1: 'capsule_side.svg',
@@ -112,7 +119,13 @@ const pDef: tParamDef = {
 		W4: 'capsule_nose.svg',
 		W5: 'capsule_top.svg',
 		R5: 'capsule_top.svg',
-		S5: 'capsule_top.svg'
+		S5: 'capsule_top.svg',
+		sideWall: 'capsule_side.svg',
+		U1: 'capsule_wall.svg',
+		U2: 'capsule_wall.svg',
+		U3: 'capsule_wall.svg',
+		V1: 'capsule_wall.svg',
+		V2: 'capsule_wall.svg'
 	},
 	sim: {
 		tMax: 180,
