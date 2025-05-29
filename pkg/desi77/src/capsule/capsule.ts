@@ -406,7 +406,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					`subpax_${designName}_top1`,
 					`subpax_${designName}_top2`,
 					`subpax_${designName}_topTop`,
-					`subpax_${designName}_topLeg1`
+					`subpax_${designName}_topLeg1`,
+					`subpax_${designName}_topLeg2`,
+					`subpax_${designName}_topLeg3`,
+					`subpax_${designName}_topLeg4`,
+					`subpax_${designName}_topLeg5`,
+					`subpax_${designName}_topLeg6`
 				]
 			);
 		}
@@ -423,14 +428,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				translate: [posX, R7, 0]
 			};
 		}
-		function volTopLeg(posX: number, posY: number, idx: string): tExtrude {
+		function volTopLeg(posX: number, posZ: number, rotY: number, idx: string): tExtrude {
 			return {
 				outName: `subpax_${designName}_topLeg${idx}`,
 				face: `${designName}_faceTopLeg`,
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: E1,
-				rotate: [0, pi2, 0],
-				translate: [posX, posY, 0]
+				rotate: [0, rotY, 0],
+				translate: [posX, 0, posZ]
 			};
 		}
 		rGeome.vol = {
@@ -487,7 +492,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					rotate: [-pi2, 0, 0],
 					translate: [0, posYtop2, WW12]
 				},
-				volTopLeg(0, 0, '1')
+				volTopLeg(-L52, WW12, pi2, '1'),
+				volTopLeg(L52 - E1, WW12, pi2, '2'),
+				volTopLeg(-L53 / 2 + R52, WW12 - W52, 0, '3'),
+				volTopLeg(-L53 / 2 + R52, WW12 + W52 - E1, 0, '4'),
+				volTopLeg(L53 / 2 - R52, WW12 - W52, 0, '5'),
+				volTopLeg(L53 / 2 - R52, WW12 + W52 - E1, 0, '6')
 			],
 			volumes: [
 				{
