@@ -23,8 +23,8 @@ import {
 	//radToDeg,
 	ffix,
 	pNumber,
-	//pCheckbox,
-	//pDropdown,
+	pCheckbox,
+	pDropdown,
 	pSectionSeparator,
 	EExtrude,
 	EBVolume,
@@ -38,19 +38,49 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('W1', 'mm', 400, 10, 2000, 1),
-		pNumber('L1', 'mm', 1000, 100, 8000, 1),
-		pSectionSeparator('Platform'),
+		pNumber('L1', 'mm', 200, 10, 2000, 1),
+		pNumber('N1', 'unit', 4, 1, 12, 1),
+		pSectionSeparator('General'),
+		pDropdown('gen3D', ['all', 'platform', 'bone', 'hand', 'motor', 'wheel']),
+		pNumber('F1', 'mm', 180, 1, 1000, 1),
+		pNumber('H1', 'mm', 200, 1, 2000, 1),
+		pNumber('T1', 'mm', 10, 1, 100, 1),
 		pNumber('E1', 'mm', 10, 1, 100, 1),
+		pSectionSeparator('Platform'),
+		pNumber('W2', 'mm', 100, 10, 2000, 1),
+		pCheckbox('triangleInt', true),
+		pCheckbox('triangleExt', true),
+		pSectionSeparator('Bone'),
+		pNumber('D1', 'mm', 20, 1, 200, 1),
+		pNumber('D2', 'mm', 40, 1, 200, 1),
+		pNumber('W3', 'mm', 30, 1, 200, 1),
+		pNumber('L2', 'mm', 150, 1, 200, 1),
 		pSectionSeparator('Angles'),
-		pNumber('a1', 'degree', 45, 10, 80, 1),
-		pNumber('a2', 'degree', 45, 10, 80, 1)
+		pNumber('a1x', 'degree', 45, 10, 80, 1),
+		pNumber('a2x', 'degree', 45, 10, 80, 1),
+		pNumber('a11', 'degree', 45, 10, 80, 1),
+		pNumber('a21', 'degree', 45, 10, 80, 1)
 	],
 	paramSvg: {
-		W1: 'rccar_angles.svg',
-		L1: 'rccar_angles.svg',
-		E1: 'rccar_angles.svg',
-		a1: 'rccar_angles.svg',
-		a2: 'rccar_angles.svg'
+		W1: 'rccar_all_xz.svg',
+		L1: 'rccar_all_xy.svg',
+		N1: 'rccar_all_xy.svg',
+		gen3D: 'rccar_all_xy.svg',
+		F1: 'rccar_one_xy.svg',
+		H1: 'rccar_platform_xz.svg',
+		T1: 'rccar_one_xy.svg',
+		E1: 'rccar_one_xy.svg',
+		W2: 'rccar_platform_xz.svg',
+		triangleInt: 'rccar_all_xy.svg',
+		triangleExt: 'rccar_all_xy.svg',
+		D1: 'rccar_bone.svg',
+		D2: 'rccar_bone.svg',
+		W3: 'rccar_bone.svg',
+		L2: 'rccar_bone.svg',
+		a1x: 'rccar_all_xz.svg',
+		a2x: 'rccar_all_xz.svg',
+		a11: 'rccar_all_xz.svg',
+		a21: 'rccar_all_xz.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -69,8 +99,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const W12 = param.W1 / 2;
 		const platSurface = (param.L1 * param.W1) / 10 ** 6;
 		// step-5 : checks on the parameter values
-		if (param.L1 < param.W1) {
-			throw `err176: L1 ${ffix(param.L1)} is too small compare to W1 ${ffix(param.W1)} mm`;
+		if (param.W1 < param.L1) {
+			throw `err176: L1 ${ffix(param.L1)} is too large compare to W1 ${ffix(param.W1)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform surface: ${ffix(platSurface)} m2\n`;
