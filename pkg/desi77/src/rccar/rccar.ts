@@ -7,7 +7,8 @@ import type {
 	tParamDef,
 	tParamVal,
 	tGeom,
-	tPageDef
+	tPageDef,
+	tExtrude
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';
@@ -15,7 +16,7 @@ import {
 	//withinZeroPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	//contourCircle,
 	ctrRectangle,
 	figure,
@@ -115,11 +116,17 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figPlatform = figure();
+	const figTriangle = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
 		//const pi2 = Math.PI / 2;
 		const W12 = param.W1 / 2;
+		const W22 = param.W2 / 2;
+		const H1b = param.H1 - param.T1;
+		const W22b = W12 - W22;
+		const W2c = param.W2 - 2 * param.T1;
+		const H1c = param.H1 - 2 * param.T1;
 		const Ltotal = param.N1 * (param.L1 + param.T1) + param.T1;
 		const platSurface = (Ltotal * param.W1) / 10 ** 6;
 		const Rwheel = param.Dwheel / 2;
@@ -141,30 +148,82 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-7 : drawing of the figures
 		// sub-function
 		// figPlatform
-		figPlatform.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.T1));
+		const ctrPlatformMain = contour(-W22, 0)
+			.addSegStrokeR(param.W2, 0)
+			.addSegStrokeR(0, H1b)
+			.addSegStrokeR(W22b, 0)
+			.addSegStrokeR(0, param.T1)
+			.addSegStrokeR(-param.W1, 0)
+			.addSegStrokeR(0, -param.T1)
+			.addSegStrokeR(W22b, 0)
+			.closeSegStroke();
+		const ctrPlatformInt = ctrRectangle(-W22 + param.T1, param.T1, W2c, H1c);
+		figPlatform.addMainOI([ctrPlatformMain, ctrPlatformInt]);
+		const ctrTriangleL = contour(-W22, 0)
+			.addSegStrokeR(param.T1, 0)
+			.addSegStrokeR(0, param.H1)
+			.addSegStrokeR(-W22b - param.T1, 0)
+			.addSegStrokeR(0, -param.T1)
+			.closeSegStroke();
+		const ctrTriangleR = contour(W22, 0)
+			.addSegStrokeR(W22b, H1b)
+			.addSegStrokeR(0, param.T1)
+			.addSegStrokeR(-W22b - param.T1, 0)
+			.addSegStrokeR(0, -param.H1)
+			.closeSegStroke();
+		figTriangle.addMainO(ctrTriangleL);
+		figTriangle.addMainO(ctrTriangleR);
+		figPlatform.addSecond(ctrTriangleL);
+		figPlatform.addSecond(ctrTriangleR);
 		// final figure list
 		rGeome.fig = {
-			facePlatform: figPlatform
+			facePlatform: figPlatform,
+			faceTriangle: figTriangle
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
+		const listPlatform: string[] = [];
+		const volPlatformMain: tExtrude = {
+			outName: `subpax_${designName}_platformMain`,
+			face: `${designName}_facePlatform`,
+			extrudeMethod: EExtrude.eLinearOrtho,
+			length: Ltotal,
+			rotate: [0, 0, 0],
+			translate: [0, 0, 0]
+		};
+		const volTriangle: tExtrude[] = [];
+		function extrudeTriangle(posZ: number, idx: number): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_platformTriangle${idx}`,
+				face: `${designName}_faceTriangle`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.T1,
+				rotate: [0, 0, 0],
+				translate: [0, 0, posZ]
+			};
+			return rVol;
+		}
+		volTriangle.push(extrudeTriangle(0, 0));
+		volTriangle.push(extrudeTriangle(Ltotal - param.T1, param.N1 + 1));
+		listPlatform.push(`subpax_${designName}_platformMain`);
+		if (param.triangleExt) {
+			listPlatform.push(`subpax_${designName}_platformTriangle${0}`);
+			listPlatform.push(`subpax_${designName}_platformTriangle${param.N1 + 1}`);
+		}
+		if (param.triangleInt) {
+			for (let ii = 1; ii < param.N1; ii++) {
+				volTriangle.push(extrudeTriangle(ii * (param.T1 + param.L1), ii + 1));
+				listPlatform.push(`subpax_${designName}_platformTriangle${ii + 1}`);
+			}
+		}
 		rGeome.vol = {
-			extrudes: [
-				{
-					outName: `subpax_${designName}_platform`,
-					face: `${designName}_facePlatform`,
-					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.L1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				}
-			],
+			extrudes: [volPlatformMain, ...volTriangle],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_platform`]
+					inList: [...listPlatform]
 				}
 			]
 		};
