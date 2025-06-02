@@ -2,7 +2,7 @@
 // high-level concept of the rc-car
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -17,7 +17,7 @@ import {
 	//ShapePoint,
 	//point,
 	contour,
-	//contourCircle,
+	contourCircle,
 	ctrRectangle,
 	figure,
 	degToRad,
@@ -50,7 +50,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Platform'),
 		pNumber('W2', 'mm', 100, 10, 2000, 1),
 		pCheckbox('triangleInt', true),
-		pCheckbox('triangleExt', true),
+		pCheckbox('triangleExt', false),
 		pSectionSeparator('Bone'),
 		pNumber('D1', 'mm', 20, 1, 200, 1),
 		pNumber('D2', 'mm', 40, 1, 200, 1),
@@ -117,6 +117,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figPlatform = figure();
 	const figTriangle = figure();
+	const figPFfixation = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -129,9 +130,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H1c = param.H1 - 2 * param.T1;
 		const Ltotal = param.N1 * (param.L1 + param.T1) + param.T1;
 		const platSurface = (Ltotal * param.W1) / 10 ** 6;
+		const R2 = param.D2 / 2;
+		const R1 = param.D1 / 2;
 		const Rwheel = param.Dwheel / 2;
 		//const Raxis = param.Daxis / 2;
 		//const Rsteering = param.Dsteering / 2;
+		const Z2b = param.Z2 - 4 * R2;
 		const A1x = degToRad(param.a1x);
 		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(A1x);
 		const Hplatform = posZplatform + param.H1;
@@ -141,6 +145,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (param.H1 < param.Z2 + param.T1) {
 			throw `err130: H1 ${ffix(param.H1)} is too small compare to Z2 ${ffix(param.Z2)} and T1 ${ffix(param.T1)} mm`;
+		}
+		if (param.Z2b < 0.1) {
+			throw `err149: Z2 ${ffix(param.Z2)} is too small compare to D2 ${ffix(param.D2)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -175,10 +182,42 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTriangle.addMainO(ctrTriangleR);
 		figPlatform.addSecond(ctrTriangleL);
 		figPlatform.addSecond(ctrTriangleR);
+		// figPFfixation
+		function makePFfixExt(sign: number): tContour[] {
+			const dW22 = sign * (W22 - param.T1);
+			const dx1 = sign * (param.E2 + R2);
+			const dx2 = sign * param.T1 + dx1;
+			const dR2 = sign * R2;
+			const rCtrExt = contour(dW22, 0, 'green')
+				.addSegStrokeR(dx2, 0)
+				.addPointR(dR2, R2)
+				.addPointR(0, 2 * R2)
+				.addSegArc2()
+				.addSegStrokeR(-dx1, 0)
+				.addSegStrokeR(0, Z2b)
+				.addSegStrokeR(dx1, 0)
+				.addPointR(dR2, R2)
+				.addPointR(0, 2 * R2)
+				.addSegArc2()
+				.addSegStrokeR(-dx2, 0)
+				.closeSegStroke();
+			const rCtr1 = contourCircle(dW22 + dx2, R2, R1);
+			const rCtr2 = contourCircle(dW22 + dx2, Z2b + 3 * R2, R1);
+			return [rCtrExt, rCtr1, rCtr2];
+		}
+		figPFfixation.addMainOI(makePFfixExt(1));
+		figPFfixation.addMainOI(makePFfixExt(-1));
+		for (const iCtr of makePFfixExt(1)) {
+			figPlatform.addSecond(iCtr);
+		}
+		for (const iCtr of makePFfixExt(-1)) {
+			figPlatform.addSecond(iCtr);
+		}
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform,
-			faceTriangle: figTriangle
+			faceTriangle: figTriangle,
+			facePFfixation: figPFfixation
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
