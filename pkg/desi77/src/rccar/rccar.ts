@@ -119,6 +119,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTriangle = figure();
 	const figPFfixation = figure();
 	const figTop = figure();
+	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -161,6 +162,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (H1c < 0.1) {
 			throw `err156: H1c ${ffix(param.H1)} is too small compare to T1 ${ffix(param.T1)} mm`;
+		}
+		if (F1b < 0.1) {
+			throw `err167: F1 ${ffix(param.F1)} is too small compare to T1 ${ffix(param.T1)} and E1 ${ffix(param.E1)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -256,12 +260,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figTop.addSecond(ctrRectangle(tPosX2, tPosY3, tL2, param.T1));
 			}
 		}
+		// figSide
+		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
+		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
+		if (param.triangleExt) {
+			for (let ii = 0; ii < 2; ii++) {
+				const tPosY = ii * (param.L1 + param.T1) * param.N1;
+				figSide.addSecond(ctrRectangle(tPosY, 0, param.T1, H1b));
+			}
+		}
+		if (param.triangleInt) {
+			for (let ii = 1; ii < param.N1; ii++) {
+				const tPosY = ii * (param.L1 + param.T1);
+				figSide.addSecond(ctrRectangle(tPosY, 0, param.T1, H1b));
+			}
+		}
+		const tH2 = 2 * R2;
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const tPosY2 of [LF2, LF23, LF25, LF28]) {
+				const tPosY3 = tPosY + tPosY2;
+				figSide.addSecond(ctrRectangle(tPosY3, 0, param.T1, tH2));
+				figSide.addSecond(ctrRectangle(tPosY3, tH2 + Z2b, param.T1, tH2));
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform,
 			faceTriangle: figTriangle,
 			facePFfixation: figPFfixation,
-			faceTop: figTop
+			faceTop: figTop,
+			faceSide: figSide
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
