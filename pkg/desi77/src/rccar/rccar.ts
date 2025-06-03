@@ -15,7 +15,7 @@ import type {
 import {
 	//withinZeroPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	contourCircle,
 	ctrRectangle,
@@ -67,10 +67,10 @@ const pDef: tParamDef = {
 		pNumber('Dsteering', 'mm', 40, 1, 500, 1),
 		pNumber('Daxis', 'mm', 20, 1, 500, 1),
 		pSectionSeparator('Angles'),
-		pNumber('a1x', 'degree', 45, 10, 80, 1),
-		pNumber('a2x', 'degree', 45, 10, 80, 1),
-		pNumber('a11', 'degree', 45, 10, 80, 1),
-		pNumber('a21', 'degree', 45, 10, 80, 1),
+		pNumber('aBoneMin', 'degree', -40, -80, 0, 1),
+		pNumber('aBoneMax', 'degree', 20, -80, 80, 1),
+		pNumber('aBoneLeft', '%', 0, 0, 100, 1),
+		pNumber('aBoneRight', '%', 0, 0, 100, 1),
 		pNumber('rx', 'cm', 0, -1000, 1000, 1),
 		pNumber('ry', 'cm', 0, -1000, 1000, 1)
 	],
@@ -99,10 +99,10 @@ const pDef: tParamDef = {
 		Lmotor: 'rccar_motor_xz.svg',
 		Dsteering: 'rccar_motor_xz.svg',
 		Daxis: 'rccar_motor_xz.svg',
-		a1x: 'rccar_all_xz.svg',
-		a2x: 'rccar_all_xz.svg',
-		a11: 'rccar_all_xz.svg',
-		a21: 'rccar_all_xz.svg',
+		aBoneMin: 'rccar_all_xz.svg',
+		aBoneMax: 'rccar_all_xz.svg',
+		aBoneLeft: 'rccar_all_xz.svg',
+		aBoneRight: 'rccar_all_xz.svg',
 		rx: 'rccar_all_xy.svg',
 		ry: 'rccar_all_xy.svg'
 	},
@@ -118,12 +118,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figPlatform = figure();
 	const figTriangle = figure();
 	const figPFfixation = figure();
+	const figBones = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const pi2 = Math.PI / 2;
+		const pi = Math.PI;
+		//const pi2 = pi / 2;
 		const W12 = param.W1 / 2;
 		const W22 = param.W2 / 2;
 		const H1b = param.H1 - param.T1;
@@ -144,9 +146,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//const Raxis = param.Daxis / 2;
 		//const Rsteering = param.Dsteering / 2;
 		const Z2b = param.Z2 - 4 * R2;
-		const A1x = degToRad(param.a1x);
-		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(A1x);
+		const AbMin = degToRad(param.aBoneMin);
+		const AbMax = degToRad(param.aBoneMax);
+		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(AbMin);
 		const Hplatform = posZplatform + param.H1;
+		const W32 = param.W3 / 2;
+		if (R2 < W32) {
+			throw `err152: D2 ${ffix(param.D2)} is too small compare to W3 ${ffix(param.W3)} mm`;
+		}
+		const W32X = Math.sqrt(R2 ** 2 - W32 ** 2);
+		const L2b = param.L2 - 2 * W32X;
+		const aBR = AbMin + (param.aBoneRight * (AbMax - AbMin)) / 100;
+		const aBL = pi - AbMin - (param.aBoneLeft * (AbMax - AbMin)) / 100;
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -165,6 +176,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (F1b < 0.1) {
 			throw `err167: F1 ${ffix(param.F1)} is too small compare to T1 ${ffix(param.T1)} and E1 ${ffix(param.E1)} mm`;
+		}
+		if (AbMax < AbMin) {
+			throw `err181: aBoneMax ${ffix(param.aBoneMax)} is too small compare to aBoneMin ${ffix(param.BoneMin)} degree`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -230,6 +244,47 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (const iCtr of makePFfixExt(-1)) {
 			figPlatform.addSecond(iCtr);
 		}
+		// figBones
+		const ctrBone = contour(W32X, W32)
+			.addPointR(-W32X - R2, -W32)
+			.addPointR(0, -2 * W32)
+			.addSegArc2()
+			.addSegStrokeR(L2b, 0)
+			.addPointR(W32X + R2, W32)
+			.addPointR(0, 2 * W32)
+			.addSegArc2()
+			.closeSegStroke();
+		const ctrBoneR = ctrBone.rotate(0, 0, aBR);
+		const ctrBoneL = ctrBone.rotate(0, 0, aBL);
+		const ptR1 = point(W22 + param.E2 + R2, R2);
+		const ptR1b = ptR1.translatePolar(aBR, param.L2);
+		const ptR2 = point(W22 + param.E2 + R2, Z2b + 3 * R2);
+		const ptR2b = ptR2.translatePolar(aBR, param.L2);
+		const ptL1 = point(-W22 - param.E2 - R2, R2);
+		const ptL1b = ptL1.translatePolar(aBL, param.L2);
+		const ptL2 = point(-W22 - param.E2 - R2, Z2b + 3 * R2);
+		const ptL2b = ptL2.translatePolar(aBL, param.L2);
+		figBones.addMainOI([
+			ctrBoneR.translate(ptR1.cx, ptR1.cy),
+			contourCircle(ptR1.cx, ptR1.cy, R1),
+			contourCircle(ptR1b.cx, ptR1b.cy, R1)
+		]);
+		figBones.addMainOI([
+			ctrBoneR.translate(ptR2.cx, ptR2.cy),
+			contourCircle(ptR2.cx, ptR2.cy, R1),
+			contourCircle(ptR2b.cx, ptR2b.cy, R1)
+		]);
+		figBones.addMainOI([
+			ctrBoneL.translate(ptL1.cx, ptL1.cy),
+			contourCircle(ptL1.cx, ptL1.cy, R1),
+			contourCircle(ptL1b.cx, ptL1b.cy, R1)
+		]);
+		figBones.addMainOI([
+			ctrBoneL.translate(ptL2.cx, ptL2.cy),
+			contourCircle(ptL2.cx, ptL2.cy, R1),
+			contourCircle(ptL2b.cx, ptL2b.cy, R1)
+		]);
+		figPlatform.mergeFigure(figBones, true);
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -289,6 +344,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			facePlatform: figPlatform,
 			faceTriangle: figTriangle,
 			facePFfixation: figPFfixation,
+			faceBones: figBones,
 			faceTop: figTop,
 			faceSide: figSide
 		};
