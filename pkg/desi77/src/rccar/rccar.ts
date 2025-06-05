@@ -137,10 +137,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R2 = param.D2 / 2;
 		const R1 = param.D1 / 2;
 		const LF2 = (param.L1 - param.F1) / 2;
+		const LF2b = LF2 + param.T1 + param.E1;
 		const LF23 = LF2 + 2 * (param.T1 + param.E1);
 		const LF24 = LF23 + param.T1;
 		const F1b = param.F1 - 6 * param.T1 - 4 * param.E1;
 		const LF25 = LF24 + F1b;
+		const LF25b = LF25 + param.T1 + param.E1;
 		const LF28 = LF25 + 2 * (param.T1 + param.E1);
 		const Rwheel = param.Dwheel / 2;
 		//const Raxis = param.Daxis / 2;
@@ -352,8 +354,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// volume
 		const designName = rGeome.partName;
 		const list3D: string[] = [];
+		// listPlatform
 		const listPlatform: string[] = [];
-		const listBones: string[] = [];
 		const volPlatformMain: tExtrude = {
 			outName: `subpax_${designName}_platformMain`,
 			face: `${designName}_facePlatform`,
@@ -407,6 +409,29 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				listPlatform.push(`subpax_${designName}_platformTriangle${ii + 1}`);
 			}
 		}
+		// listBones
+		const listBones: string[] = [];
+		const volBones: tExtrude[] = [];
+		function extrudeBones(posZ: number, idx: number): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_bones${idx}`,
+				face: `${designName}_faceBones`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.T1,
+				rotate: [0, 0, 0],
+				translate: [0, 0, posZ]
+			};
+			return rVol;
+		}
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const [jj, tPosY2] of [LF2b, LF25b].entries()) {
+				const tPosY3 = tPosY + tPosY2;
+				const idx = 2 * ii + jj;
+				volBones.push(extrudeBones(tPosY3, idx));
+				listBones.push(`subpax_${designName}_bones${idx}`);
+			}
+		}
 		// list3D
 		if (param.gen3D === 0 || param.gen3D === 1) {
 			list3D.push(...listPlatform);
@@ -415,7 +440,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			list3D.push(...listBones);
 		}
 		rGeome.vol = {
-			extrudes: [volPlatformMain, ...volTriangle],
+			extrudes: [volPlatformMain, ...volTriangle, ...volBones],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
