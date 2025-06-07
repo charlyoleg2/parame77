@@ -119,7 +119,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTriangle = figure();
 	const figPFfixation = figure();
 	const figBones = figure();
-	const figBoneFixation = figure();
+	const figHandFixation = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
@@ -291,10 +291,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			contourCircle(ptL2b.cx, ptL2b.cy, R1)
 		]);
 		figPlatform.mergeFigure(figBones, true);
-		// figBoneFixation
-		figBoneFixation.addMainOI(makePFfixExt(-1, aBR, param.L2));
-		figBoneFixation.addMainOI(makePFfixExt(1, aBL, param.L2));
-		figPlatform.mergeFigure(figBoneFixation, true);
+		// figHandFixation
+		figHandFixation.addMainOI(makePFfixExt(-1, aBR, param.L2));
+		figHandFixation.addMainOI(makePFfixExt(1, aBL, param.L2));
+		figPlatform.mergeFigure(figHandFixation, true);
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -382,7 +382,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceTriangle: figTriangle,
 			facePFfixation: figPFfixation,
 			faceBones: figBones,
-			faceBoneFixation: figBoneFixation,
+			faceHandFixation: figHandFixation,
 			faceTop: figTop,
 			faceSide: figSide
 		};
@@ -474,7 +474,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		function extrudeHandFixation(posZ: number, idx: number): tExtrude {
 			const rVol: tExtrude = {
 				outName: `subpax_${designName}_handFixation${idx}`,
-				face: `${designName}_faceBoneFixation`,
+				face: `${designName}_faceHandFixation`,
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: param.T1,
 				rotate: [0, 0, 0],
