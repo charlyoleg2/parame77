@@ -38,16 +38,17 @@ const pDef: tParamDef = {
 	partName: 'rccar',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('W1', 'mm', 400, 10, 2000, 1),
-		pNumber('L1', 'mm', 200, 10, 2000, 1),
 		pNumber('N1', 'unit', 4, 1, 12, 1),
+		pNumber('L1', 'mm', 200, 10, 2000, 1),
+		pNumber('W1', 'mm', 600, 10, 2000, 1),
 		pSectionSeparator('General'),
 		pDropdown('gen3D', ['all', 'platform', 'bone', 'hand', 'motor', 'wheel']),
-		pNumber('F1', 'mm', 180, 1, 1000, 1),
-		pNumber('H1', 'mm', 200, 10, 2000, 1),
 		pNumber('T1', 'mm', 10, 1, 100, 1),
 		pNumber('E1', 'mm', 10, 1, 100, 1),
+		pNumber('E2', 'mm', 10, 1, 500, 1),
+		pNumber('E3', 'mm', 30, 1, 500, 1),
 		pSectionSeparator('Platform'),
+		pNumber('H1', 'mm', 230, 10, 2000, 1),
 		pNumber('W2', 'mm', 100, 10, 2000, 1),
 		pCheckbox('triangleInt', true),
 		pCheckbox('triangleExt', false),
@@ -56,13 +57,12 @@ const pDef: tParamDef = {
 		pNumber('D2', 'mm', 40, 1, 200, 1),
 		pNumber('W3', 'mm', 30, 1, 200, 1),
 		pNumber('L2', 'mm', 150, 1, 200, 1),
-		pNumber('E2', 'mm', 10, 1, 500, 1),
 		pSectionSeparator('Unit'),
+		pNumber('F1', 'mm', 180, 1, 1000, 1),
 		pNumber('Dwheel', 'mm', 200, 10, 2000, 1),
 		pNumber('Z1', 'mm', 100, 10, 2000, 1),
 		pNumber('Z2', 'mm', 160, 10, 2000, 1),
 		pNumber('Lwheel', 'mm', 100, 10, 2000, 1),
-		pNumber('E3', 'mm', 30, 1, 500, 1),
 		pNumber('Lmotor', 'mm', 120, 10, 1000, 1),
 		pNumber('Dsteering', 'mm', 40, 1, 500, 1),
 		pNumber('Daxis', 'mm', 20, 1, 500, 1),
@@ -75,14 +75,15 @@ const pDef: tParamDef = {
 		pNumber('ry', 'cm', 0, -1000, 1000, 1)
 	],
 	paramSvg: {
-		W1: 'rccar_all_xz.svg',
-		L1: 'rccar_all_xy.svg',
 		N1: 'rccar_all_xy.svg',
+		L1: 'rccar_all_xy.svg',
+		W1: 'rccar_all_xz.svg',
 		gen3D: 'rccar_all_xy.svg',
-		F1: 'rccar_one_xy.svg',
-		H1: 'rccar_platform_xz.svg',
 		T1: 'rccar_one_xy.svg',
 		E1: 'rccar_one_xy.svg',
+		E2: 'rccar_motor_xz.svg',
+		E3: 'rccar_motor_xz.svg',
+		H1: 'rccar_platform_xz.svg',
 		W2: 'rccar_platform_xz.svg',
 		triangleInt: 'rccar_all_xy.svg',
 		triangleExt: 'rccar_all_xy.svg',
@@ -90,12 +91,11 @@ const pDef: tParamDef = {
 		D2: 'rccar_bone.svg',
 		W3: 'rccar_bone.svg',
 		L2: 'rccar_bone.svg',
-		E2: 'rccar_motor_xz.svg',
+		F1: 'rccar_one_xy.svg',
 		Dwheel: 'rccar_motor_xz.svg',
 		Z1: 'rccar_motor_xz.svg',
 		Z2: 'rccar_motor_xz.svg',
 		Lwheel: 'rccar_motor_xz.svg',
-		E3: 'rccar_motor_xz.svg',
 		Lmotor: 'rccar_motor_xz.svg',
 		Dsteering: 'rccar_motor_xz.svg',
 		Daxis: 'rccar_motor_xz.svg',
@@ -119,6 +119,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figTriangle = figure();
 	const figPFfixation = figure();
 	const figBones = figure();
+	const figBoneFixation = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
@@ -160,6 +161,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const L2b = param.L2 - 2 * W32X;
 		const aBR = AbMin + (param.aBoneRight * (AbMax - AbMin)) / 100;
 		const aBL = pi - AbMin - (param.aBoneLeft * (AbMax - AbMin)) / 100;
+		const boneTopxR = 2 * R2 + param.L2 * Math.cos(aBR);
+		const boneTopxL = 2 * R2 - param.L2 * Math.cos(aBL);
+		const boneSideyR = 2 * R2 * Math.sign(aBR) + param.L2 * Math.sin(aBR);
+		//const boneSideyL = 2 * R2 * Math.sign(aBL) + param.L2 * Math.sin(aBL);
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -216,12 +221,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figPlatform.addSecond(ctrTriangleL);
 		figPlatform.addSecond(ctrTriangleR);
 		// figPFfixation
-		function makePFfixExt(sign: number): tContour[] {
+		function makePFfixExt(sign: number, tpA: number, tpL: number): tContour[] {
 			const dW22 = sign * (W22 - param.T1);
+			const dW22b = -sign * (W22 + 2 * (param.E2 + R2) + param.T1);
+			const dW22c = tpL > 0 ? dW22b : dW22;
 			const dx1 = sign * (param.E2 + R2);
 			const dx2 = sign * param.T1 + dx1;
 			const dR2 = sign * R2;
-			const rCtrExt = contour(dW22, 0, 'green')
+			const dW22d = tpL > 0 ? -dW22 - dx2 : dW22 + dx2;
+			const rCtrExt = contour(dW22c, 0, 'green')
 				.addSegStrokeR(dx2, 0)
 				.addPointR(dR2, R2)
 				.addPointR(0, 2 * R2)
@@ -233,19 +241,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.addPointR(0, 2 * R2)
 				.addSegArc2()
 				.addSegStrokeR(-dx2, 0)
-				.closeSegStroke();
-			const rCtr1 = contourCircle(dW22 + dx2, R2, R1);
-			const rCtr2 = contourCircle(dW22 + dx2, Z2b + 3 * R2, R1);
+				.closeSegStroke()
+				.translatePolar(tpA, tpL);
+			const rCtr1 = contourCircle(dW22d, R2, R1).translatePolar(tpA, tpL);
+			const rCtr2 = contourCircle(dW22d, Z2b + 3 * R2, R1).translatePolar(tpA, tpL);
 			return [rCtrExt, rCtr1, rCtr2];
 		}
-		figPFfixation.addMainOI(makePFfixExt(1));
-		figPFfixation.addMainOI(makePFfixExt(-1));
-		for (const iCtr of makePFfixExt(1)) {
-			figPlatform.addSecond(iCtr);
-		}
-		for (const iCtr of makePFfixExt(-1)) {
-			figPlatform.addSecond(iCtr);
-		}
+		figPFfixation.addMainOI(makePFfixExt(1, 0, 0));
+		figPFfixation.addMainOI(makePFfixExt(-1, 0, 0));
+		figPlatform.mergeFigure(figPFfixation, true);
 		// figBones
 		const ctrBone = contour(W32X, W32)
 			.addPointR(-W32X - R2, -W32)
@@ -287,6 +291,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			contourCircle(ptL2b.cx, ptL2b.cy, R1)
 		]);
 		figPlatform.mergeFigure(figBones, true);
+		// figBoneFixation
+		figBoneFixation.addMainOI(makePFfixExt(-1, aBR, param.L2));
+		figBoneFixation.addMainOI(makePFfixExt(1, aBL, param.L2));
+		figPlatform.mergeFigure(figBoneFixation, true);
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -307,6 +315,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figTop.addSecond(ctrRectangle(W22, tPosY, W22b, param.T1));
 			}
 		}
+		// figTop fixation
 		const tL2 = param.E2 + 2 * R2;
 		const tPosX2 = -W22 - tL2;
 		for (let ii = 0; ii < param.N1; ii++) {
@@ -315,6 +324,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const tPosY3 = tPosY + tPosY2;
 				figTop.addSecond(ctrRectangle(W22, tPosY3, tL2, param.T1));
 				figTop.addSecond(ctrRectangle(tPosX2, tPosY3, tL2, param.T1));
+			}
+		}
+		// figTop bones
+		const tPosX3 = -W22 - param.E2 - boneTopxL;
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const tPosY2 of [LF2, LF25]) {
+				const tPosY3 = tPosY + tPosY2 + param.T1 + param.E1;
+				figTop.addSecond(ctrRectangle(W22 + param.E2, tPosY3, boneTopxR, param.T1));
+				figTop.addSecond(ctrRectangle(tPosX3, tPosY3, boneTopxL, param.T1));
 			}
 		}
 		// figSide
@@ -332,6 +351,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figSide.addSecond(ctrRectangle(tPosY, 0, param.T1, H1b));
 			}
 		}
+		// figSide fixation
 		const tH2 = 2 * R2;
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
@@ -341,12 +361,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figSide.addSecond(ctrRectangle(tPosY3, tH2 + Z2b, param.T1, tH2));
 			}
 		}
+		// figSide bone
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const tPosY2 of [LF2, LF25]) {
+				const tPosY3 = tPosY + tPosY2 + param.T1 + param.E1;
+				if (boneSideyR > 0) {
+					figSide.addSecond(ctrRectangle(tPosY3, 0, param.T1, boneSideyR));
+					figSide.addSecond(ctrRectangle(tPosY3, 2 * R2 + Z2b, param.T1, boneSideyR));
+				} else {
+					const tLy = -boneSideyR;
+					figSide.addSecond(ctrRectangle(tPosY3, 2 * R2 - tLy, param.T1, tLy));
+					figSide.addSecond(ctrRectangle(tPosY3, 4 * R2 + Z2b - tLy, param.T1, tLy));
+				}
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform,
 			faceTriangle: figTriangle,
 			facePFfixation: figPFfixation,
 			faceBones: figBones,
+			faceBoneFixation: figBoneFixation,
 			faceTop: figTop,
 			faceSide: figSide
 		};
@@ -432,6 +468,29 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				listBones.push(`subpax_${designName}_bones${idx}`);
 			}
 		}
+		// listHand
+		const listHands: string[] = [];
+		const volHands: tExtrude[] = [];
+		function extrudeHandFixation(posZ: number, idx: number): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_handFixation${idx}`,
+				face: `${designName}_faceBoneFixation`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.T1,
+				rotate: [0, 0, 0],
+				translate: [0, 0, posZ]
+			};
+			return rVol;
+		}
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const [jj, tPosY2] of [LF2, LF23, LF25, LF28].entries()) {
+				const tPosY3 = tPosY + tPosY2;
+				const idx = 4 * ii + jj;
+				volTriangle.push(extrudeHandFixation(tPosY3, idx));
+				listPlatform.push(`subpax_${designName}_handFixation${idx}`);
+			}
+		}
 		// list3D
 		if (param.gen3D === 0 || param.gen3D === 1) {
 			list3D.push(...listPlatform);
@@ -439,8 +498,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.gen3D === 0 || param.gen3D === 2) {
 			list3D.push(...listBones);
 		}
+		if (param.gen3D === 0 || param.gen3D === 3) {
+			list3D.push(...listHands);
+		}
 		rGeome.vol = {
-			extrudes: [volPlatformMain, ...volTriangle, ...volBones],
+			extrudes: [volPlatformMain, ...volTriangle, ...volBones, ...volHands],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
