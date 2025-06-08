@@ -506,14 +506,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figSide.addSecond(ctrRectangle(tPosY3, boneSideyRs + tH2 + Z2b, param.T1, tH2));
 			}
 		}
-		// figSide hand plate
+		// figSide hand-plate, hand-back, motor-bulk
 		const ZhpR = [boneSideyRs, boneSideyRs + Z2c];
 		const ZhpL = [boneSideyLs, boneSideyLs + Z2c];
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
 			const tPosY3 = tPosY + LF2;
-			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[0], param.F1, param.T1));
-			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[1], param.F1, param.T1));
+			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[0], param.F1, param.T1)); // hand-plate-0
+			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[1], param.F1, param.T1)); // hand-plate-1
+			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[0], param.F1, param.Z2)); // hand-back
+			figSide.addSecond(ctrRectangle(tPosY3, mBRpY, param.F1, motorHeight)); // motor-bulk
 		}
 		// final figure list
 		rGeome.fig = {
