@@ -63,7 +63,7 @@ const pDef: tParamDef = {
 		pNumber('Z1', 'mm', 100, 10, 2000, 1),
 		pNumber('Z2', 'mm', 160, 10, 2000, 1),
 		pNumber('Lwheel', 'mm', 100, 10, 2000, 1),
-		pNumber('Lmotor', 'mm', 120, 10, 1000, 1),
+		pNumber('Lmotor', 'mm', 140, 10, 1000, 1),
 		pNumber('Dsteering', 'mm', 40, 1, 500, 1),
 		pNumber('Daxis', 'mm', 20, 1, 500, 1),
 		pSectionSeparator('Angles'),
