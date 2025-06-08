@@ -120,14 +120,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figPFfixation = figure();
 	const figBones = figure();
 	const figHandFixation = figure();
-	const figHandPlate = figure();
+	const figHandPlateR = figure();
+	const figHandPlateL = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
 		const pi = Math.PI;
-		//const pi2 = pi / 2;
+		const pi2 = pi / 2;
 		const W12 = param.W1 / 2;
 		const W22 = param.W2 / 2;
 		const H1b = param.H1 - param.T1;
@@ -151,6 +152,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//const Raxis = param.Daxis / 2;
 		const Rsteering = param.Dsteering / 2;
 		const Z2b = param.Z2 - 4 * R2;
+		const Z2c = param.Z2 - 2 * param.T1;
 		const AbMin = degToRad(param.aBoneMin);
 		const AbMax = degToRad(param.aBoneMax);
 		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(AbMin);
@@ -167,8 +169,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const boneTopxLs = param.L2 * Math.cos(aBL);
 		const boneTopxR = 2 * R2 + boneTopxRs;
 		const boneTopxL = 2 * R2 - boneTopxLs;
-		const boneSideyR = 2 * R2 * Math.sign(aBR) + param.L2 * Math.sin(aBR);
-		//const boneSideyL = 2 * R2 * Math.sign(aBL) + param.L2 * Math.sin(aBL);
+		const boneSideyRs = param.L2 * Math.sin(aBR);
+		const boneSideyLs = param.L2 * Math.sin(aBL);
+		const boneSideyR = 2 * R2 * Math.sign(aBR) + boneSideyRs;
+		//const boneSideyL = 2 * R2 * Math.sign(aBL) + boneSideyLs;
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -299,7 +303,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figHandFixation.addMainOI(makePFfixExt(-1, aBR, param.L2));
 		figHandFixation.addMainOI(makePFfixExt(1, aBL, param.L2));
 		figPlatform.mergeFigure(figHandFixation, true);
-		// figHandPlate
+		// figHandPlateR figHandPlateL
 		function makeHandPlate(az: number, addL: number, ipX: number, ipY: number): tContour[] {
 			const rCtrExt = contour(ipX, ipY + F12)
 				.addPointR(-F12, -F12)
@@ -316,8 +320,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
 			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
 			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
-			figHandPlate.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
-			figHandPlate.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
+			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
+			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
 		}
 		// figTop
 		figTop.addMainOI([
@@ -372,7 +376,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figTop hand plate
-		figTop.mergeFigure(figHandPlate, true);
+		figTop.mergeFigure(figHandPlateR, true);
+		figTop.mergeFigure(figHandPlateL, true);
 		// figSide
 		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
 		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
@@ -414,14 +419,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figSide hand fixation
-		const tPosY4 = param.L2 * Math.sin(aBR);
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
 			for (const tPosY2 of [LF2, LF23, LF25, LF28]) {
 				const tPosY3 = tPosY + tPosY2;
-				figSide.addSecond(ctrRectangle(tPosY3, tPosY4, param.T1, tH2));
-				figSide.addSecond(ctrRectangle(tPosY3, tPosY4 + tH2 + Z2b, param.T1, tH2));
+				figSide.addSecond(ctrRectangle(tPosY3, boneSideyRs, param.T1, tH2));
+				figSide.addSecond(ctrRectangle(tPosY3, boneSideyRs + tH2 + Z2b, param.T1, tH2));
 			}
+		}
+		// figSide hand plate
+		const ZhpR = [boneSideyRs, boneSideyRs + param.T1 + Z2c];
+		const ZhpL = [boneSideyLs, boneSideyLs + param.T1 + Z2c];
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			const tPosY3 = tPosY + LF2;
+			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[0], param.F1, param.T1));
+			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[1], param.F1, param.T1));
 		}
 		// final figure list
 		rGeome.fig = {
@@ -430,7 +443,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			facePFfixation: figPFfixation,
 			faceBones: figBones,
 			faceHandFixation: figHandFixation,
-			faceHandPlate: figHandPlate,
+			faceHandPlateR: figHandPlateR,
+			faceHandPlateL: figHandPlateL,
 			faceTop: figTop,
 			faceSide: figSide
 		};
@@ -535,10 +549,29 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			for (const [jj, tPosY2] of [LF2, LF23, LF25, LF28].entries()) {
 				const tPosY3 = tPosY + tPosY2;
 				const idx = 4 * ii + jj;
-				volTriangle.push(extrudeHandFixation(tPosY3, idx));
-				listPlatform.push(`subpax_${designName}_handFixation${idx}`);
+				volHands.push(extrudeHandFixation(tPosY3, idx));
+				listHands.push(`subpax_${designName}_handFixation${idx}`);
 			}
 		}
+		function extrudeHandPlate(posY: number, iRL: string, idx: number): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_handPlate${iRL}${idx}`,
+				face: `${designName}_faceHandPlate${iRL}`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.T1,
+				rotate: [pi2, 0, 0],
+				translate: [0, posY + param.T1, 0]
+			};
+			return rVol;
+		}
+		volHands.push(extrudeHandPlate(ZhpR[0], 'R', 1));
+		volHands.push(extrudeHandPlate(ZhpR[1], 'R', 2));
+		volHands.push(extrudeHandPlate(ZhpL[0], 'L', 1));
+		volHands.push(extrudeHandPlate(ZhpL[1], 'L', 2));
+		listHands.push(`subpax_${designName}_handPlateR1`);
+		listHands.push(`subpax_${designName}_handPlateR2`);
+		listHands.push(`subpax_${designName}_handPlateL1`);
+		listHands.push(`subpax_${designName}_handPlateL2`);
 		// list3D
 		if (param.gen3D === 0 || param.gen3D === 1) {
 			list3D.push(...listPlatform);
