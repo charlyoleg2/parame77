@@ -14,6 +14,7 @@ import type {
 } from 'geometrix';
 import {
 	//withinZeroPi,
+	withinHPiHPi,
 	ShapePoint,
 	point,
 	contour,
@@ -189,11 +190,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ra = degToRad(param.ra);
 		const rx10 = 10 * param.rx;
 		const ry10 = 10 * param.ry;
+		const hFposR = W22 + param.E2 + R2 + boneTopxRs - R2;
+		const hFposL = -W22 - param.E2 - R2 + boneTopxLs - R2 - param.E2;
+		const hBposR = W22 + 2 * (param.E2 + R2) + boneTopxRs;
+		const hBposL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1;
+		const hPposR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
+		const hPposL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
 		let wheelRA = new Array<number>(param.N1).fill(ra);
 		let wheelLA = new Array<number>(param.N1).fill(pi + ra);
+		function adjustWheelAngle(dY: number, dX: number, ref: number): number {
+			const rawA = Math.atan2(dY, dX);
+			const rA = ref + withinHPiHPi(rawA - ref);
+			return rA;
+		}
 		if (param.wheel === 1) {
-			wheelRA = new Array<number>(param.N1).fill(0);
-			wheelLA = new Array<number>(param.N1).fill(pi);
+			const tWheelRA: number[] = [];
+			const tWheelLA: number[] = [];
+			const bTxs = param.L2 * Math.cos(AbMin);
+			const XpR = W22 + 2 * (param.E2 + R2) + bTxs + param.T1 + param.E2 + F12;
+			const XpL = -W22 - 2 * (param.E2 + R2) - bTxs - param.T1 - param.E2 - F12;
+			for (let ii = 0; ii < param.N1; ii++) {
+				const Yp = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
+				tWheelRA.push(adjustWheelAngle(Yp - ry10, XpR - rx10, 0));
+				tWheelLA.push(adjustWheelAngle(Yp - ry10, XpL - rx10, pi));
+			}
+			wheelRA = tWheelRA;
+			wheelLA = tWheelLA;
 		}
 		const motorExtraL = param.Lmotor - F12;
 		const motorHeight = param.Z2 - 2 * (param.T1 + param.E1);
@@ -348,26 +370,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
-			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
-			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
-			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
-			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
+			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, hPposR, tPosY));
+			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, hPposL, tPosY));
 		}
 		// figHandBackR figHandBackL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + LF2;
-			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs;
-			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1;
-			figHandBackR.addMainO(ctrRectangle(iPosXR, tPosY, param.T1, 2 * F12));
-			figHandBackL.addMainO(ctrRectangle(iPosXL, tPosY, param.T1, 2 * F12));
+			figHandBackR.addMainO(ctrRectangle(hBposR, tPosY, param.T1, 2 * F12));
+			figHandBackL.addMainO(ctrRectangle(hBposL, tPosY, param.T1, 2 * F12));
 		}
 		// figMotorBulkR figMotorBulkL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
-			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
-			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
-			figMotorBulkR.addMainOI(makeHandPlate(wheelRA[ii], motorExtraL, iPosXR, tPosY));
-			figMotorBulkL.addMainOI(makeHandPlate(wheelLA[ii], motorExtraL, iPosXL, tPosY));
+			figMotorBulkR.addMainOI(makeHandPlate(wheelRA[ii], motorExtraL, hPposR, tPosY));
+			figMotorBulkL.addMainOI(makeHandPlate(wheelLA[ii], motorExtraL, hPposL, tPosY));
 		}
 		// figTop
 		figTop.addMainOI([
@@ -411,14 +427,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figTop hand fixation
-		const tPosX4 = W22 + param.E2 + R2 + boneTopxRs - R2;
-		const tPosX5 = -W22 - param.E2 - R2 + boneTopxLs - R2 - param.E2;
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
 			for (const tPosY2 of [LF2, LF23, LF25, LF28]) {
 				const tPosY3 = tPosY + tPosY2;
-				figTop.addSecond(ctrRectangle(tPosX4, tPosY3, tL2, param.T1));
-				figTop.addSecond(ctrRectangle(tPosX5, tPosY3, tL2, param.T1));
+				figTop.addSecond(ctrRectangle(hFposR, tPosY3, tL2, param.T1));
+				figTop.addSecond(ctrRectangle(hFposL, tPosY3, tL2, param.T1));
 			}
 		}
 		// figTop hand plate
