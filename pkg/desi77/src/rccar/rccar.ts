@@ -120,6 +120,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figPFfixation = figure();
 	const figBones = figure();
 	const figHandFixation = figure();
+	const figHandPlate = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
@@ -137,6 +138,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const platSurface = (Ltotal * param.W1) / 10 ** 6;
 		const R2 = param.D2 / 2;
 		const R1 = param.D1 / 2;
+		const F12 = param.F1 / 2;
 		const LF2 = (param.L1 - param.F1) / 2;
 		const LF2b = LF2 + param.T1 + param.E1;
 		const LF23 = LF2 + 2 * (param.T1 + param.E1);
@@ -147,7 +149,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const LF28 = LF25 + 2 * (param.T1 + param.E1);
 		const Rwheel = param.Dwheel / 2;
 		//const Raxis = param.Daxis / 2;
-		//const Rsteering = param.Dsteering / 2;
+		const Rsteering = param.Dsteering / 2;
 		const Z2b = param.Z2 - 4 * R2;
 		const AbMin = degToRad(param.aBoneMin);
 		const AbMax = degToRad(param.aBoneMax);
@@ -161,8 +163,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const L2b = param.L2 - 2 * W32X;
 		const aBR = AbMin + (param.aBoneRight * (AbMax - AbMin)) / 100;
 		const aBL = pi - AbMin - (param.aBoneLeft * (AbMax - AbMin)) / 100;
-		const boneTopxR = 2 * R2 + param.L2 * Math.cos(aBR);
-		const boneTopxL = 2 * R2 - param.L2 * Math.cos(aBL);
+		const boneTopxRs = param.L2 * Math.cos(aBR);
+		const boneTopxLs = param.L2 * Math.cos(aBL);
+		const boneTopxR = 2 * R2 + boneTopxRs;
+		const boneTopxL = 2 * R2 - boneTopxLs;
 		const boneSideyR = 2 * R2 * Math.sign(aBR) + param.L2 * Math.sin(aBR);
 		//const boneSideyL = 2 * R2 * Math.sign(aBL) + param.L2 * Math.sin(aBL);
 		// step-5 : checks on the parameter values
@@ -295,6 +299,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figHandFixation.addMainOI(makePFfixExt(-1, aBR, param.L2));
 		figHandFixation.addMainOI(makePFfixExt(1, aBL, param.L2));
 		figPlatform.mergeFigure(figHandFixation, true);
+		// figHandPlate
+		function makeHandPlate(az: number, addL: number, ipX: number, ipY: number): tContour[] {
+			const rCtrExt = contour(ipX, ipY + F12)
+				.addPointR(-F12, -F12)
+				.addPointR(0, -2 * F12)
+				.addSegArc2()
+				.addSegStrokeR(F12 + addL, 0)
+				.addSegStrokeR(0, 2 * F12)
+				.closeSegStroke()
+				.rotate(ipX, ipY, az);
+			const rCtrHole = contourCircle(ipX, ipY, Rsteering);
+			return [rCtrExt, rCtrHole];
+		}
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
+			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
+			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
+			figHandPlate.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
+			figHandPlate.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
+		}
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -315,7 +339,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figTop.addSecond(ctrRectangle(W22, tPosY, W22b, param.T1));
 			}
 		}
-		// figTop fixation
+		// figTop platform fixation
 		const tL2 = param.E2 + 2 * R2;
 		const tPosX2 = -W22 - tL2;
 		for (let ii = 0; ii < param.N1; ii++) {
@@ -336,6 +360,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figTop.addSecond(ctrRectangle(tPosX3, tPosY3, boneTopxL, param.T1));
 			}
 		}
+		// figTop hand fixation
+		const tPosX4 = W22 + param.E2 + R2 + boneTopxRs - R2;
+		const tPosX5 = -W22 - param.E2 - R2 + boneTopxLs - R2 - param.E2;
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const tPosY2 of [LF2, LF23, LF25, LF28]) {
+				const tPosY3 = tPosY + tPosY2;
+				figTop.addSecond(ctrRectangle(tPosX4, tPosY3, tL2, param.T1));
+				figTop.addSecond(ctrRectangle(tPosX5, tPosY3, tL2, param.T1));
+			}
+		}
+		// figTop hand plate
+		figTop.mergeFigure(figHandPlate, true);
 		// figSide
 		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
 		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
@@ -351,7 +388,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figSide.addSecond(ctrRectangle(tPosY, 0, param.T1, H1b));
 			}
 		}
-		// figSide fixation
+		// figSide platform fixation
 		const tH2 = 2 * R2;
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
@@ -376,6 +413,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				}
 			}
 		}
+		// figSide hand fixation
+		const tPosY4 = param.L2 * Math.sin(aBR);
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = param.T1 + ii * (param.L1 + param.T1);
+			for (const tPosY2 of [LF2, LF23, LF25, LF28]) {
+				const tPosY3 = tPosY + tPosY2;
+				figSide.addSecond(ctrRectangle(tPosY3, tPosY4, param.T1, tH2));
+				figSide.addSecond(ctrRectangle(tPosY3, tPosY4 + tH2 + Z2b, param.T1, tH2));
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform,
@@ -383,6 +430,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			facePFfixation: figPFfixation,
 			faceBones: figBones,
 			faceHandFixation: figHandFixation,
+			faceHandPlate: figHandPlate,
 			faceTop: figTop,
 			faceSide: figSide
 		};
