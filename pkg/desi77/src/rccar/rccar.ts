@@ -72,6 +72,7 @@ const pDef: tParamDef = {
 		pNumber('aBoneLeft', '%', 0, 0, 100, 1),
 		pNumber('aBoneRight', '%', 0, 0, 100, 1),
 		pDropdown('wheel', ['straight', 'turn']),
+		pNumber('ra', 'degree', 0, -90, 90, 1),
 		pNumber('rx', 'cm', 0, -1000, 1000, 1),
 		pNumber('ry', 'cm', 0, -1000, 1000, 1)
 	],
@@ -105,6 +106,7 @@ const pDef: tParamDef = {
 		aBoneLeft: 'rccar_all_xz.svg',
 		aBoneRight: 'rccar_all_xz.svg',
 		wheel: 'rccar_all_xy.svg',
+		ra: 'rccar_all_xy.svg',
 		rx: 'rccar_all_xy.svg',
 		ry: 'rccar_all_xy.svg'
 	},
@@ -182,14 +184,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const boneSideyLs = param.L2 * Math.sin(aBL);
 		const boneSideyR = 2 * R2 * Math.sign(aBR) + boneSideyRs;
 		//const boneSideyL = 2 * R2 * Math.sign(aBL) + boneSideyLs;
-		let wheelRA = new Array<number>(param.N1).fill(0);
-		let wheelLA = new Array<number>(param.N1).fill(pi);
+		const ra = degToRad(param.ra);
+		const rx10 = 10 * param.rx;
+		const ry10 = 10 * param.ry;
+		let wheelRA = new Array<number>(param.N1).fill(ra);
+		let wheelLA = new Array<number>(param.N1).fill(pi + ra);
 		if (param.wheel === 1) {
 			wheelRA = new Array<number>(param.N1).fill(0);
 			wheelLA = new Array<number>(param.N1).fill(pi);
 		}
-		const rx10 = 10 * param.rx;
-		const ry10 = 10 * param.ry;
 		const motorExtraL = param.Lmotor - F12;
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
@@ -409,7 +412,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop.mergeFigure(figHandPlateL, true);
 		figTop.mergeFigure(figMotorBulkR, true);
 		figTop.mergeFigure(figMotorBulkL, true);
-		figTop.addPoint(point(rx10, ry10, ShapePoint.eTwoTri));
+		figTop.addPoint(point(rx10, ry10, ShapePoint.eBigSquare));
 		// figSide
 		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
 		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
@@ -471,6 +474,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// final figure list
 		rGeome.fig = {
 			facePlatform: figPlatform,
+			faceTop: figTop,
+			faceSide: figSide,
 			faceTriangle: figTriangle,
 			facePFfixation: figPFfixation,
 			faceBones: figBones,
@@ -478,9 +483,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHandPlateR: figHandPlateR,
 			faceHandPlateL: figHandPlateL,
 			faceMotorBulkR: figMotorBulkR,
-			faceMotorBulkL: figMotorBulkL,
-			faceTop: figTop,
-			faceSide: figSide
+			faceMotorBulkL: figMotorBulkL
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
