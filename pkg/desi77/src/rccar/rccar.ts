@@ -41,7 +41,7 @@ const pDef: tParamDef = {
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('N1', 'unit', 4, 1, 12, 1),
 		pNumber('L1', 'mm', 300, 10, 2000, 1),
-		pNumber('W1', 'mm', 1000, 10, 2000, 1),
+		pNumber('W1', 'mm', 1200, 10, 2000, 1),
 		pSectionSeparator('General'),
 		pDropdown('gen3D', ['all', 'platform', 'bone', 'hand', 'motor', 'wheel']),
 		pNumber('T1', 'mm', 10, 1, 100, 1),
@@ -161,7 +161,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//const Raxis = param.Daxis / 2;
 		const Rsteering = param.Dsteering / 2;
 		const Z2b = param.Z2 - 4 * R2;
-		const Z2c = param.Z2 - 2 * param.T1;
+		const Z2c = param.Z2 - param.T1;
 		const AbMin = degToRad(param.aBoneMin);
 		const AbMax = degToRad(param.aBoneMax);
 		const posZplatform = Rwheel + param.Z1 + param.L2 * Math.sin(AbMin);
@@ -190,7 +190,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ra = degToRad(param.ra);
 		const rx10 = 10 * param.rx;
 		const ry10 = 10 * param.ry;
-		const hPlen = F12 + param.E2 + param.T1;
+		const hPlen = 2 * F12 + param.E2 + param.T1;
 		const hFposR = W22 + param.E2 + R2 + boneTopxRs - R2;
 		const hFposL = -W22 - param.E2 - R2 + boneTopxLs - R2 - param.E2;
 		const hBposR = W22 + 2 * (param.E2 + R2) + boneTopxRs;
@@ -220,6 +220,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const motorExtraL = param.Lmotor - F12;
 		const motorHeight = param.Z2 - 2 * (param.T1 + param.E1);
+		const motorLen = F12 + param.Lmotor;
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -375,7 +376,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, hPposL, tPosY));
 		}
 		figPlatform.addSecond(ctrRectangle(hBposR, boneSideyRs, hPlen, param.T1));
+		figPlatform.addSecond(ctrRectangle(hBposR, boneSideyRs + Z2c, hPlen, param.T1));
 		figPlatform.addSecond(ctrRectangle(hBposL - hPlen, boneSideyLs, hPlen, param.T1));
+		figPlatform.addSecond(ctrRectangle(hBposL - hPlen, boneSideyLs + Z2c, hPlen, param.T1));
 		// figHandBackR figHandBackL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + LF2;
@@ -390,6 +393,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figMotorBulkR.addMainOI(makeHandPlate(wheelRA[ii], motorExtraL, hPposR, tPosY));
 			figMotorBulkL.addMainOI(makeHandPlate(wheelLA[ii], motorExtraL, hPposL, tPosY));
 		}
+		const mBRpX = hBposR + param.T1 + param.E2;
+		const mBRpY = boneSideyRs + param.T1 + param.E1;
+		const mBLpX = hBposL - param.T1 - param.E2 - motorLen;
+		const mBLpY = boneSideyLs + param.T1 + param.E1;
+		figPlatform.addSecond(ctrRectangle(mBRpX, mBRpY, motorLen, motorHeight));
+		figPlatform.addSecond(ctrRectangle(mBLpX, mBLpY, motorLen, motorHeight));
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -498,8 +507,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figSide hand plate
-		const ZhpR = [boneSideyRs, boneSideyRs + param.T1 + Z2c];
-		const ZhpL = [boneSideyLs, boneSideyLs + param.T1 + Z2c];
+		const ZhpR = [boneSideyRs, boneSideyRs + Z2c];
+		const ZhpL = [boneSideyLs, boneSideyLs + Z2c];
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = param.T1 + ii * (param.L1 + param.T1);
 			const tPosY3 = tPosY + LF2;
