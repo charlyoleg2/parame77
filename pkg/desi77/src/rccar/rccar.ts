@@ -126,6 +126,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figHandFixation = figure();
 	const figHandPlateR = figure();
 	const figHandPlateL = figure();
+	const figHandBackR = figure();
+	const figHandBackL = figure();
 	const figMotorBulkR = figure();
 	const figMotorBulkL = figure();
 	const figTop = figure();
@@ -194,6 +196,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			wheelLA = new Array<number>(param.N1).fill(pi);
 		}
 		const motorExtraL = param.Lmotor - F12;
+		const motorHeight = param.Z2 - 2 * (param.T1 + param.E1);
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -218,6 +221,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (motorExtraL < param.T1 + param.E2) {
 			throw `err218: Lmotor ${ffix(param.Lmotor)} is too small compare to F1 ${ffix(param.F1)}`;
+		}
+		if (motorHeight < param.T1) {
+			throw `err226: Z2 ${ffix(param.Z2)} is too small compare to T1 ${ffix(param.T1)} and E1 ${ffix(param.E1)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -347,6 +353,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
 			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
 		}
+		// figHandBackR figHandBackL
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = ii * (param.L1 + param.T1) + param.T1 + LF2;
+			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs;
+			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1;
+			figHandBackR.addMainO(ctrRectangle(iPosXR, tPosY, param.T1, 2 * F12));
+			figHandBackL.addMainO(ctrRectangle(iPosXL, tPosY, param.T1, 2 * F12));
+		}
 		// figMotorBulkR figMotorBulkL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
@@ -410,6 +424,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figTop hand plate
 		figTop.mergeFigure(figHandPlateR, true);
 		figTop.mergeFigure(figHandPlateL, true);
+		figTop.mergeFigure(figHandBackR, true);
+		figTop.mergeFigure(figHandBackL, true);
 		figTop.mergeFigure(figMotorBulkR, true);
 		figTop.mergeFigure(figMotorBulkL, true);
 		figTop.addPoint(point(rx10, ry10, ShapePoint.eBigSquare));
@@ -482,6 +498,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHandFixation: figHandFixation,
 			faceHandPlateR: figHandPlateR,
 			faceHandPlateL: figHandPlateL,
+			faceHandBackR: figHandBackR,
+			faceHandBackL: figHandBackL,
 			faceMotorBulkR: figMotorBulkR,
 			faceMotorBulkL: figMotorBulkL
 		};
@@ -609,6 +627,42 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		listHands.push(`subpax_${designName}_handPlateR2`);
 		listHands.push(`subpax_${designName}_handPlateL1`);
 		listHands.push(`subpax_${designName}_handPlateL2`);
+		function extrudeHandBack(posY: number, iRL: string): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_handBack${iRL}`,
+				face: `${designName}_faceHandBack${iRL}`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.Z2,
+				rotate: [pi2, 0, 0],
+				translate: [0, posY + param.T1, 0]
+			};
+			return rVol;
+		}
+		volHands.push(extrudeHandBack(ZhpR[1], 'R'));
+		volHands.push(extrudeHandBack(ZhpL[1], 'L'));
+		listHands.push(`subpax_${designName}_handBackR`);
+		listHands.push(`subpax_${designName}_handBackL`);
+		// listMotors
+		const listMotors: string[] = [];
+		const volMotors: tExtrude[] = [];
+		function extrudeMotorBulk(posY: number, iRL: string): tExtrude {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_motorBulk${iRL}`,
+				face: `${designName}_faceMotorBulk${iRL}`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: motorHeight,
+				rotate: [pi2, 0, 0],
+				translate: [0, posY - param.E1, 0]
+			};
+			return rVol;
+		}
+		volHands.push(extrudeMotorBulk(ZhpR[1], 'R'));
+		volHands.push(extrudeMotorBulk(ZhpL[1], 'L'));
+		listHands.push(`subpax_${designName}_motorBulkR`);
+		listHands.push(`subpax_${designName}_motorBulkL`);
+		// listWheels
+		const listWheels: string[] = [];
+		const volWheels: tExtrude[] = [];
 		// list3D
 		if (param.gen3D === 0 || param.gen3D === 1) {
 			list3D.push(...listPlatform);
@@ -619,8 +673,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.gen3D === 0 || param.gen3D === 3) {
 			list3D.push(...listHands);
 		}
+		if (param.gen3D === 0 || param.gen3D === 4) {
+			list3D.push(...listMotors);
+		}
+		if (param.gen3D === 0 || param.gen3D === 5) {
+			list3D.push(...listWheels);
+		}
 		rGeome.vol = {
-			extrudes: [volPlatformMain, ...volTriangle, ...volBones, ...volHands],
+			extrudes: [
+				volPlatformMain,
+				...volTriangle,
+				...volBones,
+				...volHands,
+				...volMotors,
+				...volWheels
+			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
