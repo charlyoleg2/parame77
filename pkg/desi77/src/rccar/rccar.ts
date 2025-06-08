@@ -107,7 +107,7 @@ const pDef: tParamDef = {
 		ry: 'rccar_all_xy.svg'
 	},
 	sim: {
-		tMax: 180,
+		tMax: 200,
 		tStep: 0.5,
 		tUpdate: 500 // every 0.5 second
 	}
@@ -163,8 +163,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const W32X = Math.sqrt(R2 ** 2 - W32 ** 2);
 		const L2b = param.L2 - 2 * W32X;
-		const aBR = AbMin + (param.aBoneRight * (AbMax - AbMin)) / 100;
-		const aBL = pi - AbMin - (param.aBoneLeft * (AbMax - AbMin)) / 100;
+		function calcPercent(aInit: number): number {
+			const percent2 = (aInit + t) % 200;
+			const rP = percent2 > 100 ? 200 - percent2 : percent2;
+			return rP / 100;
+		}
+		const aBR = AbMin + calcPercent(param.aBoneRight) * (AbMax - AbMin);
+		const aBL = pi - AbMin - calcPercent(param.aBoneLeft) * (AbMax - AbMin);
 		const boneTopxRs = param.L2 * Math.cos(aBR);
 		const boneTopxLs = param.L2 * Math.cos(aBL);
 		const boneTopxR = 2 * R2 + boneTopxRs;
