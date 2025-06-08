@@ -190,10 +190,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ra = degToRad(param.ra);
 		const rx10 = 10 * param.rx;
 		const ry10 = 10 * param.ry;
+		const hPlen = F12 + param.E2 + param.T1;
 		const hFposR = W22 + param.E2 + R2 + boneTopxRs - R2;
 		const hFposL = -W22 - param.E2 - R2 + boneTopxLs - R2 - param.E2;
 		const hBposR = W22 + 2 * (param.E2 + R2) + boneTopxRs;
-		const hBposL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1;
+		const hBposL = -W22 - 2 * (param.E2 + R2) + boneTopxLs;
 		const hPposR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
 		const hPposL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
 		let wheelRA = new Array<number>(param.N1).fill(ra);
@@ -373,12 +374,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, hPposR, tPosY));
 			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, hPposL, tPosY));
 		}
+		figPlatform.addSecond(ctrRectangle(hBposR, boneSideyRs, hPlen, param.T1));
+		figPlatform.addSecond(ctrRectangle(hBposL - hPlen, boneSideyLs, hPlen, param.T1));
 		// figHandBackR figHandBackL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + LF2;
 			figHandBackR.addMainO(ctrRectangle(hBposR, tPosY, param.T1, 2 * F12));
-			figHandBackL.addMainO(ctrRectangle(hBposL, tPosY, param.T1, 2 * F12));
+			figHandBackL.addMainO(ctrRectangle(hBposL - param.T1, tPosY, param.T1, 2 * F12));
 		}
+		figPlatform.addSecond(ctrRectangle(hBposR, boneSideyRs, param.T1, param.Z2));
+		figPlatform.addSecond(ctrRectangle(hBposL - param.T1, boneSideyLs, param.T1, param.Z2));
 		// figMotorBulkR figMotorBulkL
 		for (let ii = 0; ii < param.N1; ii++) {
 			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
