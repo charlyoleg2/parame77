@@ -14,7 +14,7 @@ import type {
 } from 'geometrix';
 import {
 	//withinZeroPi,
-	//ShapePoint,
+	ShapePoint,
 	point,
 	contour,
 	contourCircle,
@@ -39,8 +39,8 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('N1', 'unit', 4, 1, 12, 1),
-		pNumber('L1', 'mm', 200, 10, 2000, 1),
-		pNumber('W1', 'mm', 600, 10, 2000, 1),
+		pNumber('L1', 'mm', 300, 10, 2000, 1),
+		pNumber('W1', 'mm', 1000, 10, 2000, 1),
 		pSectionSeparator('General'),
 		pDropdown('gen3D', ['all', 'platform', 'bone', 'hand', 'motor', 'wheel']),
 		pNumber('T1', 'mm', 10, 1, 100, 1),
@@ -71,6 +71,7 @@ const pDef: tParamDef = {
 		pNumber('aBoneMax', 'degree', 20, -80, 80, 1),
 		pNumber('aBoneLeft', '%', 0, 0, 100, 1),
 		pNumber('aBoneRight', '%', 0, 0, 100, 1),
+		pDropdown('wheel', ['straight', 'turn']),
 		pNumber('rx', 'cm', 0, -1000, 1000, 1),
 		pNumber('ry', 'cm', 0, -1000, 1000, 1)
 	],
@@ -103,6 +104,7 @@ const pDef: tParamDef = {
 		aBoneMax: 'rccar_all_xz.svg',
 		aBoneLeft: 'rccar_all_xz.svg',
 		aBoneRight: 'rccar_all_xz.svg',
+		wheel: 'rccar_all_xy.svg',
 		rx: 'rccar_all_xy.svg',
 		ry: 'rccar_all_xy.svg'
 	},
@@ -122,6 +124,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figHandFixation = figure();
 	const figHandPlateR = figure();
 	const figHandPlateL = figure();
+	const figMotorBulkR = figure();
+	const figMotorBulkL = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
@@ -178,6 +182,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const boneSideyLs = param.L2 * Math.sin(aBL);
 		const boneSideyR = 2 * R2 * Math.sign(aBR) + boneSideyRs;
 		//const boneSideyL = 2 * R2 * Math.sign(aBL) + boneSideyLs;
+		let wheelRA = new Array<number>(param.N1).fill(0);
+		let wheelLA = new Array<number>(param.N1).fill(pi);
+		if (param.wheel === 1) {
+			wheelRA = new Array<number>(param.N1).fill(0);
+			wheelLA = new Array<number>(param.N1).fill(pi);
+		}
+		const rx10 = 10 * param.rx;
+		const ry10 = 10 * param.ry;
+		const motorExtraL = param.Lmotor - F12;
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -199,6 +212,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (AbMax < AbMin) {
 			throw `err181: aBoneMax ${ffix(param.aBoneMax)} is too small compare to aBoneMin ${ffix(param.BoneMin)} degree`;
+		}
+		if (motorExtraL < param.T1 + param.E2) {
+			throw `err218: Lmotor ${ffix(param.Lmotor)} is too small compare to F1 ${ffix(param.F1)}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -328,6 +344,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figHandPlateR.addMainOI(makeHandPlate(pi, param.T1 + param.E2, iPosXR, tPosY));
 			figHandPlateL.addMainOI(makeHandPlate(0, param.T1 + param.E2, iPosXL, tPosY));
 		}
+		// figMotorBulkR figMotorBulkL
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
+			const iPosXR = W22 + 2 * (param.E2 + R2) + boneTopxRs + param.T1 + param.E2 + F12;
+			const iPosXL = -W22 - 2 * (param.E2 + R2) + boneTopxLs - param.T1 - param.E2 - F12;
+			figMotorBulkR.addMainOI(makeHandPlate(wheelRA[ii], motorExtraL, iPosXR, tPosY));
+			figMotorBulkL.addMainOI(makeHandPlate(wheelLA[ii], motorExtraL, iPosXL, tPosY));
+		}
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -383,6 +407,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figTop hand plate
 		figTop.mergeFigure(figHandPlateR, true);
 		figTop.mergeFigure(figHandPlateL, true);
+		figTop.mergeFigure(figMotorBulkR, true);
+		figTop.mergeFigure(figMotorBulkL, true);
+		figTop.addPoint(point(rx10, ry10, ShapePoint.eTwoTri));
 		// figSide
 		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
 		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
@@ -450,6 +477,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHandFixation: figHandFixation,
 			faceHandPlateR: figHandPlateR,
 			faceHandPlateL: figHandPlateL,
+			faceMotorBulkR: figMotorBulkR,
+			faceMotorBulkL: figMotorBulkL,
 			faceTop: figTop,
 			faceSide: figSide
 		};
