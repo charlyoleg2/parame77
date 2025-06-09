@@ -803,14 +803,45 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const idx0 = (2 * ii).toString().padStart(2, '0');
 			const idx1 = (2 * ii + 1).toString().padStart(2, '0');
 			const tPosZ = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
-			volMotors.push(extrudeMFoot(hPposR, ZhpR[0] - param.Z1, tPosZ, wheelRA[0], idx0));
+			volMotors.push(extrudeMFoot(hPposR, ZhpR[0] - param.Z1, tPosZ, wheelRA[ii], idx0));
 			listMotors.push(`subpax_${designName}_mFoot${idx0}`);
-			volMotors.push(extrudeMFoot(hPposL, ZhpL[0] - param.Z1, tPosZ, wheelLA[0], idx1));
+			volMotors.push(extrudeMFoot(hPposL, ZhpL[0] - param.Z1, tPosZ, wheelLA[ii], idx1));
 			listMotors.push(`subpax_${designName}_mFoot${idx1}`);
 		}
 		// listWheels
 		const listWheels: string[] = [];
 		const volWheels: tExtrude[] = [];
+		function extrudeWheel(
+			posX: number,
+			posY: number,
+			posZ: number,
+			az: number,
+			idx: string
+		): tExtrude {
+			const tL = param.Lmotor - mFootWidth;
+			const tCos = tL * Math.cos(az);
+			const tSin = tL * Math.sin(az);
+			const tm = transform3d()
+				.addRotation(0, pi2 - az, 0)
+				.addTranslation(posX + tCos, posY, posZ + tSin);
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_wheel${idx}`,
+				face: `${designName}_faceWheel`,
+				extrudeMethod: EExtrude.eRotate,
+				rotate: tm.getRotation(),
+				translate: tm.getTranslation()
+			};
+			return rVol;
+		}
+		for (let ii = 0; ii < param.N1; ii++) {
+			const idx0 = (2 * ii).toString().padStart(2, '0');
+			const idx1 = (2 * ii + 1).toString().padStart(2, '0');
+			const tPosZ = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
+			volWheels.push(extrudeWheel(hPposR, ZhpR[0] - param.Z1, tPosZ, wheelRA[ii], idx0));
+			listWheels.push(`subpax_${designName}_wheel${idx0}`);
+			volWheels.push(extrudeWheel(hPposL, ZhpL[0] - param.Z1, tPosZ, wheelLA[ii], idx1));
+			listWheels.push(`subpax_${designName}_wheel${idx1}`);
+		}
 		// list3D
 		if (param.gen3D === 0 || param.gen3D === 1) {
 			list3D.push(...listPlatform);
