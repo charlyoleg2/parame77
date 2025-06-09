@@ -131,6 +131,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figHandBackL = figure();
 	const figMotorBulkR = figure();
 	const figMotorBulkL = figure();
+	const figWheel = figure();
 	const figTop = figure();
 	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
@@ -158,7 +159,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const LF25b = LF25 + param.T1 + param.E1;
 		const LF28 = LF25 + 2 * (param.T1 + param.E1);
 		const Rwheel = param.Dwheel / 2;
-		//const Raxis = param.Daxis / 2;
+		const Raxis = param.Daxis / 2;
 		const Rsteering = param.Dsteering / 2;
 		const Z2b = param.Z2 - 4 * R2;
 		const Z2c = param.Z2 - param.T1;
@@ -221,6 +222,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const motorExtraL = param.Lmotor - F12;
 		const motorHeight = param.Z2 - 2 * (param.T1 + param.E1);
 		const motorLen = F12 + param.Lmotor;
+		const mFootWidth = motorExtraL - param.E2;
+		const mFootR = Raxis + param.E1 + param.T1;
+		const mFootHeight = motorHeight + param.E1 + param.T1 + param.Z1 + mFootR;
+		const dWheelAxis = Rwheel - Raxis;
+		const roundedWheel = Math.min(param.Lwheel / 3, dWheelAxis / 2);
 		// step-5 : checks on the parameter values
 		if (LF2 < 0.1) {
 			throw `err176: L1 ${ffix(param.L1)} is too small compare to F1 ${ffix(param.F1)} mm`;
@@ -243,11 +249,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (AbMax < AbMin) {
 			throw `err181: aBoneMax ${ffix(param.aBoneMax)} is too small compare to aBoneMin ${ffix(param.BoneMin)} degree`;
 		}
-		if (motorExtraL < param.T1 + param.E2) {
+		if (mFootWidth < param.T1) {
 			throw `err218: Lmotor ${ffix(param.Lmotor)} is too small compare to F1 ${ffix(param.F1)}`;
 		}
 		if (motorHeight < param.T1) {
 			throw `err226: Z2 ${ffix(param.Z2)} is too small compare to T1 ${ffix(param.T1)} and E1 ${ffix(param.E1)} mm`;
+		}
+		if (param.Z1 < mFootR) {
+			throw `err256: Z1 ${ffix(param.Z1)} is too small compare to mFootR ${ffix(mFootR)} mm`;
+		}
+		if (Rwheel < mFootR) {
+			throw `err259: Dwheel ${ffix(param.Dwheel)} is too small compare to mFootR ${ffix(mFootR)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Platform Ltotal ${ffix(Ltotal / 1000)} m, surface ${ffix(platSurface)} m2\n`;
@@ -399,6 +411,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const mBLpY = boneSideyLs + param.T1 + param.E1;
 		figPlatform.addSecond(ctrRectangle(mBRpX, mBRpY, motorLen, motorHeight));
 		figPlatform.addSecond(ctrRectangle(mBLpX, mBLpY, motorLen, motorHeight));
+		const mFRpX = mBRpX + F12 + param.Lmotor - mFootWidth;
+		const mFRpY = boneSideyRs - param.Z1 - mFootR;
+		const mFLpX = mBLpX;
+		const mFLpY = boneSideyLs - param.Z1 - mFootR;
+		figPlatform.addSecond(ctrRectangle(mFRpX, mFRpY, mFootWidth, mFootHeight));
+		figPlatform.addSecond(ctrRectangle(mFLpX, mFLpY, mFootWidth, mFootHeight));
+		// figWheel
+		function makeCtrWheel(xSign: number, ia: number, itx: number, ity: number): tContour {
+			const rCtr = contour(itx, ity)
+				.addSegStrokeR(xSign * Raxis, 0)
+				.addSegStrokeR(0, mFootWidth + param.E2)
+				.addSegStrokeR(xSign * dWheelAxis, 0)
+				.addCornerRounded(roundedWheel)
+				.addSegStrokeR(0, param.Lwheel)
+				.addCornerRounded(roundedWheel)
+				.addSegStrokeR(-xSign * Rwheel, 0)
+				.closeSegStroke()
+				.rotate(itx, ity, ia);
+			return rCtr;
+		}
+		figWheel.addMainO(makeCtrWheel(1, 0, 0, 0));
+		figWheel.addSecond(makeCtrWheel(-1, 0, 0, 0));
+		figPlatform.addSecond(makeCtrWheel(1, -pi2, mFRpX, mFRpY + mFootR));
+		figPlatform.addSecond(makeCtrWheel(-1, -pi2, mFRpX, mFRpY + mFootR));
+		figPlatform.addSecond(makeCtrWheel(1, pi2, mFLpX + mFootWidth, mFLpY + mFootR));
+		figPlatform.addSecond(makeCtrWheel(-1, pi2, mFLpX + mFootWidth, mFLpY + mFootR));
 		// figTop
 		figTop.addMainOI([
 			ctrRectangle(-W12, 0, param.W1, Ltotal),
@@ -531,7 +569,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHandBackR: figHandBackR,
 			faceHandBackL: figHandBackL,
 			faceMotorBulkR: figMotorBulkR,
-			faceMotorBulkL: figMotorBulkL
+			faceMotorBulkL: figMotorBulkL,
+			faceWheel: figWheel
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
