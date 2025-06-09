@@ -437,7 +437,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		function makeCtrWheel(xSign: number, ia: number, itx: number, ity: number): tContour {
 			const rCtr = contour(itx, ity)
 				.addSegStrokeR(xSign * Raxis, 0)
-				.addSegStrokeR(0, mFootWidth + param.E2)
+				.addSegStrokeR(0, mFootWidth + param.E3)
 				.addSegStrokeR(xSign * dWheelAxis, 0)
 				.addCornerRounded(roundedWheel)
 				.addSegStrokeR(0, param.Lwheel)
@@ -511,6 +511,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop.mergeFigure(figMotorBulkR, true);
 		figTop.mergeFigure(figMotorBulkL, true);
 		figTop.addPoint(point(rx10, ry10, ShapePoint.eBigSquare));
+		// figTop wheel
+		function makeTopWheel(itx: number, ity: number, ia: number): tContour[] {
+			const tL = param.Lmotor - mFootWidth;
+			const tCos = tL * Math.cos(ia);
+			const tSin = tL * Math.sin(ia);
+			const ctrWheel1 = makeCtrWheel(1, -pi2 + ia, itx + tCos, ity + tSin);
+			const ctrWheel2 = makeCtrWheel(-1, -pi2 + ia, itx + tCos, ity + tSin);
+			const ctrMFootPre = ctrRectangle(itx + tL, ity - F12, mFootWidth, 2 * F12);
+			const ctrMFoot = ctrMFootPre.rotate(itx, ity, ia);
+			return [ctrWheel1, ctrWheel2, ctrMFoot];
+		}
+		for (let ii = 0; ii < param.N1; ii++) {
+			const tPosY = ii * (param.L1 + param.T1) + param.T1 + param.L1 / 2;
+			for (const iCtr of makeTopWheel(hPposR, tPosY, wheelRA[ii])) {
+				figTop.addSecond(iCtr); // motor-foot and wheel : right
+			}
+			for (const iCtr of makeTopWheel(hPposL, tPosY, wheelLA[ii])) {
+				figTop.addSecond(iCtr); // motor-foot and wheel : left
+			}
+		}
 		// figSide
 		figSide.addMainO(ctrRectangle(0, 0, Ltotal, param.H1));
 		figSide.addSecond(ctrRectangle(0, H1b, Ltotal, param.T1));
