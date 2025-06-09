@@ -60,7 +60,7 @@ const pDef: tParamDef = {
 		pNumber('L2', 'mm', 150, 1, 200, 1),
 		pSectionSeparator('Unit'),
 		pNumber('F1', 'mm', 180, 1, 1000, 1),
-		pNumber('Dwheel', 'mm', 200, 10, 2000, 1),
+		pNumber('Dwheel', 'mm', 250, 10, 2000, 1),
 		pNumber('Z1', 'mm', 100, 10, 2000, 1),
 		pNumber('Z2', 'mm', 160, 10, 2000, 1),
 		pNumber('Lwheel', 'mm', 100, 10, 2000, 1),
@@ -131,6 +131,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figHandBackL = figure();
 	const figMotorBulkR = figure();
 	const figMotorBulkL = figure();
+	const figMFoot = figure();
 	const figWheel = figure();
 	const figTop = figure();
 	const figSide = figure();
@@ -417,6 +418,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const mFLpY = boneSideyLs - param.Z1 - mFootR;
 		figPlatform.addSecond(ctrRectangle(mFRpX, mFRpY, mFootWidth, mFootHeight));
 		figPlatform.addSecond(ctrRectangle(mFLpX, mFLpY, mFootWidth, mFootHeight));
+		// figMFoot
+		function makeMFoot(itx: number, ity: number): tContour[] {
+			const rCtrExt = contour(itx - mFootR, ity, 'green')
+				.addPointR(mFootR, -mFootR)
+				.addPointR(2 * mFootR, 0)
+				.addSegArc2()
+				.addSegStrokeR(F12 - mFootR, param.Z1 + param.T1 + param.E1)
+				.addSegStrokeR(0, motorHeight)
+				.addSegStrokeR(-2 * F12, 0)
+				.addSegStrokeR(0, -motorHeight)
+				.closeSegStroke();
+			const rCtrHole = contourCircle(itx, ity, Raxis + param.E1);
+			return [rCtrExt, rCtrHole];
+		}
+		figMFoot.addMainOI(makeMFoot(0, 0));
 		// figWheel
 		function makeCtrWheel(xSign: number, ia: number, itx: number, ity: number): tContour {
 			const rCtr = contour(itx, ity)
@@ -544,7 +560,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figSide.addSecond(ctrRectangle(tPosY3, boneSideyRs + tH2 + Z2b, param.T1, tH2));
 			}
 		}
-		// figSide hand-plate, hand-back, motor-bulk
+		// figSide hand-plate, hand-back, motor-bulk, motor-foot
 		const ZhpR = [boneSideyRs, boneSideyRs + Z2c];
 		const ZhpL = [boneSideyLs, boneSideyLs + Z2c];
 		for (let ii = 0; ii < param.N1; ii++) {
@@ -554,6 +570,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[1], param.F1, param.T1)); // hand-plate-1
 			figSide.addSecond(ctrRectangle(tPosY3, ZhpR[0], param.F1, param.Z2)); // hand-back
 			figSide.addSecond(ctrRectangle(tPosY3, mBRpY, param.F1, motorHeight)); // motor-bulk
+			// motor-foot
+			const axisX = tPosY + param.L1 / 2;
+			const axisY = ZhpR[0] - param.Z1;
+			for (const iCtr of makeMFoot(axisX, axisY)) {
+				figSide.addSecond(iCtr); // motor-foot
+			}
+			figSide.addSecond(contourCircle(axisX, axisY, Raxis)); // wheel-axis
+			figSide.addSecond(contourCircle(axisX, axisY, Rwheel)); // wheel
 		}
 		// final figure list
 		rGeome.fig = {
@@ -570,6 +594,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceHandBackL: figHandBackL,
 			faceMotorBulkR: figMotorBulkR,
 			faceMotorBulkL: figMotorBulkL,
+			faceMFoot: figMFoot,
 			faceWheel: figWheel
 		};
 		// step-8 : recipes of the 3D construction
