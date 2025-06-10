@@ -88,7 +88,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const dX = Math.sqrt(dX2);
 		const L1b = param.L1 - 2 * dX;
 		const Rh = (W12 * param.P2) / 100;
-		const N2 = Math.max(Math.floor((param.L1 - 2 * R12 - param.W2) / (2 * Rh + param.W2)), 0);
+		const hX1 = param.W2 + 2 * Rh;
+		const N2 = Math.max(Math.floor((param.L1 - 2 * R22 - param.W2) / hX1), 0);
+		const W2b = (param.L1 - 2 * R22 - N2 * 2 * Rh) / (N2 + 1);
+		const hX0b = R22 + W2b + Rh;
+		const hX1b = W2b + 2 * Rh;
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -98,7 +102,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bone length ${ffix(boneLen)} mm\n`;
-		rGeome.logstr += `Bone with N2 ${N2} holes\n`;
+		rGeome.logstr += `Bone with N2 ${N2} holes of diameter ${ffix(2 * Rh)} mm\n`;
+		rGeome.logstr += `Bone W2b ${ffix(W2b)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// figBone
@@ -118,8 +123,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrAxis1 = contourCircle(0, 0, R12);
 		const ctrAxis2 = contourCircle(param.L1, 0, R12);
 		const ctrMinis: tContour[] = [];
-		for (let ii = 0; ii < N2; ii++) {
-			ctrMinis.push(contourCircle(R22, ii * (param.W2 + Rh), Rh));
+		if (Rh > 0) {
+			for (let ii = 0; ii < N2; ii++) {
+				ctrMinis.push(contourCircle(hX0b + ii * hX1b, 0, Rh));
+			}
 		}
 		figBone.addMainOI([ctrBone, ctrAxis1, ctrAxis2, ...ctrMinis]);
 		// final figure list
@@ -144,7 +151,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eIdentity,
-					inList: []
+					inList: [`subpax_${designName}_bone`]
 				}
 			]
 		};
