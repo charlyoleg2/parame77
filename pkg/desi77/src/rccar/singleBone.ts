@@ -2,7 +2,7 @@
 // detailed design of the suspension bone of the rccar
 
 import type {
-	tContour,
+	//tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
