@@ -2,7 +2,7 @@
 // detailed design of the suspension bone of the rccar
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -87,8 +87,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const dX = Math.sqrt(dX2);
 		const L1b = param.L1 - 2 * dX;
-		const Rh = W12 * param.P2 / 100;
-		const N2 = Math.max(Math.floor((param.L1 - 2 * R1 - param.W2) / (2 * Rh + param.W2)), 0 );
+		const Rh = (W12 * param.P2) / 100;
+		const N2 = Math.max(Math.floor((param.L1 - 2 * R12 - param.W2) / (2 * Rh + param.W2)), 0);
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -119,7 +119,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrAxis2 = contourCircle(param.L1, 0, R12);
 		const ctrMinis: tContour[] = [];
 		for (let ii = 0; ii < N2; ii++) {
-			ctrMinis.push(contourCircle(R2, ii * (param.W2 + Rh), Rh));
+			ctrMinis.push(contourCircle(R22, ii * (param.W2 + Rh), Rh));
 		}
 		figBone.addMainOI([ctrBone, ctrAxis1, ctrAxis2, ...ctrMinis]);
 		// final figure list
