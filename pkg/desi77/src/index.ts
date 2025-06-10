@@ -13,4 +13,5 @@ export * from './spring/springSide';
 export * from './spring/springInt';
 export * from './heliostat/heliostat';
 export * from './rccar/rccar';
+export * from './rccar/singleBone';
 export * from './capsule/capsule';

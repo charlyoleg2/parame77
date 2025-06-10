@@ -14,6 +14,7 @@ import { springSideDef } from 'desi77';
 import { springIntDef } from 'desi77';
 import { heliostatDef } from 'desi77';
 import { rccarDef } from 'desi77';
+import { singleBoneDef } from 'desi77';
 import { capsuleDef } from 'desi77';
 
 const designList: tAllPageDef = {
@@ -30,6 +31,7 @@ const designList: tAllPageDef = {
 	'desi77/springInt': springIntDef,
 	'desi77/heliostat': heliostatDef,
 	'desi77/rccar': rccarDef,
+	'desi77/singleBone': singleBoneDef,
 	'desi77/capsule': capsuleDef
 };
 
