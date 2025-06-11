@@ -17,11 +17,11 @@ import {
 	//withinHPiHPi,
 	//ShapePoint,
 	//point,
-	contour,
+	//contour,
 	contourCircle,
 	//ctrRectangle,
-	figure,
-	//degToRad,
+	//figure,
+	degToRad,
 	//radToDeg,
 	ffix,
 	pNumber,
@@ -30,12 +30,23 @@ import {
 	pSectionSeparator,
 	//transform2d,
 	//transform3d,
-	EExtrude,
-	EBVolume,
+	//EExtrude,
+	//EBVolume,
 	initGeom
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrL } from 'triangule';
+//import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
+import type { tContourJ, tHalfProfile } from 'sheetfold';
+import {
+	tJDir,
+	tJSide,
+	contourJ,
+	facet,
+	//contourJ2contour,
+	//facet2figure,
+	sheetFold
+} from 'sheetfold';
 
 const pDef: tParamDef = {
 	partName: 'doubleBone',
@@ -99,7 +110,7 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figBone = figure();
+	//const figBone = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -121,6 +132,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const W2b = (param.L1 - 2 * R22 - N2 * 2 * Rh) / (N2 + 1);
 		const hX0b = R22 + W2b + Rh;
 		const hX1b = W2b + 2 * Rh;
+		const aJa = degToRad(param.Jangle);
+		const aJn = param.Jneutral / 100;
+		const aJr = param.Jradius;
+		const aJm = param.Jmark;
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -134,16 +149,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Bone W2b ${ffix(W2b)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
-		// figBone
-		const ctrBone = contour(dX, W12)
-			.addPointR(-dX - R22, -W12)
-			.addPointR(0, -2 * W12)
-			.addSegArc2()
-			.addSegStrokeR(L1b, 0)
-			.addPointR(dX + R22, W12)
-			.addPointR(0, 2 * W12)
-			.addSegArc2()
-			.closeSegStroke();
+		// facet faBone1 faBone2
+		function makeCtrBone(iJ1: string, iJ2: string): tContourJ {
+			const rCtr = contourJ(dX, W12)
+				.addPointR(-dX - R22, -W12)
+				.addPointR(0, -2 * W12)
+				.addSegArc2()
+				.startJunction(iJ1, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(L1b, 0)
+				.addPointR(dX + R22, W12)
+				.addPointR(0, 2 * W12)
+				.addSegArc2()
+				.startJunction(iJ2, tJDir.eB, tJSide.eABRight)
+				.closeSegStroke();
+			return rCtr;
+		}
 		const ctrAxis1 = contourCircle(0, 0, R12);
 		const ctrAxis2 = contourCircle(param.L1, 0, R12);
 		const ctrMinis: tContour[] = [];
@@ -152,33 +172,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				ctrMinis.push(contourCircle(hX0b + ii * hX1b, 0, Rh));
 			}
 		}
-		figBone.addMainOI([ctrBone, ctrAxis1, ctrAxis2, ...ctrMinis]);
+		const ctrBone1 = makeCtrBone('J1', 'J2');
+		const faBone1 = facet([ctrBone1, ctrAxis1, ctrAxis2, ...ctrMinis]);
+		// sheetFold
+		let half1: tHalfProfile = [];
+		let half2: tHalfProfile = [];
+		if (param.P11 > 0) {
+			half1 = ['J1', param.W1];
+			half2 = ['J2', param.W1];
+		}
+		const sFold = sheetFold(
+			[faBone1],
+			{
+				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+			},
+			[
+				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
+				{ x1: 0, y1: W12, a1: 0, l1: param.W1, ante: half1, post: half2 }
+			],
+			param.T1,
+			rGeome.partName
+		);
 		// final figure list
-		rGeome.fig = {
-			faceBone: figBone
-		};
+		rGeome.fig = sFold.makeFigures();
 		// step-8 : recipes of the 3D construction
 		// volume
-		const designName = rGeome.partName;
-		rGeome.vol = {
-			extrudes: [
-				{
-					outName: `subpax_${designName}_bone`,
-					face: `${designName}_faceBone`,
-					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.T1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				}
-			],
-			volumes: [
-				{
-					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eIdentity,
-					inList: [`subpax_${designName}_bone`]
-				}
-			]
-		};
+		rGeome.vol = sFold.makeVolume();
 		// step-9 : optional sub-design parameter export
 		// sub-design
 		rGeome.sub = {};
