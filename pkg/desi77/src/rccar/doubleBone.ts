@@ -43,24 +43,52 @@ const pDef: tParamDef = {
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('D1', 'mm', 30, 1, 500, 1),
 		pNumber('D2', 'mm', 70, 1, 500, 1),
-		pNumber('L1', 'mm', 200, 10, 1000, 1),
-		pSectionSeparator('Details'),
-		pNumber('R3', 'mm', 50, 0, 1000, 1),
+		pNumber('L1', 'mm', 300, 10, 1000, 1),
+		pNumber('L2', 'mm', 200, 10, 1000, 1),
+		pNumber('E1', 'mm', 40, 1, 1000, 1),
+		pSectionSeparator('Side'),
 		pNumber('W1', 'mm', 30, 1, 500, 1),
-		pNumber('T1', 'mm', 10, 1, 100, 1),
-		pSectionSeparator('Holes'),
 		pNumber('P2', '%', 50, 0, 99, 1),
-		pNumber('W2', 'mm', 10, 1, 500, 1)
+		pNumber('W2', 'mm', 10, 1, 500, 1),
+		pSectionSeparator('Top'),
+		pNumber('S1', 'mm', 20, 1, 100, 1),
+		pNumber('S2', 'mm', 20, 1, 100, 1),
+		pNumber('S3', 'mm', 20, 1, 100, 1),
+		pNumber('R3', 'mm', 50, 0, 1000, 1),
+		pSectionSeparator('Wings'),
+		pNumber('P11', '%', 20, 0, 90, 1),
+		pNumber('P12', '%', 20, 0, 90, 1),
+		pNumber('P21', '%', 20, 0, 90, 1),
+		pNumber('P22', '%', 20, 0, 90, 1),
+		pSectionSeparator('Folding'),
+		pNumber('T1', 'mm', 2, 0.5, 10, 0.1),
+		pNumber('Jangle', 'degree', 90, 30, 120, 1),
+		pNumber('Jradius', 'mm', 10, 0.1, 50, 0.1),
+		pNumber('Jneutral', '%', 50, 0, 100, 1),
+		pNumber('Jmark', 'mm', 2, 0.1, 10, 0.1)
 	],
 	paramSvg: {
 		D1: 'doubleBone_face.svg',
 		D2: 'doubleBone_face.svg',
 		L1: 'doubleBone_face.svg',
-		R3: 'doubleBone_side.svg',
-		W1: 'doubleBone_top.svg',
-		T1: 'doubleBone_folding.svg',
+		L2: 'doubleBone_top.svg',
+		E1: 'doubleBone_top.svg',
+		W1: 'doubleBone_face.svg',
 		P2: 'doubleBone_side.svg',
-		W2: 'doubleBone_top.svg'
+		W2: 'doubleBone_side.svg',
+		S1: 'doubleBone_top.svg',
+		S2: 'doubleBone_top.svg',
+		S3: 'doubleBone_top.svg',
+		R3: 'doubleBone_side.svg',
+		P11: 'doubleBone_top.svg',
+		P12: 'doubleBone_top.svg',
+		P21: 'doubleBone_top.svg',
+		P22: 'doubleBone_top.svg',
+		T1: 'doubleBone_folding.svg',
+		Jangle: 'doubleBone_folding.svg',
+		Jradius: 'doubleBone_folding.svg',
+		Jneutral: 'doubleBone_folding.svg',
+		Jmark: 'doubleBone_folding.svg'
 	},
 	sim: {
 		tMax: 200,
@@ -108,17 +136,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// sub-function
 		// figBone
 		const ctrBone = contour(dX, W12)
-			.addCornerRounded(param.R3)
 			.addPointR(-dX - R22, -W12)
 			.addPointR(0, -2 * W12)
 			.addSegArc2()
-			.addCornerRounded(param.R3)
 			.addSegStrokeR(L1b, 0)
-			.addCornerRounded(param.R3)
 			.addPointR(dX + R22, W12)
 			.addPointR(0, 2 * W12)
 			.addSegArc2()
-			.addCornerRounded(param.R3)
 			.closeSegStroke();
 		const ctrAxis1 = contourCircle(0, 0, R12);
 		const ctrAxis2 = contourCircle(param.L1, 0, R12);
