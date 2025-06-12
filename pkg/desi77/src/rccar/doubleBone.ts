@@ -231,7 +231,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		const faSide1 = facet([makeCtrSide('J11'), ...ctrMinics]);
-		//const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
+		const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
 		// sheetFold
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
@@ -240,7 +240,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			half2 = ['J2', param.W1];
 		}
 		const sFold = sheetFold(
-			[faBone1, faPlate1, faPlate2, faBone2, faSide1],
+			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2],
 			{
 				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
 				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
