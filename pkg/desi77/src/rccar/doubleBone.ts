@@ -141,6 +141,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const L2b = param.L2 - 2 * cornerSizeExt;
 		const L2c = L2b + 2 * cornerSizeInt - 2 * param.E1;
 		const L2d = (L2b - L2c) / 2;
+		const N2c = Math.max(Math.floor((L2c - param.W2) / hX1), 0);
+		const W2c = (L2c - N2c * 2 * Rh) / (N2c + 1);
+		const hX0c = W2c + Rh;
+		const hX1c = W2c + 2 * Rh;
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -156,8 +160,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bone length ${ffix(boneLen)} mm\n`;
-		rGeome.logstr += `Bone with N2 ${N2} holes of diameter ${ffix(2 * Rh)} mm\n`;
-		rGeome.logstr += `Bone W2b ${ffix(W2b)} mm\n`;
+		rGeome.logstr += `Bone with N2 ${N2} holes of diameter ${ffix(2 * Rh)} and W2b ${ffix(W2b)} mm\n`;
+		rGeome.logstr += `Side with N2c ${N2c} holes of diameter ${ffix(2 * Rh)} and W2c ${ffix(W2c)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// facet faBone1 faBone2
@@ -210,6 +214,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const faPlate1 = facet([makeCtrPlate('J1', '', 1)]);
 		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2)]);
+		// facet faSide1 faSide2
+		function makeCtrSide(iJ1: string): tContourJ {
+			const rCtr = contourJ(0, 0)
+				.addSegStrokeR(L2c, 0)
+				.addSegStrokeR(0, param.W1)
+				.startJunction(iJ1, tJDir.eB, tJSide.eABRight)
+				.addSegStrokeR(-L2c, 0)
+				.closeSegStroke();
+			return rCtr;
+		}
+		const ctrMinics: tContour[] = [];
+		if (Rh > 0) {
+			for (let ii = 0; ii < N2c; ii++) {
+				ctrMinics.push(contourCircle(hX0c + ii * hX1c, W12, Rh));
+			}
+		}
+		const faSide1 = facet([makeCtrSide('J11'), ...ctrMinics]);
+		//const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
 		// sheetFold
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
@@ -218,7 +240,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			half2 = ['J2', param.W1];
 		}
 		const sFold = sheetFold(
-			[faBone1, faPlate1, faPlate2, faBone2],
+			[faBone1, faPlate1, faPlate2, faBone2, faSide1],
 			{
 				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
 				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
