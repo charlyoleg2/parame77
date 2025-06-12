@@ -136,12 +136,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aJn = param.Jneutral / 100;
 		const aJr = param.Jradius;
 		const aJm = param.Jmark;
+		const cornerSizeExt = aJr + param.T1 * (1 - aJa);
+		const cornerSizeInt = aJr - param.T1 * aJa;
+		const L2b = param.L2 - 2 * cornerSizeExt;
+		const L2c = L2b + 2 * cornerSizeInt - 2 * param.E1;
+		const L2d = (L2b - L2c) / 2;
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
 		}
 		if (L1b < 0) {
 			throw `err095: L1 ${ffix(param.L1)} is too small compare to D2 ${ffix(param.D2)} mm`;
+		}
+		if (param.E1 < cornerSizeInt) {
+			throw `err151: E1 ${ffix(param.E1)} is too small compare to Jradius ${ffix(param.Jradius)} mm`;
+		}
+		if (L2c < 0) {
+			throw `err150: L2 ${ffix(param.L2)} is too small compare to E1 ${ffix(param.E1)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bone length ${ffix(boneLen)} mm\n`;
@@ -173,7 +184,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		const ctrBone1 = makeCtrBone('J1', 'J2');
+		//const ctrBone2 = makeCtrBone('J3', 'J4');
 		const faBone1 = facet([ctrBone1, ctrAxis1, ctrAxis2, ...ctrMinis]);
+		//const faBone2 = facet([ctrBone2, ctrAxis1, ctrAxis2, ...ctrMinis]);
+		// facet faPlate1 faPlate2
+		function makeCtrPlate(iJ1: string, iJ2: string, idx: number): tContourJ {
+			const tJ1 = `J${idx}1`;
+			const tJ2 = `J${idx}2`;
+			const rCtr = contourJ(0, 0)
+				.addSegStrokeR(L2d, 0)
+				.startJunction(tJ1, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(L2c, 0)
+				.addSegStrokeR(L2d, 0);
+			if (iJ2 !== '') {
+				rCtr.startJunction(iJ2, tJDir.eA, tJSide.eABLeft);
+			}
+			rCtr.addSegStrokeR(0, L1b)
+				.addSegStrokeR(-L2d, 0)
+				.startJunction(tJ2, tJDir.eA, tJSide.eABLeft)
+				.addSegStrokeR(-L2c, 0)
+				.addSegStrokeR(-L2d, 0)
+				.startJunction(iJ1, tJDir.eB, tJSide.eABRight)
+				.closeSegStroke();
+			return rCtr;
+		}
+		//const faPlate1 = facet([makeCtrPlate('J1', '', 1)]);
+		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2)]);
 		// sheetFold
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
@@ -182,10 +218,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			half2 = ['J2', param.W1];
 		}
 		const sFold = sheetFold(
-			[faBone1],
+			//[faBone1, faPlate1, faBone2, faPlate2],
+			[faBone1, faPlate2],
 			{
 				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J3: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J4: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J11: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J12: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J21: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
+				J22: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
