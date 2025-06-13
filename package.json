@@ -21,6 +21,7 @@
 	],
 	"scripts": {
 		"desi77:dev": "npm -w desi77 run dev",
+		"desi77:build": "npm -w desi77 run build",
 		"desi77:ci": "npm -w desi77 run ci",
 		"desi77:svgo": "npm -w desi77 run svgo",
 		"desi77:clean": "npm -w desi77 run clean",
@@ -45,6 +46,7 @@
 		"dev": "run-p desi77:dev desi77-ui:dev",
 		"ci": "run-s desi77:ci desi77-ui:ci desi77-cli:ci desi77-uis:ci",
 		"ci2": "run-s desi77:ci desi77-ui:ci",
+		"ci2b": "run-s desi77:build desi77-ui:ci",
 		"ci3": "run-s desi77:ci desi77-cli:ci",
 		"svgo": "run-s desi77:svgo",
 		"clean-root": "rimraf tmp output output2",

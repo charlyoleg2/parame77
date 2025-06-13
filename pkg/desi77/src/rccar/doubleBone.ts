@@ -65,7 +65,7 @@ const pDef: tParamDef = {
 		pNumber('S1', 'mm', 20, 1, 100, 1),
 		pNumber('S2', 'mm', 20, 1, 100, 1),
 		pNumber('S3', 'mm', 20, 1, 100, 1),
-		pNumber('R3', 'mm', 50, 0, 1000, 1),
+		pNumber('R3', 'mm', 10, 0, 1000, 1),
 		pSectionSeparator('Wings'),
 		pNumber('P11', '%', 20, 0, 90, 1),
 		pNumber('P12', '%', 20, 0, 90, 1),
@@ -248,29 +248,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			t2s: number,
 			t2c: number
 		): tContourJ {
-			const rCtr = contourJ(x0, y0).addSegStrokeR(t1s, 0);
+			const rCtr = contourJ(x0, y0).addCornerRounded(param.R3).addSegStrokeR(t1s, 0);
 			if (t1c > 0) {
 				rCtr.startJunction(`${jn}1`, tJDir.eA, tJSide.eABRight)
 					.addSegStrokeR(t1c, 0)
 					.addSegStrokeR(t1s, 0);
 			}
-			rCtr.addSegStrokeRP(pi - ia, t2s);
+			const a2 = pi - ia;
+			rCtr.addCornerRounded(param.R3).addSegStrokeRP(a2, t2s);
 			if (t2c > 0) {
 				rCtr.startJunction(`${jn}2`, tJDir.eA, tJSide.eABRight)
-					.addSegStrokeR(t2c, 0)
-					.addSegStrokeR(t2s, 0);
+					.addSegStrokeRP(a2, t2c)
+					.addSegStrokeRP(a2, t2s);
 			}
-			rCtr.addSegStrokeRP(pi + ia, t2s);
+			const a3 = pi + ia;
+			rCtr.addCornerRounded(param.R3).addSegStrokeRP(a3, t2s);
 			if (t2c > 0) {
 				rCtr.startJunction(`${jn}3`, tJDir.eA, tJSide.eABRight)
-					.addSegStrokeR(t2c, 0)
-					.addSegStrokeR(t2s, 0);
+					.addSegStrokeRP(a3, t2c)
+					.addSegStrokeRP(a3, t2s);
 			}
 			return rCtr;
 		}
 		const x0 = tri1d0;
 		const y0 = param.S2;
 		const ctrTri114 = makeCtrTri('J14', x0, y0, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
+		//const faDbg1 = facet([ctrTri114]);
 		const faPlate1 = facet([makeCtrPlate('J1', '', 1), ctrTri114]);
 		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2)]);
 		// facet faSide1 faSide2
@@ -301,6 +304,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const sFold = sheetFold(
 			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2],
+			//[faDbg1],
 			{
 				J1: Jdef,
 				J2: Jdef,
