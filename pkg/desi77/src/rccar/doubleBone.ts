@@ -119,7 +119,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	try {
 		// step-4 : some preparation calculation
 		const pi = Math.PI;
-		//const pi2 = pi / 2;
+		const pi2 = pi / 2;
 		const W12 = param.W1 / 2;
 		const R12 = param.D1 / 2;
 		const R22 = param.D2 / 2;
@@ -160,6 +160,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const [tri1a, tri1d0] = calcInnerTri(L2b, L1b, param.S3 / 2, param.S2);
 		const tri11L = L2b - 2 * tri1d0;
+		const [tri2a, tri2d0] = calcInnerTri(L1b, L2b, param.S3 / 2, param.S1);
+		const tri21L = L1b - 2 * tri2d0;
 		function calcSplitTri(iL: number, iP: number): [number, number] {
 			if (iL < 0) {
 				throw `err559: iL ${ffix(iL)} is negative mm`;
@@ -176,6 +178,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const [tri11s, tri11c] = calcSplitTri(tri11L, param.P11);
 		const tri12L = tri11L / (2 * Math.cos(tri1a));
 		const [tri12s, tri12c] = calcSplitTri(tri12L, param.P12);
+		const [tri21s, tri21c] = calcSplitTri(tri21L, param.P21);
+		const tri22L = tri21L / (2 * Math.cos(tri2a));
+		const [tri22s, tri22c] = calcSplitTri(tri22L, param.P22);
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -243,6 +248,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
+		const ctrPlate1 = makeCtrPlate('J1', '', 1);
+		const ctrPlate2 = makeCtrPlate('J3', 'J2', 2);
 		function makeCtrTri(
 			jn: string,
 			x0: number,
@@ -285,9 +292,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const y02 = L1b - param.S2;
 		const ctrTri12 = makeCtrTri('J12', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
 		const ctrTri22 = makeCtrTri('J22', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
+		const x01 = L2b - param.S1;
+		const y01 = tri2d0;
+		const ctrTri11 = makeCtrTri('J11', x01, y01, pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
+		const ctrTri21 = makeCtrTri('J21', x01, y01, pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
+		const x03 = param.S1;
+		const y03 = L1b - tri2d0;
+		const ctrTri13 = makeCtrTri('J13', x03, y03, -pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
+		const ctrTri23 = makeCtrTri('J23', x03, y03, -pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
 		//const faDbg1 = facet([ctrTri14]);
-		const faPlate1 = facet([makeCtrPlate('J1', '', 1), ctrTri14, ctrTri12]);
-		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2), ctrTri24, ctrTri22]);
+		const faPlate1 = facet([ctrPlate1, ctrTri14, ctrTri12, ctrTri11, ctrTri13]);
+		const faPlate2 = facet([ctrPlate2, ctrTri24, ctrTri22, ctrTri21, ctrTri23]);
 		// facet faSide1 faSide2
 		function makeCtrSide(iJ1: string): tContourJ {
 			const rCtr = contourJ(0, 0)
