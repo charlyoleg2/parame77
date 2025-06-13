@@ -119,7 +119,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const pi = Math.PI;
 		const pi2 = pi / 2;
-		const W12 = param.W1 / 2;
+		const W1 = param.W1;
+		const W12 = W1 / 2;
 		const R12 = param.D1 / 2;
 		const R22 = param.D2 / 2;
 		const boneLen = param.L1 + 2 * R22;
@@ -365,18 +366,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			juncs[iJ] = Jdef2;
 		}
 		// profile preparation
-		let half1: tHalfProfile = [];
-		let half2: tHalfProfile = [];
-		if (param.P11 > 0) {
-			half1 = ['J1', param.W1];
-			half2 = ['J2', param.W1];
-		}
+		const half1A: tHalfProfile = ['J1', L2b, 'J2', W1, 'J3', L2b];
+		const half2A: tHalfProfile = ['J11', W1, 'J21', L1b];
+		const half2P: tHalfProfile = ['J12', W1, 'J22'];
+		const half3A: tHalfProfile = ['J2', param.S1, 'J111', wingH];
+		const half3P: tHalfProfile = ['J3', param.S1, 'J211', wingH];
 		const sFold = sheetFold(
 			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2, ...faWings],
 			juncs,
 			[
-				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
-				{ x1: 0, y1: W12, a1: 0, l1: param.W1, ante: half1, post: half2 }
+				{ x1: 0, y1: 0, a1: 0, l1: W1, ante: half1A, post: ['J4'] },
+				{ x1: 2 * W1, y1: 0, a1: 0, l1: W1, ante: half3A, post: half3P },
+				{ x1: 4 * W1, y1: 0, a1: 0, l1: L1b, ante: half2A, post: half2P }
 			],
 			param.T1,
 			rGeome.partName
