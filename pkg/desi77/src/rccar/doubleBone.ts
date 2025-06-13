@@ -36,8 +36,7 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrL } from 'triangule';
-//import type { tContourJ, Facet, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
+import type { tContourJ, Facet, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -66,10 +65,10 @@ const pDef: tParamDef = {
 		pNumber('S2', 'mm', 20, 1, 100, 1),
 		pNumber('S3', 'mm', 20, 1, 100, 1),
 		pNumber('R3', 'mm', 10, 0, 1000, 1),
-		pSectionSeparator('Wings'),
-		pNumber('P11', '%', 20, 0, 90, 1),
+		pSectionSeparator('Wing width'),
+		pNumber('P11', '%', 8, 0, 90, 1),
 		pNumber('P12', '%', 20, 0, 90, 1),
-		pNumber('P21', '%', 20, 0, 90, 1),
+		pNumber('P21', '%', 18, 0, 90, 1),
 		pNumber('P22', '%', 20, 0, 90, 1),
 		pSectionSeparator('Folding'),
 		pNumber('T1', 'mm', 2, 0.5, 10, 0.1),
@@ -144,6 +143,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aJm2 = param.Jmark2;
 		const cornerSizeExt = aJr + param.T1 * (1 - aJa);
 		const cornerSizeInt = aJr - param.T1 * aJa;
+		const cornerSizeInt2 = aJr2 - param.T1 * aJa;
 		const L2b = param.L2 - 2 * cornerSizeExt;
 		const L2c = L2b + 2 * cornerSizeInt - 2 * param.E1;
 		const L2d = (L2b - L2c) / 2;
@@ -181,6 +181,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const [tri21s, tri21c] = calcSplitTri(tri21L, param.P21);
 		const tri22L = tri21L / (2 * Math.cos(tri2a));
 		const [tri22s, tri22c] = calcSplitTri(tri22L, param.P22);
+		const wingH = param.W1 / 2 + cornerSizeInt - cornerSizeInt2;
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -321,14 +322,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const faSide1 = facet([makeCtrSide('J11'), ...ctrMinics]);
 		const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
 		// facet wings
-		const Jwings = ['J111', 'J112', 'J113'];
-		Jwings.push(...['J121', 'J122', 'J123']);
-		Jwings.push(...['J131', 'J132', 'J133']);
-		Jwings.push(...['J141', 'J142', 'J143']);
-		Jwings.push(...['J211', 'J212', 'J213']);
-		Jwings.push(...['J221', 'J222', 'J223']);
-		Jwings.push(...['J231', 'J232', 'J233']);
-		Jwings.push(...['J241', 'J242', 'J243']);
+		const Jwings: string[] = [];
+		const faWings: Facet[] = [];
+		//Jwings.push(...['J111', 'J112', 'J113']);
+		//Jwings.push(...['J121', 'J122', 'J123']);
+		//Jwings.push(...['J131', 'J132', 'J133']);
+		//Jwings.push(...['J141', 'J142', 'J143']);
+		//Jwings.push(...['J211', 'J212', 'J213']);
+		//Jwings.push(...['J221', 'J222', 'J223']);
+		//Jwings.push(...['J231', 'J232', 'J233']);
+		//Jwings.push(...['J241', 'J242', 'J243']);
+		//for (const iJ of Jwings) {
+		const tri13 = [tri21c, tri22c, tri22c];
+		const tri24 = [tri11c, tri12c, tri12c];
+		for (let i1 = 0; i1 < 2; i1++) {
+			for (let i2 = 0; i2 < 4; i2++) {
+				for (let i3 = 0; i3 < 3; i3++) {
+					const jN = `J${i1 + 1}${i2 + 1}${i3 + 1}`;
+					Jwings.push(jN);
+					const triParity = i2 % 2;
+					const triC = triParity === 1 ? tri24 : tri13;
+					const lc = triC[i3];
+					const ctrJ = contourJ(0, 0)
+						.addSegStrokeR(lc, 0)
+						.addSegStrokeR(0, wingH)
+						.startJunction(jN, tJDir.eA, tJSide.eABLeft)
+						.addSegStrokeR(-lc, 0)
+						.closeSegStroke();
+					faWings.push(facet([ctrJ]));
+				}
+			}
+		}
 		// sheetFold
 		const Jbase = ['J1', 'J2', 'J3', 'J4', 'J11', 'J12', 'J21', 'J22'];
 		const Jdef: tJunc = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
@@ -348,7 +372,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			half2 = ['J2', param.W1];
 		}
 		const sFold = sheetFold(
-			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2],
+			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2, ...faWings],
 			juncs,
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
