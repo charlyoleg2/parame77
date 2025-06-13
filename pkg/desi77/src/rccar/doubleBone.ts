@@ -76,7 +76,9 @@ const pDef: tParamDef = {
 		pNumber('Jangle', 'degree', 90, 30, 120, 1),
 		pNumber('Jradius', 'mm', 10, 0.1, 50, 0.1),
 		pNumber('Jneutral', '%', 50, 0, 100, 1),
-		pNumber('Jmark', 'mm', 2, 0.1, 10, 0.1)
+		pNumber('Jmark', 'mm', 2, 0.1, 10, 0.1),
+		pNumber('Jradius2', 'mm', 4, 0.1, 50, 0.1),
+		pNumber('Jmark2', 'mm', 2, 0.1, 10, 0.1)
 	],
 	paramSvg: {
 		D1: 'doubleBone_face.svg',
@@ -99,7 +101,9 @@ const pDef: tParamDef = {
 		Jangle: 'doubleBone_folding.svg',
 		Jradius: 'doubleBone_folding.svg',
 		Jneutral: 'doubleBone_folding.svg',
-		Jmark: 'doubleBone_folding.svg'
+		Jmark: 'doubleBone_folding.svg',
+		Jradius2: 'doubleBone_folding.svg',
+		Jmark2: 'doubleBone_folding.svg'
 	},
 	sim: {
 		tMax: 200,
@@ -136,6 +140,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aJn = param.Jneutral / 100;
 		const aJr = param.Jradius;
 		const aJm = param.Jmark;
+		const aJr2 = param.Jradius2;
+		const aJm2 = param.Jmark2;
 		const cornerSizeExt = aJr + param.T1 * (1 - aJa);
 		const cornerSizeInt = aJr - param.T1 * aJa;
 		const L2b = param.L2 - 2 * cornerSizeExt;
@@ -248,34 +254,40 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			t2s: number,
 			t2c: number
 		): tContourJ {
-			const rCtr = contourJ(x0, y0).addCornerRounded(param.R3).addSegStrokeR(t1s, 0);
+			const ctr = contourJ(x0, y0).addCornerRounded(param.R3).addSegStrokeR(t1s, 0);
 			if (t1c > 0) {
-				rCtr.startJunction(`${jn}1`, tJDir.eA, tJSide.eABRight)
+				ctr.startJunction(`${jn}1`, tJDir.eA, tJSide.eABRight)
 					.addSegStrokeR(t1c, 0)
 					.addSegStrokeR(t1s, 0);
 			}
 			const a2 = pi - ia;
-			rCtr.addCornerRounded(param.R3).addSegStrokeRP(a2, t2s);
+			ctr.addCornerRounded(param.R3).addSegStrokeRP(a2, t2s);
 			if (t2c > 0) {
-				rCtr.startJunction(`${jn}2`, tJDir.eA, tJSide.eABRight)
+				ctr.startJunction(`${jn}2`, tJDir.eA, tJSide.eABRight)
 					.addSegStrokeRP(a2, t2c)
 					.addSegStrokeRP(a2, t2s);
 			}
 			const a3 = pi + ia;
-			rCtr.addCornerRounded(param.R3).addSegStrokeRP(a3, t2s);
+			ctr.addCornerRounded(param.R3).addSegStrokeRP(a3, t2s);
 			if (t2c > 0) {
-				rCtr.startJunction(`${jn}3`, tJDir.eA, tJSide.eABRight)
+				ctr.startJunction(`${jn}3`, tJDir.eA, tJSide.eABRight)
 					.addSegStrokeRP(a3, t2c)
 					.addSegStrokeRP(a3, t2s);
 			}
+			const rCtr = ctr.rotate(x0, y0, r0);
 			return rCtr;
 		}
-		const x0 = tri1d0;
-		const y0 = param.S2;
-		const ctrTri114 = makeCtrTri('J14', x0, y0, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
-		//const faDbg1 = facet([ctrTri114]);
-		const faPlate1 = facet([makeCtrPlate('J1', '', 1), ctrTri114]);
-		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2)]);
+		const x04 = tri1d0;
+		const y04 = param.S2;
+		const ctrTri14 = makeCtrTri('J14', x04, y04, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
+		const ctrTri24 = makeCtrTri('J24', x04, y04, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
+		const x02 = L2b - tri1d0;
+		const y02 = L1b - param.S2;
+		const ctrTri12 = makeCtrTri('J12', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
+		const ctrTri22 = makeCtrTri('J22', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
+		//const faDbg1 = facet([ctrTri14]);
+		const faPlate1 = facet([makeCtrPlate('J1', '', 1), ctrTri14, ctrTri12]);
+		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2), ctrTri24, ctrTri22]);
 		// facet faSide1 faSide2
 		function makeCtrSide(iJ1: string): tContourJ {
 			const rCtr = contourJ(0, 0)
@@ -296,6 +308,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
 		// sheetFold
 		const Jdef: tJunc = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
+		const Jdef2: tJunc = { angle: aJa, radius: aJr2, neutral: aJn, mark: aJm2 };
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
 		if (param.P11 > 0) {
@@ -314,12 +327,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				J12: Jdef,
 				J21: Jdef,
 				J22: Jdef,
-				J111: Jdef,
-				J112: Jdef,
-				J113: Jdef,
-				J141: Jdef,
-				J142: Jdef,
-				J143: Jdef
+				J111: Jdef2,
+				J112: Jdef2,
+				J113: Jdef2,
+				J121: Jdef2,
+				J122: Jdef2,
+				J123: Jdef2,
+				J131: Jdef2,
+				J132: Jdef2,
+				J133: Jdef2,
+				J141: Jdef2,
+				J142: Jdef2,
+				J143: Jdef2,
+				J211: Jdef2,
+				J212: Jdef2,
+				J213: Jdef2,
+				J221: Jdef2,
+				J222: Jdef2,
+				J223: Jdef2,
+				J231: Jdef2,
+				J232: Jdef2,
+				J233: Jdef2,
+				J241: Jdef2,
+				J242: Jdef2,
+				J243: Jdef2
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
