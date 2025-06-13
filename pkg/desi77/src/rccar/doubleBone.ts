@@ -36,8 +36,8 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrL } from 'triangule';
-//import type { tContourJ, Facet, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, tHalfProfile } from 'sheetfold';
+//import type { tContourJ, Facet, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
+import type { tContourJ, tJunc, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -114,7 +114,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const pi = Math.PI;
+		const pi = Math.PI;
 		//const pi2 = pi / 2;
 		const W12 = param.W1 / 2;
 		const R12 = param.D1 / 2;
@@ -145,6 +145,31 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const W2c = (L2c - N2c * 2 * Rh) / (N2c + 1);
 		const hX0c = W2c + Rh;
 		const hX1c = W2c + 2 * Rh;
+		function calcInnerTri(iW: number, iH: number, iDW: number, iBW: number): [number, number] {
+			const rA = Math.atan2(iH, iW);
+			const dIni1 = iDW / Math.sin(rA);
+			const dIni2 = iBW / Math.tan(rA);
+			const rInitDist = dIni1 + dIni2;
+			return [rA, rInitDist];
+		}
+		const [tri1a, tri1d0] = calcInnerTri(L2b, L1b, param.S3 / 2, param.S2);
+		const tri11L = L2b - 2 * tri1d0;
+		function calcSplitTri(iL: number, iP: number): [number, number] {
+			if (iL < 0) {
+				throw `err559: iL ${ffix(iL)} is negative mm`;
+			}
+			let rLside = iL;
+			let rLcenter = 0;
+			if (iP > 0) {
+				const pr = iP / 100;
+				rLcenter = pr * iL;
+				rLside = (iL - rLcenter) / 2;
+			}
+			return [rLside, rLcenter];
+		}
+		const [tri11s, tri11c] = calcSplitTri(tri11L, param.P11);
+		const tri12L = tri11L / (2 * Math.cos(tri1a));
+		const [tri12s, tri12c] = calcSplitTri(tri12L, param.P12);
 		// step-5 : checks on the parameter values
 		if (R22 < R12) {
 			throw `err085: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -212,7 +237,41 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
-		const faPlate1 = facet([makeCtrPlate('J1', '', 1)]);
+		function makeCtrTri(
+			jn: string,
+			x0: number,
+			y0: number,
+			r0: number,
+			ia: number,
+			t1s: number,
+			t1c: number,
+			t2s: number,
+			t2c: number
+		): tContourJ {
+			const rCtr = contourJ(x0, y0).addSegStrokeR(t1s, 0);
+			if (t1c > 0) {
+				rCtr.startJunction(`${jn}1`, tJDir.eA, tJSide.eABRight)
+					.addSegStrokeR(t1c, 0)
+					.addSegStrokeR(t1s, 0);
+			}
+			rCtr.addSegStrokeRP(pi - ia, t2s);
+			if (t2c > 0) {
+				rCtr.startJunction(`${jn}2`, tJDir.eA, tJSide.eABRight)
+					.addSegStrokeR(t2c, 0)
+					.addSegStrokeR(t2s, 0);
+			}
+			rCtr.addSegStrokeRP(pi + ia, t2s);
+			if (t2c > 0) {
+				rCtr.startJunction(`${jn}3`, tJDir.eA, tJSide.eABRight)
+					.addSegStrokeR(t2c, 0)
+					.addSegStrokeR(t2s, 0);
+			}
+			return rCtr;
+		}
+		const x0 = tri1d0;
+		const y0 = param.S2;
+		const ctrTri114 = makeCtrTri('J14', x0, y0, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
+		const faPlate1 = facet([makeCtrPlate('J1', '', 1), ctrTri114]);
 		const faPlate2 = facet([makeCtrPlate('J3', 'J2', 2)]);
 		// facet faSide1 faSide2
 		function makeCtrSide(iJ1: string): tContourJ {
@@ -233,6 +292,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const faSide1 = facet([makeCtrSide('J11'), ...ctrMinics]);
 		const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
 		// sheetFold
+		const Jdef: tJunc = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
 		if (param.P11 > 0) {
@@ -242,14 +302,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const sFold = sheetFold(
 			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2],
 			{
-				J1: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J2: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J3: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J4: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J11: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J12: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J21: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm },
-				J22: { angle: aJa, radius: aJr, neutral: aJn, mark: aJm }
+				J1: Jdef,
+				J2: Jdef,
+				J3: Jdef,
+				J4: Jdef,
+				J11: Jdef,
+				J12: Jdef,
+				J21: Jdef,
+				J22: Jdef,
+				J111: Jdef,
+				J112: Jdef,
+				J113: Jdef,
+				J141: Jdef,
+				J142: Jdef,
+				J143: Jdef
 			},
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },

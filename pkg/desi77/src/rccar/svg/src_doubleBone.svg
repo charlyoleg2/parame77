@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="0.7848415"
-     inkscape:cx="327.45465"
-     inkscape:cy="1505.3995"
+     inkscape:zoom="3.139366"
+     inkscape:cx="270.43677"
+     inkscape:cy="2514.6797"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -1296,6 +1296,32 @@
        width="63.517319"
        height="28.380079"
        id="rect8-6-1-7-1-3-0-9-3-4" />
+    <rect
+       x="306.11276"
+       y="1539.4828"
+       width="34.083317"
+       height="25.214911"
+       id="rect32-76-7" />
+    <marker
+       style="overflow:visible"
+       id="ArrowWide-12-3-6-3-6-6-5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Wide arrow"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1;stroke-linecap:butt"
+         d="M 3,-3 0,0 3,3"
+         transform="rotate(180,0.125,0)"
+         sodipodi:nodetypes="ccc"
+         id="path1-93-8-2-7-4-1-3" />
+    </marker>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -2825,5 +2851,68 @@
          x="345.9668"
          y="248.03332"
          id="tspan64">J143</tspan></text>
+    <rect
+       style="fill:none;stroke:#000080;stroke-width:0.264583;stroke-linejoin:round"
+       id="rect4"
+       width="73.491486"
+       height="91.695801"
+       x="42.47673"
+       y="597.37115" />
+    <path
+       style="fill:none;stroke:#88aa00;stroke-width:0.264583;stroke-linejoin:round"
+       d="M 42.476729,689.06693 115.96821,597.37114"
+       id="path33" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,5.5641746,225.73682)"
+       id="text32-6-1"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect32-76-7);display:inline;fill:#d45500;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="306.11328"
+         y="1553.7189"
+         id="tspan65">S32</tspan></text>
+    <path
+       style="fill:none;stroke:#ff6600;stroke-width:0.264581;stroke-linejoin:round;marker-start:url(#ArrowWide-12-3-6-3-6-6-5);marker-end:url(#ArrowWide-12-3-6-3-6-6-5)"
+       d="m 84.934419,636.0922 5.17032,5.31923"
+       id="path11-4-9-9-9-8-0-7"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#88aa00;stroke-width:0.264583;stroke-linejoin:round"
+       d="M 42.476735,701.18586 115.96821,609.49007"
+       id="path33-0" />
+    <path
+       style="fill:none;stroke:#88aa00;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 52.18968,689.06696 -8.97529,-7.16053"
+       id="path33-0-8" />
+    <path
+       style="fill:none;stroke:#999999;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 45.652128,685.10517 0.649945,0.66168 0.714942,-0.72183"
+       id="path34" />
+    <path
+       style="fill:none;stroke:#ff7f2a;stroke-width:0.264583;stroke-linejoin:round"
+       d="M 42.444977,675.37019 H 115.99997"
+       id="path35" />
+    <path
+       style="fill:none;stroke:#ff7f2a;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 63.167234,675.37019 v 21.63276"
+       id="path36" />
+    <path
+       style="fill:none;stroke:#ff00ff;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 44.934187,688.91139 c 0,0 0.09423,-0.61124 0,-0.89393 -0.125636,-0.37691 -0.715134,-0.9535 -0.715134,-0.9535"
+       id="path37"
+       sodipodi:nodetypes="cac" />
+    <path
+       style="fill:none;stroke:#ff00ff;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 54.419473,689.1507 c 0,0 0.09423,-0.61124 0,-0.89393 -0.125636,-0.37691 -0.715134,-0.9535 -0.715134,-0.9535"
+       id="path37-3"
+       sodipodi:nodetypes="cac" />
+    <path
+       style="fill:none;stroke:#d4aa00;stroke-width:0.264584;stroke-linejoin:round"
+       d="m 79.222473,653.44385 v 35.62311"
+       id="path36-2" />
+    <path
+       style="fill:none;stroke:#ff00ff;stroke-width:0.264583;stroke-linejoin:round"
+       d="m 65.53991,675.26575 c 0,0 0.09423,-0.61124 0,-0.89393 -0.125636,-0.37691 -0.715134,-0.9535 -0.715134,-0.9535"
+       id="path37-3-6"
+       sodipodi:nodetypes="cac" />
   </g>
 </svg>
