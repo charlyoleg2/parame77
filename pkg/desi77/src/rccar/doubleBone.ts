@@ -37,7 +37,7 @@ import {
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 //import { triALLrL } from 'triangule';
 //import type { tContourJ, Facet, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
-import type { tContourJ, tJunc, tHalfProfile } from 'sheetfold';
+import type { tContourJ, tJunc, tJuncs, tHalfProfile } from 'sheetfold';
 import {
 	tJDir,
 	tJSide,
@@ -151,17 +151,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const W2c = (L2c - N2c * 2 * Rh) / (N2c + 1);
 		const hX0c = W2c + Rh;
 		const hX1c = W2c + 2 * Rh;
-		function calcInnerTri(iW: number, iH: number, iDW: number, iBW: number): [number, number] {
+		const L1i = L1b - 2 * param.S2;
+		const L2i = L2b - 2 * param.S1;
+		function calcInnerTri(iW: number, iH: number, iDW: number): [number, number] {
 			const rA = Math.atan2(iH, iW);
-			const dIni1 = iDW / Math.sin(rA);
-			const dIni2 = iBW / Math.tan(rA);
-			const rInitDist = dIni1 + dIni2;
+			const rInitDist = iDW / Math.sin(rA);
 			return [rA, rInitDist];
 		}
-		const [tri1a, tri1d0] = calcInnerTri(L2b, L1b, param.S3 / 2, param.S2);
-		const tri11L = L2b - 2 * tri1d0;
-		const [tri2a, tri2d0] = calcInnerTri(L1b, L2b, param.S3 / 2, param.S1);
-		const tri21L = L1b - 2 * tri2d0;
+		const [tri1a, tri1d0] = calcInnerTri(L2i, L1i, param.S3 / 2);
+		const tri11L = L2i - 2 * tri1d0;
+		const [tri2a, tri2d0] = calcInnerTri(L1i, L2i, param.S3 / 2);
+		const tri21L = L1i - 2 * tri2d0;
 		function calcSplitTri(iL: number, iP: number): [number, number] {
 			if (iL < 0) {
 				throw `err559: iL ${ffix(iL)} is negative mm`;
@@ -284,23 +284,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const rCtr = ctr.rotate(x0, y0, r0);
 			return rCtr;
 		}
-		const x04 = tri1d0;
+		const x04 = param.S1 + tri1d0;
 		const y04 = param.S2;
 		const ctrTri14 = makeCtrTri('J14', x04, y04, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
 		const ctrTri24 = makeCtrTri('J24', x04, y04, 0, tri1a, tri11s, tri11c, tri12s, tri12c);
-		const x02 = L2b - tri1d0;
+		const x02 = L2b - param.S1 - tri1d0;
 		const y02 = L1b - param.S2;
 		const ctrTri12 = makeCtrTri('J12', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
 		const ctrTri22 = makeCtrTri('J22', x02, y02, pi, tri1a, tri11s, tri11c, tri12s, tri12c);
 		const x01 = L2b - param.S1;
-		const y01 = tri2d0;
+		const y01 = param.S2 + tri2d0;
 		const ctrTri11 = makeCtrTri('J11', x01, y01, pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
 		const ctrTri21 = makeCtrTri('J21', x01, y01, pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
 		const x03 = param.S1;
-		const y03 = L1b - tri2d0;
+		const y03 = L1b - param.S2 - tri2d0;
 		const ctrTri13 = makeCtrTri('J13', x03, y03, -pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
 		const ctrTri23 = makeCtrTri('J23', x03, y03, -pi2, tri2a, tri21s, tri21c, tri22s, tri22c);
-		//const faDbg1 = facet([ctrTri14]);
 		const faPlate1 = facet([ctrPlate1, ctrTri14, ctrTri12, ctrTri11, ctrTri13]);
 		const faPlate2 = facet([ctrPlate2, ctrTri24, ctrTri22, ctrTri21, ctrTri23]);
 		// facet faSide1 faSide2
@@ -321,9 +320,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const faSide1 = facet([makeCtrSide('J11'), ...ctrMinics]);
 		const faSide2 = facet([makeCtrSide('J12'), ...ctrMinics]);
+		// facet wings
+		const Jwings = ['J111', 'J112', 'J113'];
+		Jwings.push(...['J121', 'J122', 'J123']);
+		Jwings.push(...['J131', 'J132', 'J133']);
+		Jwings.push(...['J141', 'J142', 'J143']);
+		Jwings.push(...['J211', 'J212', 'J213']);
+		Jwings.push(...['J221', 'J222', 'J223']);
+		Jwings.push(...['J231', 'J232', 'J233']);
+		Jwings.push(...['J241', 'J242', 'J243']);
 		// sheetFold
+		const Jbase = ['J1', 'J2', 'J3', 'J4', 'J11', 'J12', 'J21', 'J22'];
 		const Jdef: tJunc = { angle: aJa, radius: aJr, neutral: aJn, mark: aJm };
 		const Jdef2: tJunc = { angle: aJa, radius: aJr2, neutral: aJn, mark: aJm2 };
+		const juncs: tJuncs = {};
+		for (const iJ of Jbase) {
+			juncs[iJ] = Jdef;
+		}
+		for (const iJ of Jwings) {
+			juncs[iJ] = Jdef2;
+		}
+		// profile preparation
 		let half1: tHalfProfile = [];
 		let half2: tHalfProfile = [];
 		if (param.P11 > 0) {
@@ -332,41 +349,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const sFold = sheetFold(
 			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2],
-			//[faDbg1],
-			{
-				J1: Jdef,
-				J2: Jdef,
-				J3: Jdef,
-				J4: Jdef,
-				J11: Jdef,
-				J12: Jdef,
-				J21: Jdef,
-				J22: Jdef,
-				J111: Jdef2,
-				J112: Jdef2,
-				J113: Jdef2,
-				J121: Jdef2,
-				J122: Jdef2,
-				J123: Jdef2,
-				J131: Jdef2,
-				J132: Jdef2,
-				J133: Jdef2,
-				J141: Jdef2,
-				J142: Jdef2,
-				J143: Jdef2,
-				J211: Jdef2,
-				J212: Jdef2,
-				J213: Jdef2,
-				J221: Jdef2,
-				J222: Jdef2,
-				J223: Jdef2,
-				J231: Jdef2,
-				J232: Jdef2,
-				J233: Jdef2,
-				J241: Jdef2,
-				J242: Jdef2,
-				J243: Jdef2
-			},
+			juncs,
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: param.W1, ante: ['J1', W12], post: ['J2', W12] },
 				{ x1: 0, y1: W12, a1: 0, l1: param.W1, ante: half1, post: half2 }
