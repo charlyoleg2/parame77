@@ -344,13 +344,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					const triParity = i2 % 2;
 					const triC = triParity === 1 ? tri24 : tri13;
 					const lc = triC[i3];
-					const ctrJ = contourJ(0, 0)
-						.addSegStrokeR(lc, 0)
-						.addSegStrokeR(0, wingH)
-						.startJunction(jN, tJDir.eA, tJSide.eABLeft)
-						.addSegStrokeR(-lc, 0)
-						.closeSegStroke();
-					faWings.push(facet([ctrJ]));
+					if (lc > 0) {
+						const ctrJ = contourJ(0, 0)
+							.addSegStrokeR(lc, 0)
+							.addSegStrokeR(0, wingH)
+							.startJunction(jN, tJDir.eA, tJSide.eABLeft)
+							.addSegStrokeR(-lc, 0)
+							.closeSegStroke();
+						faWings.push(facet([ctrJ]));
+					}
 				}
 			}
 		}
@@ -369,14 +371,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const half1A: tHalfProfile = ['J1', L2b, 'J2', W1, 'J3', L2b];
 		const half2A: tHalfProfile = ['J11', W1, 'J21', L1b];
 		const half2P: tHalfProfile = ['J12', W1, 'J22'];
-		const half3A: tHalfProfile = ['J2', param.S1, 'J111', wingH];
-		const half3P: tHalfProfile = ['J3', param.S1, 'J211', wingH];
+		//const half3A: tHalfProfile = ['J2', param.S1, 'J111', wingH];
+		//const half3P: tHalfProfile = ['J3', param.S1, 'J211', wingH];
 		const sFold = sheetFold(
 			[faBone1, faPlate1, faPlate2, faBone2, faSide1, faSide2, ...faWings],
 			juncs,
 			[
 				{ x1: 0, y1: 0, a1: 0, l1: W1, ante: half1A, post: ['J4'] },
-				{ x1: 2 * W1, y1: 0, a1: 0, l1: W1, ante: half3A, post: half3P },
+				//{ x1: 2 * W1, y1: 0, a1: 0, l1: W1, ante: half3A, post: half3P },
 				{ x1: 4 * W1, y1: 0, a1: 0, l1: L1b, ante: half2A, post: half2P }
 			],
 			param.T1,
