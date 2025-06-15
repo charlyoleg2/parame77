@@ -15,4 +15,5 @@ export * from './heliostat/heliostat';
 export * from './rccar/rccar';
 export * from './rccar/singleBone';
 export * from './rccar/doubleBone';
+export * from './rccar/pcar';
 export * from './capsule/capsule';
