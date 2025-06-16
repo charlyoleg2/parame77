@@ -135,6 +135,7 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figSideWiWheels = figure();
+	const figSideWoWheels = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -237,9 +238,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figSideWiWheels.addSecond(contourCircle(0, RW2, RW1));
 		figSideWiWheels.addSecond(contourCircle(param.LB2, RW2, RW2));
 		figSideWiWheels.addSecond(contourCircle(param.LB2, RW2, RW1));
+		// figSideWoWheels
+		figSideWoWheels.addMainO(makeCtrSide(false));
+		figSideWoWheels.mergeFigure(figSideWiWheels, true);
 		// final figure list
 		rGeome.fig = {
-			faceSideWiWheels: figSideWiWheels
+			faceSideWiWheels: figSideWiWheels,
+			faceSideWoWheels: figSideWoWheels
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -247,19 +252,39 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_sideWiW`,
+					outName: `subpax_${designName}_sideWiW1`,
 					face: `${designName}_faceSideWiWheels`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Wt1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_sideWiW2`,
+					face: `${designName}_faceSideWiWheels`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.Wt1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, param.Wt2 + param.Wt1]
+				},
+				{
+					outName: `subpax_${designName}_sideWoW`,
+					face: `${designName}_faceSideWoWheels`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.Wt2,
+					rotate: [0, 0, 0],
+					translate: [0, 0, param.Wt1]
 				}
 			],
 			volumes: [
 				{
 					outName: `ipax_${designName}_side`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_sideWiW`]
+					inList: [
+						`subpax_${designName}_sideWiW1`,
+						`subpax_${designName}_sideWiW2`,
+						`subpax_${designName}_sideWoW`
+					]
 				},
 				{
 					outName: `pax_${designName}`,
