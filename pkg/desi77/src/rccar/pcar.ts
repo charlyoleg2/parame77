@@ -17,7 +17,7 @@ import {
 	figure,
 	//degToRad,
 	//radToDeg,
-	//ffix,
+	ffix,
 	pNumber,
 	//pCheckbox,
 	//pDropdown,
@@ -42,7 +42,7 @@ const pDef: tParamDef = {
 		pNumber('HF4', 'mm', 800, 100, 3000, 1),
 		pNumber('HB1', 'mm', 800, 100, 3000, 1),
 		pSectionSeparator('Wheels'),
-		pNumber('HW1', 'mm', 200, 1, 1000, 1),
+		pNumber('HW1', 'mm', 200, -1000, 1000, 1),
 		pNumber('DW1', 'mm', 100, 1, 500, 1),
 		pNumber('DW2', 'mm', 600, 1, 2000, 1),
 		pNumber('DW3', 'mm', 800, 1, 2000, 1),
@@ -141,13 +141,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const RW1 = param.DW1 / 2;
 		const RW2 = param.DW2 / 2;
 		//const RW3 = param.DW3 / 2;
+		const BodyY0 = RW2 - param.HW1;
+		const BodyHeight = param.HF1 + param.HF3 + param.HF4;
+		const BodyLength = param.LB1 + param.LB2 + param.LB3;
+		const BodyWidth = 2 * param.Wt1 + param.Wt2;
 		// step-5 : checks on the parameter values
+		if (BodyY0 < 0) {
+			throw `err147: DW2 ${param.DW2} is too small comapre to HW1 ${ffix(param.HW1)} mm`;
+		}
 		// step-6 : any logs
+		rGeome.logstr += `Body: Y0 ${ffix(BodyY0)}, Height ${ffix(BodyHeight)}, Lenght: ${ffix(BodyLength)}, Width: ${ffix(BodyWidth)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// figSideWiWheels
 		figSideWiWheels.addSecond(contourCircle(0, RW2, RW2));
 		figSideWiWheels.addSecond(contourCircle(0, RW2, RW1));
+		figSideWiWheels.addSecond(contourCircle(param.LB2, RW2, RW2));
+		figSideWiWheels.addSecond(contourCircle(param.LB2, RW2, RW1));
 		// final figure list
 		rGeome.fig = {
 			faceSideWiWheels: figSideWiWheels
