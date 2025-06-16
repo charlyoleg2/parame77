@@ -54,30 +54,30 @@ const pDef: tParamDef = {
 		pNumber('C2', 'mm', 50, 1, 500, 1),
 		pNumber('C3', 'mm', 50, 1, 500, 1),
 		pNumber('C4', 'mm', 50, 1, 500, 1),
-		pNumber('Rs1', 'mm', 100, 1, 500, 1),
-		pNumber('Rs2', 'mm', 100, 1, 500, 1),
-		pNumber('Rs3', 'mm', 100, 1, 500, 1),
-		pNumber('Rs4', 'mm', 100, 1, 500, 1),
-		pNumber('Rs5', 'mm', 100, 1, 500, 1),
-		pNumber('Rs6', 'mm', 100, 1, 500, 1),
-		pNumber('Rs7', 'mm', 100, 1, 500, 1),
+		pNumber('Rs1', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs2', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs3', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs4', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs5', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs6', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs7', 'mm', 100, 1, 2000, 1),
 		pSectionSeparator('Top'),
 		pNumber('Wt1', 'mm', 600, 1, 2000, 1),
 		pNumber('Wt2', 'mm', 800, 1, 2000, 1),
 		pNumber('Ct1', 'mm', 50, 1, 500, 1),
 		pNumber('Ct2', 'mm', 50, 1, 500, 1),
 		pNumber('Ct3', 'mm', 50, 1, 500, 1),
-		pNumber('Rt1', 'mm', 100, 1, 500, 1),
-		pNumber('Rt2', 'mm', 100, 1, 500, 1),
+		pNumber('Rt1', 'mm', 100, 1, 2000, 1),
+		pNumber('Rt2', 'mm', 100, 1, 2000, 1),
 		pSectionSeparator('Front'),
 		pNumber('Wf1', 'mm', 800, 1, 2000, 1),
 		pNumber('Wf2', 'mm', 150, 1, 1000, 1),
 		pNumber('Cf1', 'mm', 50, 1, 500, 1),
 		pNumber('Cf2', 'mm', 50, 1, 500, 1),
 		pNumber('Cf3', 'mm', 50, 1, 500, 1),
-		pNumber('Rf1', 'mm', 100, 1, 500, 1),
-		pNumber('Rf2', 'mm', 100, 1, 500, 1),
-		pNumber('Rf3', 'mm', 100, 1, 500, 1)
+		pNumber('Rf1', 'mm', 100, 1, 2000, 1),
+		pNumber('Rf2', 'mm', 100, 1, 2000, 1),
+		pNumber('Rf3', 'mm', 100, 1, 2000, 1)
 	],
 	paramSvg: {
 		LB1: 'pcar_side.svg',
@@ -147,6 +147,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const BodyLength = param.LB1 + param.LB2 + param.LB3;
 		const BodyWidth = 2 * param.Wt1 + param.Wt2;
 		const LT2 = BodyLength - (param.LT1 + param.LT3 + param.LT4);
+		const HF3b = param.HF3 - param.C2;
+		const HB1b = param.HB1 - param.C2;
 		const HB2 = BodyHeight - param.HB1;
 		const Wf1b = BodyHeight - param.Cf3 - param.Wf1;
 		const Wf2b = BodyWidth - 2 * (param.Cf1 + param.Wf2);
@@ -162,12 +164,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const LB1b = param.LB1 - dXwheel;
 		const LB2b = param.LB2 - 2 * dXwheel;
 		const LB3b = param.LB3 - dXwheel;
+		function calcCR(dX: number, dY: number, dC: number): number {
+			//const AD = Math.sqrt(dX ** 2 + dY ** 2) / 2;
+			const AD2 = (dX ** 2 + dY ** 2) / 4;
+			const AD = Math.sqrt(AD2);
+			const EA = Math.sqrt(AD2 + dC ** 2);
+			const rAC = (EA * AD) / dC;
+			return rAC;
+		}
+		const CR1 = calcCR(param.LT1, HB1b, param.C1);
+		const CR2 = calcCR(LT2, 0, param.C2);
+		const CR3 = calcCR(param.LT3, HF3b, param.C3);
+		const CR4 = calcCR(param.LT4, param.HF4, param.C4);
 		// step-5 : checks on the parameter values
 		if (BodyY0 < 0) {
 			throw `err147: DW2 ${ffix(param.DW2)} is too small comapre to HW1 ${ffix(param.HW1)} mm`;
 		}
 		if (LT2 < 0) {
 			throw `err169: LT2 ${ffix(LT2)} mm is negative`;
+		}
+		if (HF3b < 0) {
+			throw `err174: HF3b ${ffix(HF3b)} mm is negative`;
+		}
+		if (HB1b < 0) {
+			throw `err178: HB1b ${ffix(HB1b)} mm is negative`;
 		}
 		if (HB2 < 0) {
 			throw `err172: HB2 ${ffix(HB2)} mm is negative`;
@@ -222,13 +242,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			rCtr.addCornerRounded(param.Rs7)
 				.addSegStrokeR(0, param.HF1)
 				.addCornerRounded(param.Rs6)
-				.addSegStrokeR(-param.LT4, param.HF4)
+				.addPointR(-param.LT4, param.HF4)
+				//.addSegStroke()
+				.addSegArc(CR4, false, true)
 				.addCornerRounded(param.Rs5)
-				.addSegStrokeR(-param.LT3, param.HF3)
+				.addPointR(-param.LT3, HF3b)
+				//.addSegStroke()
+				.addSegArc(CR3, false, true)
 				.addCornerRounded(param.Rs4)
-				.addSegStrokeR(-LT2, 0)
+				.addPointR(-LT2, 0)
+				//.addSegStroke()
+				.addSegArc(CR2, false, true)
 				.addCornerRounded(param.Rs3)
-				.addSegStrokeR(-param.LT1, -param.HB1)
+				.addPointR(-param.LT1, -HB1b)
+				//.addSegStroke()
+				.addSegArc(CR1, false, true)
 				.addCornerRounded(param.Rs2)
 				.closeSegStroke();
 			return rCtr;
