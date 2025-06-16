@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.569683"
-     inkscape:cx="231.89396"
-     inkscape:cy="1177.6263"
+     inkscape:zoom="1.1099335"
+     inkscape:cx="394.61824"
+     inkscape:cy="1242.8673"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -597,6 +597,32 @@
        width="42.795357"
        height="20.947201"
        id="rect5-9-6" />
+    <marker
+       style="overflow:visible"
+       id="ArrowWide-75-1-6-6-75"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Wide arrow"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1;stroke-linecap:butt"
+         d="M 3,-3 0,0 3,3"
+         transform="rotate(180,0.125,0)"
+         sodipodi:nodetypes="ccc"
+         id="path6-69-0-2-6-3" />
+    </marker>
+    <rect
+       x="437.43417"
+       y="1005.9356"
+       width="98.342812"
+       height="56.05677"
+       id="rect6-5-2" />
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -999,5 +1025,17 @@
        style="fill:#338000;stroke:#ff5555;stroke-width:0.264581;stroke-linejoin:round;marker-start:url(#ArrowWide-8-9-0-5-9);marker-end:url(#ArrowWide-8-9-0-5-9)"
        d="M 118.95427,325.04455 V 349.2508"
        id="path38-6-9-9-8-7" />
+    <path
+       style="fill:#338000;stroke:#008080;stroke-width:0.264583;stroke-linejoin:round;marker-start:url(#ArrowWide-75-1-6-6-75)"
+       d="m 99.270734,353.78428 18.619016,5.46149"
+       id="path21-2-7-9-0-2" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,2.6444557,90.726955)"
+       id="text3-6-9"
+       style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect6-5-2);display:inline;fill:#008080;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
+         x="437.43359"
+         y="1020.172"
+         id="tspan23">RW2</tspan></text>
   </g>
 </svg>
