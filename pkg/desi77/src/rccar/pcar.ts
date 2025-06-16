@@ -2,7 +2,7 @@
 // the envelop of a passager car
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -12,7 +12,7 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	//contour,
+	contour,
 	contourCircle,
 	figure,
 	//degToRad,
@@ -37,9 +37,9 @@ const pDef: tParamDef = {
 		pNumber('LT1', 'mm', 800, 100, 4000, 1),
 		pNumber('LT3', 'mm', 1200, 100, 4000, 1),
 		pNumber('LT4', 'mm', 1600, 100, 4000, 1),
-		pNumber('HF1', 'mm', 600, 100, 3000, 1),
-		pNumber('HF3', 'mm', 500, 100, 3000, 1),
-		pNumber('HF4', 'mm', 800, 100, 3000, 1),
+		pNumber('HF1', 'mm', 900, 100, 3000, 1),
+		pNumber('HF3', 'mm', 600, 100, 3000, 1),
+		pNumber('HF4', 'mm', 300, 100, 3000, 1),
 		pNumber('HB1', 'mm', 800, 100, 3000, 1),
 		pSectionSeparator('Wheels'),
 		pNumber('HW1', 'mm', 200, -1000, 1000, 1),
@@ -140,20 +140,99 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const RW1 = param.DW1 / 2;
 		const RW2 = param.DW2 / 2;
-		//const RW3 = param.DW3 / 2;
+		const RW3 = param.DW3 / 2;
 		const BodyY0 = RW2 - param.HW1;
 		const BodyHeight = param.HF1 + param.HF3 + param.HF4;
 		const BodyLength = param.LB1 + param.LB2 + param.LB3;
 		const BodyWidth = 2 * param.Wt1 + param.Wt2;
+		const LT2 = BodyLength - (param.LT1 + param.LT3 + param.LT4);
+		const HB2 = BodyHeight - param.HB1;
+		const Wf1b = BodyHeight - param.Cf3 - param.Wf1;
+		const Wf2b = BodyWidth - 2 * (param.Cf1 + param.Wf2);
+		const Cf1b = param.Wt1 - (param.Cf1 + param.WW1 + param.WW2);
+		const Ct2b = param.Wt1 - (param.Ct2 + param.WW1 + param.WW2);
+		const Ct1b = param.LB1 - (param.Ct1 + RW3);
+		const Ct3b = param.LB3 - (param.Ct3 + RW3);
+		const dXwheel2 = RW3 ** 2 - param.HW1 ** 2;
+		if (dXwheel2 < 0) {
+			throw `err158: dXwheel2 ${ffix(dXwheel2)} is negative because of HW1 ${ffix(param.HW1)} and RW3 ${ffix(RW3)} mm`;
+		}
+		const dXwheel = Math.sqrt(RW3 ** 2 - param.HW1 ** 2);
+		const LB1b = param.LB1 - dXwheel;
+		const LB2b = param.LB2 - 2 * dXwheel;
+		const LB3b = param.LB3 - dXwheel;
 		// step-5 : checks on the parameter values
 		if (BodyY0 < 0) {
-			throw `err147: DW2 ${param.DW2} is too small comapre to HW1 ${ffix(param.HW1)} mm`;
+			throw `err147: DW2 ${ffix(param.DW2)} is too small comapre to HW1 ${ffix(param.HW1)} mm`;
+		}
+		if (LT2 < 0) {
+			throw `err169: LT2 ${ffix(LT2)} mm is negative`;
+		}
+		if (HB2 < 0) {
+			throw `err172: HB2 ${ffix(HB2)} mm is negative`;
+		}
+		if (Wf1b < 0) {
+			throw `err161: Wf1b ${ffix(Wf1b)} mm is negative`;
+		}
+		if (Wf2b < 0) {
+			throw `err164: Wf2b ${ffix(Wf2b)} mm is negative`;
+		}
+		if (Cf1b < 0) {
+			throw `err167: Cf1b ${ffix(Cf1b)} mm is negative`;
+		}
+		if (Ct1b < 0) {
+			throw `err170: Ct1b ${ffix(Ct1b)} mm is negative`;
+		}
+		if (Ct2b < 0) {
+			throw `err173: Ct2b ${ffix(Ct2b)} mm is negative`;
+		}
+		if (Ct3b < 0) {
+			throw `err176: Ct3b ${ffix(Ct3b)} mm is negative`;
+		}
+		if (LB1b < 0) {
+			throw `err185: LB1b ${ffix(LB1b)} mm is negative`;
+		}
+		if (LB2b < 0) {
+			throw `err189: LB2b ${ffix(LB2b)} mm is negative`;
+		}
+		if (LB3b < 0) {
+			throw `err193: LB3b ${ffix(LB3b)} mm is negative`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Body: Y0 ${ffix(BodyY0)}, Height ${ffix(BodyHeight)}, Lenght: ${ffix(BodyLength)}, Width: ${ffix(BodyWidth)} mm\n`;
 		// step-7 : drawing of the figures
 		// sub-function
 		// figSideWiWheels
+		function makeCtrSide(withWheels: boolean): tContour {
+			const rCtr = contour(-param.LB1, BodyY0).addCornerRounded(param.Rs1);
+			if (withWheels) {
+				rCtr.addSegStrokeR(LB1b, 0)
+					.addPointR(dXwheel, param.HW1 + RW3)
+					.addPointR(2 * dXwheel, 0)
+					.addSegArc2()
+					.addSegStrokeR(LB2b, 0)
+					.addPointR(dXwheel, param.HW1 + RW3)
+					.addPointR(2 * dXwheel, 0)
+					.addSegArc2()
+					.addSegStrokeR(LB3b, 0);
+			} else {
+				rCtr.addSegStrokeR(BodyLength, 0);
+			}
+			rCtr.addCornerRounded(param.Rs7)
+				.addSegStrokeR(0, param.HF1)
+				.addCornerRounded(param.Rs6)
+				.addSegStrokeR(-param.LT4, param.HF4)
+				.addCornerRounded(param.Rs5)
+				.addSegStrokeR(-param.LT3, param.HF3)
+				.addCornerRounded(param.Rs4)
+				.addSegStrokeR(-LT2, 0)
+				.addCornerRounded(param.Rs3)
+				.addSegStrokeR(-param.LT1, -param.HB1)
+				.addCornerRounded(param.Rs2)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figSideWiWheels.addMainO(makeCtrSide(true));
 		figSideWiWheels.addSecond(contourCircle(0, RW2, RW2));
 		figSideWiWheels.addSecond(contourCircle(0, RW2, RW1));
 		figSideWiWheels.addSecond(contourCircle(param.LB2, RW2, RW2));
