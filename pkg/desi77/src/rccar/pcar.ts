@@ -3,7 +3,7 @@
 
 import type {
 	//tContour,
-	tOuterInner,
+	//tOuterInner,
 	tParamDef,
 	tParamVal,
 	tGeom,
@@ -12,7 +12,7 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	contour,
+	//contour,
 	contourCircle,
 	figure,
 	//degToRad,
@@ -77,12 +77,7 @@ const pDef: tParamDef = {
 		pNumber('Cf3', 'mm', 50, 1, 500, 1),
 		pNumber('Rf1', 'mm', 100, 1, 500, 1),
 		pNumber('Rf2', 'mm', 100, 1, 500, 1),
-		pNumber('Rf3', 'mm', 100, 1, 500, 1),
-		pSectionSeparator('to be deleted'),
-		pNumber('H1', 'mm', 40, 1, 4000, 1),
-		pNumber('H2', 'mm', 50, 1, 4000, 1),
-		pNumber('radius', 'mm', 10, 1, 4000, 1),
-		pNumber('Rc', 'mm', 10, 0, 400, 1)
+		pNumber('Rf3', 'mm', 100, 1, 500, 1)
 	],
 	paramSvg: {
 		LB1: 'pcar_side.svg',
@@ -128,11 +123,7 @@ const pDef: tParamDef = {
 		Cf3: 'pcar_front.svg',
 		Rf1: 'pcar_front.svg',
 		Rf2: 'pcar_front.svg',
-		Rf3: 'pcar_front.svg',
-		H1: 'pcar_side.svg',
-		H2: 'pcar_side.svg',
-		radius: 'pcar_top.svg',
-		Rc: 'pcar_front.svg'
+		Rf3: 'pcar_front.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -143,48 +134,55 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figFace = figure();
+	const figSideWiWheels = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
-		// figFace
-		const face1: tOuterInner = [];
-		const ctrPoleFace = contour(-param.H1 / 2, -param.H2 / 2)
-			.addCornerRounded(param.Rc)
-			.addSegStrokeA(param.H1 / 2, -param.H2 / 2)
-			.addSegStrokeA(param.H1 / 2, param.H2 / 2)
-			.addCornerRounded(param.Rc)
-			.addSegStrokeA(-param.H1 / 2, param.H2 / 2)
-			.closeSegStroke();
-		face1.push(ctrPoleFace);
-		face1.push(contourCircle(0, 0, param.radius));
-		figFace.addMainOI(face1);
+		// step-4 : some preparation calculation
+		const RW1 = param.DW1 / 2;
+		const RW2 = param.DW2 / 2;
+		//const RW3 = param.DW3 / 2;
+		// step-5 : checks on the parameter values
+		// step-6 : any logs
+		// step-7 : drawing of the figures
+		// sub-function
+		// figSideWiWheels
+		figSideWiWheels.addSecond(contourCircle(0, RW2, RW2));
+		figSideWiWheels.addSecond(contourCircle(0, RW2, RW1));
 		// final figure list
 		rGeome.fig = {
-			faceVoila: figFace
+			faceSideWiWheels: figSideWiWheels
 		};
+		// step-8 : recipes of the 3D construction
 		// volume
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_top`,
-					face: `${designName}_faceVoila`,
+					outName: `subpax_${designName}_sideWiW`,
+					face: `${designName}_faceSideWiWheels`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: 10,
+					length: param.Wt1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
+					outName: `ipax_${designName}_side`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_sideWiW`]
+				},
+				{
 					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eIdentity,
-					inList: [`subpax_${designName}_top`]
+					boolMethod: EBVolume.eIntersection,
+					inList: [`subpax_${designName}_side`]
 				}
 			]
 		};
+		// step-9 : optional sub-design parameter export
 		// sub-design
 		rGeome.sub = {};
+		// step-10 : final log message
 		// finalize
 		rGeome.logstr += 'pcar drawn successfully!\n';
 		rGeome.calcErr = false;
