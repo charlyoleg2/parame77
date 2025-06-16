@@ -143,6 +143,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	try {
 		// step-4 : some preparation calculation
 		const pi = Math.PI;
+		const pi2 = pi / 2;
 		const RW1 = param.DW1 / 2;
 		const RW2 = param.DW2 / 2;
 		const RW3 = param.DW3 / 2;
@@ -299,7 +300,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc(CRt1, false, true);
 		figTop.addMainO(ctrTop);
 		// figFront
-		const ctrFront = contour(0, BodyY0)
+		const ctrFront = contour(param.Cf1, BodyY0)
 			.addCornerRounded(param.Rf1)
 			.addSegStrokeR(Wtb, 0)
 			.addCornerRounded(param.Rf1)
@@ -342,6 +343,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop.addSecond(makeCtrWheel(-1, 0, param.Wt1, pi));
 		figTop.addSecond(makeCtrWheel(1, param.LB2, param.Wt1, pi));
 		figTop.addSecond(makeCtrWheel(-1, param.LB2, param.Wt1, pi));
+		figFront.addSecond(makeCtrWheel(1, param.Wt1, RW2, pi2));
+		figFront.addSecond(makeCtrWheel(-1, param.Wt1, RW2, pi2));
+		figFront.addSecond(makeCtrWheel(1, param.Wt1 + param.Wt2, RW2, -pi2));
+		figFront.addSecond(makeCtrWheel(-1, param.Wt1 + param.Wt2, RW2, -pi2));
 		// final figure list
 		rGeome.fig = {
 			faceSideWiWheels: figSideWiWheels,
