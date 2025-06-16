@@ -71,7 +71,7 @@ const pDef: tParamDef = {
 		pNumber('Rt2', 'mm', 100, 1, 2000, 1),
 		pSectionSeparator('Front'),
 		pNumber('Wf1', 'mm', 800, 1, 2000, 1),
-		pNumber('Wf2', 'mm', 150, 1, 1000, 1),
+		pNumber('Wf2', 'mm', 300, 1, 1000, 1),
 		pNumber('Cf1', 'mm', 50, 1, 500, 1),
 		pNumber('Cf2', 'mm', 50, 1, 500, 1),
 		pNumber('Cf3', 'mm', 50, 1, 500, 1),
@@ -136,9 +136,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figSideWiWheels = figure();
 	const figSideWoWheels = figure();
+	const figTop = figure();
+	const figFront = figure();
+	const figWheel = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi = Math.PI;
 		const RW1 = param.DW1 / 2;
 		const RW2 = param.DW2 / 2;
 		const RW3 = param.DW3 / 2;
@@ -152,6 +156,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const HB2 = BodyHeight - param.HB1;
 		const Wf1b = BodyHeight - param.Cf3 - param.Wf1;
 		const Wf2b = BodyWidth - 2 * (param.Cf1 + param.Wf2);
+		const Wtb = BodyWidth - 2 * param.Cf1;
 		const Cf1b = param.Wt1 - (param.Cf1 + param.WW1 + param.WW2);
 		const Ct2b = param.Wt1 - (param.Ct2 + param.WW1 + param.WW2);
 		const Ct1b = param.LB1 - (param.Ct1 + RW3);
@@ -169,13 +174,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const AD2 = (dX ** 2 + dY ** 2) / 4;
 			const AD = Math.sqrt(AD2);
 			const EA = Math.sqrt(AD2 + dC ** 2);
-			const rAC = (EA * AD) / dC;
-			return rAC;
+			//const rAC = (EA * AD) / dC;
+			const EG = EA / 2;
+			const aAED = Math.atan2(AD, dC);
+			const rEF = EG / Math.cos(aAED);
+			return rEF;
 		}
 		const CR1 = calcCR(param.LT1, HB1b, param.C1);
 		const CR2 = calcCR(LT2, 0, param.C2);
 		const CR3 = calcCR(param.LT3, HF3b, param.C3);
 		const CR4 = calcCR(param.LT4, param.HF4, param.C4);
+		const CRt1 = calcCR(0, BodyWidth - 2 * param.Ct2, param.Ct1);
+		const CRt3 = calcCR(0, BodyWidth - 2 * param.Ct2, param.Ct3);
+		const CRt2 = calcCR(BodyLength - param.Ct1 - param.Ct3, 0, param.Ct2);
+		const CRf1 = calcCR(0, param.Wf1, param.Cf1);
+		const CRf2 = calcCR(param.Wf2, Wf1b, param.Cf2);
+		const CRf3 = calcCR(Wf2b, 0, param.Cf3);
 		// step-5 : checks on the parameter values
 		if (BodyY0 < 0) {
 			throw `err147: DW2 ${ffix(param.DW2)} is too small comapre to HW1 ${ffix(param.HW1)} mm`;
@@ -269,10 +283,72 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figSideWoWheels
 		figSideWoWheels.addMainO(makeCtrSide(false));
 		figSideWoWheels.mergeFigure(figSideWiWheels, true);
+		// figTop
+		const ctrTop = contour(-param.LB1 + param.Ct1, param.Ct2)
+			.addCornerRounded(param.Rt1)
+			.addPointR(BodyLength - param.Ct1 - param.Ct3, 0)
+			.addSegArc(CRt2, false, true)
+			.addCornerRounded(param.Rt2)
+			.addPointR(0, BodyWidth - 2 * param.Ct2)
+			.addSegArc(CRt3, false, true)
+			.addCornerRounded(param.Rt2)
+			.addPointR(-BodyLength + param.Ct1 + param.Ct3, 0)
+			.addSegArc(CRt2, false, true)
+			.addCornerRounded(param.Rt1)
+			.addPointR(0, -BodyWidth + 2 * param.Ct2)
+			.addSegArc(CRt1, false, true);
+		figTop.addMainO(ctrTop);
+		// figFront
+		const ctrFront = contour(0, BodyY0)
+			.addCornerRounded(param.Rf1)
+			.addSegStrokeR(Wtb, 0)
+			.addCornerRounded(param.Rf1)
+			.addPointR(0, param.Wf1)
+			.addSegArc(CRf1, false, true)
+			.addCornerRounded(param.Rf2)
+			.addPointR(-param.Wf2, Wf1b)
+			.addSegArc(CRf2, false, true)
+			.addCornerRounded(param.Rf3)
+			.addPointR(-Wf2b, 0)
+			.addSegArc(CRf3, false, true)
+			.addCornerRounded(param.Rf3)
+			.addPointR(-param.Wf2, -Wf1b)
+			.addSegArc(CRf2, false, true)
+			.addCornerRounded(param.Rf2)
+			.addPointR(0, -param.Wf1)
+			.addSegArc(CRf1, false, true);
+		figFront.addMainO(ctrFront);
+		// figWheel
+		function makeCtrWheel(sX: number, x0: number, y0: number, r0: number): tContour {
+			const rCtr = contour(x0, y0)
+				.addSegStrokeR(sX * RW1, 0)
+				.addSegStrokeR(0, param.WW1)
+				.addSegStrokeR(sX * (RW2 - RW1), 0)
+				.addCornerRounded(param.RW2)
+				.addSegStrokeR(0, param.WW2)
+				.addCornerRounded(param.RW2)
+				.addSegStrokeR(-sX * RW2, 0)
+				.closeSegStroke()
+				.rotate(x0, y0, r0);
+			return rCtr;
+		}
+		figWheel.addMainO(makeCtrWheel(1, 0, 0, 0));
+		figWheel.addSecond(makeCtrWheel(-1, 0, 0, 0));
+		figTop.addSecond(makeCtrWheel(1, 0, param.Wt1 + param.Wt2, 0));
+		figTop.addSecond(makeCtrWheel(-1, 0, param.Wt1 + param.Wt2, 0));
+		figTop.addSecond(makeCtrWheel(1, param.LB2, param.Wt1 + param.Wt2, 0));
+		figTop.addSecond(makeCtrWheel(-1, param.LB2, param.Wt1 + param.Wt2, 0));
+		figTop.addSecond(makeCtrWheel(1, 0, param.Wt1, pi));
+		figTop.addSecond(makeCtrWheel(-1, 0, param.Wt1, pi));
+		figTop.addSecond(makeCtrWheel(1, param.LB2, param.Wt1, pi));
+		figTop.addSecond(makeCtrWheel(-1, param.LB2, param.Wt1, pi));
 		// final figure list
 		rGeome.fig = {
 			faceSideWiWheels: figSideWiWheels,
-			faceSideWoWheels: figSideWoWheels
+			faceSideWoWheels: figSideWoWheels,
+			faceTop: figTop,
+			faceFront: figFront,
+			faceWheel: figWheel
 		};
 		// step-8 : recipes of the 3D construction
 		// volume
@@ -302,6 +378,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.Wt2,
 					rotate: [0, 0, 0],
 					translate: [0, 0, param.Wt1]
+				},
+				{
+					outName: `subpax_${designName}_front`,
+					face: `${designName}_faceFront`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: BodyLength,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_top`,
+					face: `${designName}_faceTop`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: BodyHeight,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
@@ -315,9 +407,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					]
 				},
 				{
-					outName: `pax_${designName}`,
+					outName: `ipax_${designName}_body`,
 					boolMethod: EBVolume.eIntersection,
-					inList: [`subpax_${designName}_side`]
+					inList: [
+						`ipax_${designName}_side`,
+						`subpax_${designName}_front`,
+						`subpax_${designName}_top`
+					]
+				},
+				{
+					outName: `pax_${designName}`,
+					boolMethod: EBVolume.eUnion,
+					inList: [`ipax_${designName}_body`]
 				}
 			]
 		};
