@@ -32,8 +32,8 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('LB1', 'mm', 1000, 100, 4000, 1),
-		pNumber('LB2', 'mm', 3500, 100, 8000, 1),
-		pNumber('LB3', 'mm', 1500, 100, 4000, 1),
+		pNumber('LB2', 'mm', 3000, 100, 8000, 1),
+		pNumber('LB3', 'mm', 1000, 100, 4000, 1),
 		pNumber('LT1', 'mm', 800, 100, 4000, 1),
 		pNumber('LT3', 'mm', 1200, 100, 4000, 1),
 		pNumber('LT4', 'mm', 1600, 100, 4000, 1),
@@ -51,7 +51,7 @@ const pDef: tParamDef = {
 		pNumber('RW2', 'mm', 50, 1, 1000, 1),
 		pSectionSeparator('Side'),
 		pNumber('C1', 'mm', 50, 1, 500, 1),
-		pNumber('C2', 'mm', 50, 1, 500, 1),
+		pNumber('C2', 'mm', 100, 1, 500, 1),
 		pNumber('C3', 'mm', 50, 1, 500, 1),
 		pNumber('C4', 'mm', 50, 1, 500, 1),
 		pNumber('Rs1', 'mm', 100, 1, 2000, 1),
@@ -59,7 +59,7 @@ const pDef: tParamDef = {
 		pNumber('Rs3', 'mm', 100, 1, 2000, 1),
 		pNumber('Rs4', 'mm', 100, 1, 2000, 1),
 		pNumber('Rs5', 'mm', 100, 1, 2000, 1),
-		pNumber('Rs6', 'mm', 100, 1, 2000, 1),
+		pNumber('Rs6', 'mm', 500, 1, 2000, 1),
 		pNumber('Rs7', 'mm', 100, 1, 2000, 1),
 		pSectionSeparator('Top'),
 		pNumber('Wt1', 'mm', 600, 1, 2000, 1),
@@ -68,7 +68,7 @@ const pDef: tParamDef = {
 		pNumber('Ct2', 'mm', 50, 1, 500, 1),
 		pNumber('Ct3', 'mm', 50, 1, 500, 1),
 		pNumber('Rt1', 'mm', 100, 1, 2000, 1),
-		pNumber('Rt2', 'mm', 100, 1, 2000, 1),
+		pNumber('Rt2', 'mm', 400, 1, 2000, 1),
 		pSectionSeparator('Front'),
 		pNumber('Wf1', 'mm', 800, 1, 2000, 1),
 		pNumber('Wf2', 'mm', 300, 1, 1000, 1),
@@ -365,40 +365,68 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					face: `${designName}_faceSideWiWheels`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Wt1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					rotate: [pi2, 0, 0],
+					translate: [0, param.Wt1, 0]
 				},
 				{
 					outName: `subpax_${designName}_sideWiW2`,
 					face: `${designName}_faceSideWiWheels`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Wt1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, param.Wt2 + param.Wt1]
+					rotate: [pi2, 0, 0],
+					translate: [0, param.Wt2 + 2 * param.Wt1, 0]
 				},
 				{
 					outName: `subpax_${designName}_sideWoW`,
 					face: `${designName}_faceSideWoWheels`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Wt2,
-					rotate: [0, 0, 0],
-					translate: [0, 0, param.Wt1]
+					rotate: [pi2, 0, 0],
+					translate: [0, param.Wt2 + param.Wt1, 0]
 				},
 				{
 					outName: `subpax_${designName}_front`,
 					face: `${designName}_faceFront`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: BodyLength,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					rotate: [pi2, 0, pi2],
+					translate: [-param.LB1, 0, 0]
 				},
 				{
 					outName: `subpax_${designName}_top`,
 					face: `${designName}_faceTop`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: BodyHeight,
+					length: BodyHeight + BodyY0,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel11`,
+					face: `${designName}_faceWheel`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.Wt1, RW2]
+				},
+				{
+					outName: `subpax_${designName}_wheel12`,
+					face: `${designName}_faceWheel`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [-pi2, 0, 0],
+					translate: [0, param.Wt1 + param.Wt2, RW2]
+				},
+				{
+					outName: `subpax_${designName}_wheel21`,
+					face: `${designName}_faceWheel`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [pi2, 0, 0],
+					translate: [param.LB2, param.Wt1, RW2]
+				},
+				{
+					outName: `subpax_${designName}_wheel22`,
+					face: `${designName}_faceWheel`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [-pi2, 0, 0],
+					translate: [param.LB2, param.Wt1 + param.Wt2, RW2]
 				}
 			],
 			volumes: [
@@ -423,7 +451,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`ipax_${designName}_body`]
+					inList: [
+						`ipax_${designName}_body`,
+						`subpax_${designName}_wheel11`,
+						`subpax_${designName}_wheel12`,
+						`subpax_${designName}_wheel21`,
+						`subpax_${designName}_wheel22`
+					]
 				}
 			]
 		};
