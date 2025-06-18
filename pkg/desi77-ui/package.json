@@ -33,7 +33,7 @@
 		"clean": "rimraf .svelte-kit build node_modules static/pgdsvg"
 	},
 	"dependencies": {
-		"desi77": "^0.1.15",
+		"desi77": "^0.1.16",
 		"geometrix": "^1.0.21",
 		"geomui": "^1.0.21"
 	},
@@ -53,11 +53,11 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"rimraf": "^6.0.1",
 		"sass": "^1.89.2",
-		"svelte": "^5.34.3",
+		"svelte": "^5.34.5",
 		"svelte-check": "^4.2.1",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.34.1",
 		"vite": "^6.3.5",
-		"vitest": "^3.2.3"
+		"vitest": "^3.2.4"
 	}
 }
