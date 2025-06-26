@@ -208,4 +208,3 @@ const factoryDef: tPageDef = {
 
 // step-12 : export the final object
 export { factoryDef };
-
