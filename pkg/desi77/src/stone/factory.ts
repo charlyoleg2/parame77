@@ -151,7 +151,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const lliym = lliy / 1000;
 		const lleym = lley / 1000;
 		const fh = param.oh1 + param.oh2;
+		const olix = param.olx - 2 * param.ith;
+		const oliy = param.oly - 2 * param.ith;
 		// step-5 : checks on the parameter values
+		if (olix < 0) {
+			throw `err158: olix ${olix} is too small compare to ith ${param.ith}`;
+		}
+		if (oliy < 0) {
+			throw `err161: oliy ${oliy} is too small compare to ith ${param.ith}`;
+		}
 		if (param.olx < 2 * param.ith + param.swx1 + param.swx2) {
 			throw `err151: olx ${param.olx} is too small compare to swx1 ${param.swx1} and swx2 ${param.swx2}`;
 		}
@@ -166,6 +174,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrFext = ctrRectangle(0, 0, llex, lley);
 		const ctrFint = ctrRectangle(param.eth, param.eth, llix, lliy);
 		figTop.addMainOI([ctrFext, ctrFint]);
+		for (let ii = 0; ii < param.onx; ii++) {
+			for (let jj = 0; jj < param.ony; jj++) {
+				const pox = param.eth + param.ewx + ii * (param.olx + param.iwx);
+				const poy = param.eth + param.ewy + jj * (param.oly + param.iwy);
+				const ctrOext = ctrRectangle(pox, poy, param.olx, param.oly);
+				const ctrOint = ctrRectangle(pox + param.ith, poy + param.ith, olix, oliy);
+				figTop.addMainOI([ctrOext, ctrOint]);
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop
