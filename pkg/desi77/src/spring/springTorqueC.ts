@@ -158,8 +158,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (Rmin1 < 0.1) {
 			throw `err120: Di ${param.Di} is too small compare to DTi ${param.DTi}, Ei ${param.Ei}`;
 		}
-		if (dRLs < 2 * param.Ws) {
-			throw `err133: dRLs ${dRLs} is too small compare to Ws ${param.Ws}`;
+		if (dRLs < 2 * param.Wk) {
+			throw `err133: dRLs ${dRLs} is too small compare to Wk ${param.Wk}`;
 		}
 		if (Esi < 0.2 * param.Rrsi) {
 			throw `err136: Esi ${Esi} is too small compare to Rrsi ${param.Rrsi}`;
