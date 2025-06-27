@@ -142,10 +142,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const llix = (param.onx * param.olx + (param.onx - 1) * param.iwx + 2 * param.ewx) / 1000;
-		const llex = llix + (2 * param.eth) / 1000;
-		const lliy = (param.ony * param.oly + (param.ony - 1) * param.iwy + 2 * param.ewy) / 1000;
-		const lley = lliy + (2 * param.eth) / 1000;
+		const llix = param.onx * param.olx + (param.onx - 1) * param.iwx + 2 * param.ewx;
+		const llex = llix + 2 * param.eth;
+		const lliy = param.ony * param.oly + (param.ony - 1) * param.iwy + 2 * param.ewy;
+		const lley = lliy + 2 * param.eth;
+		const llixm = llix / 1000;
+		const llexm = llex / 1000;
+		const lliym = lliy / 1000;
+		const lleym = lley / 1000;
 		const fh = param.oh1 + param.oh2;
 		// step-5 : checks on the parameter values
 		if (param.olx < 2 * param.ith + param.swx1 + param.swx2) {
@@ -155,8 +159,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err154: oly ${param.oly} is too small compare to fwx1 ${param.fwx1}, fwx2 ${param.fwx2}, fdx1 ${param.fdx1}, fdx2 ${param.fdx2}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `factory size: llex ${ffix(llex)} x lley ${ffix(lley)} m\n`;
-		rGeome.logstr += `factory surface: ext ${ffix(llex * lley)}, int ${ffix(llix * lliy)} m2\n`;
+		rGeome.logstr += `factory size: llex ${ffix(llexm)} x lley ${ffix(lleym)} m\n`;
+		rGeome.logstr += `factory surface: ext ${ffix(llexm * lleym)}, int ${ffix(llixm * lliym)} m2\n`;
 		// step-7 : drawing of the figures
 		// figTop
 		const ctrFext = ctrRectangle(0, 0, llex, lley);
