@@ -3,8 +3,8 @@
 
 // step-1 : import from geometrix
 import type {
-	tContour,
-	tOuterInner,
+	//tContour,
+	//tOuterInner,
 	tParamDef,
 	tParamVal,
 	tGeom,
@@ -13,8 +13,8 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	contour,
-	contourCircle,
+	//contour,
+	//contourCircle,
 	ctrRectangle,
 	figure,
 	//degToRad,
@@ -138,117 +138,52 @@ const pDef: tParamDef = {
 // step-3 : definition of the function that creates from the parameter-values the figures and construct the 3D
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figBottom = figure();
 	const figTop = figure();
-	const figSide = figure();
-	const figFace = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const L1b = param.L1 - 2 * param.W1;
-		const L2b = param.L2 - 2 * param.W1;
-		const Rcb = Math.max(param.Rc - param.W1, 0);
-		const H3b = param.H1 - param.H2;
-		const circleDelta = ((param.D1 + param.D2) * 3) / 4;
+		const llix = (param.onx * param.olx + (param.onx - 1) * param.iwx + 2 * param.ewx) / 1000;
+		const llex = llix + (2 * param.eth) / 1000;
+		const lliy = (param.ony * param.oly + (param.ony - 1) * param.iwy + 2 * param.ewy) / 1000;
+		const lley = lliy + (2 * param.eth) / 1000;
+		const fh = param.oh1 + param.oh2;
 		// step-5 : checks on the parameter values
-		if (L1b < 0) {
-			throw `err085: L1 ${param.L1} is too small compare to W1 ${param.W1}`;
+		if (param.olx < 2 * param.ith + param.swx1 + param.swx2) {
+			throw `err151: olx ${param.olx} is too small compare to swx1 ${param.swx1} and swx2 ${param.swx2}`;
 		}
-		if (L2b < 0) {
-			throw `err088: L2 ${param.L2} is too small compare to W1 ${param.W1}`;
-		}
-		if (H3b < 0) {
-			throw `err091: H1 ${param.H1} is too small compare to H2 ${param.H2}`;
+		if (param.oly < 2 * param.ith + param.fwx1 + param.fwx2 + param.fdx1 + param.fdx2) {
+			throw `err154: oly ${param.oly} is too small compare to fwx1 ${param.fwx1}, fwx2 ${param.fwx2}, fdx1 ${param.fdx1}, fdx2 ${param.fdx2}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `box-base surface ${ffix(param.L1 * param.L2)} mm2\n`;
-		rGeome.logstr += `box volume ${ffix(param.L1 * param.L2 * param.H1)} mm3\n`;
+		rGeome.logstr += `factory size: llex ${ffix(llex)} x lley ${ffix(lley)} m\n`;
+		rGeome.logstr += `factory surface: ext ${ffix(llex * lley)}, int ${ffix(llix * lliy)} m2\n`;
 		// step-7 : drawing of the figures
 		// figTop
-		const ctrExt = contour(0, 0)
-			.addCornerRounded(param.Rc)
-			.addSegStrokeA(param.L1, 0)
-			.addCornerRounded(param.Rc)
-			.addSegStrokeA(param.L1, param.L2)
-			.addCornerRounded(param.Rc)
-			.addSegStrokeA(0, param.L2)
-			.addCornerRounded(param.Rc)
-			.closeSegStroke();
-		const ctrInt = ctrRectangle(param.W1, param.W1, L1b, L2b, Rcb);
-		const ctrsTop: tOuterInner = [ctrExt, ctrInt];
-		figTop.addMainOI(ctrsTop);
-		const hole1 = contourCircle(param.L1 / 2, param.L2 / 2, param.D1 / 2);
-		const hole2 = contourCircle(param.L1 / 2 + circleDelta, param.L2 / 2, param.D2 / 2);
-		if (param.holes) {
-			figTop.addSecond(hole1);
-			figTop.addSecond(hole2);
-		}
-		// figBottom
-		if (param.holes) {
-			figBottom.addMainOI([ctrExt, hole1, hole2]);
-		} else {
-			figBottom.addMainO(ctrExt);
-		}
-		figBottom.addSecond(ctrInt);
-		// figSide
-		function shapeU(hLength: number): tContour {
-			const rCtr = contour(0, 0)
-				.addSegStrokeR(hLength, 0)
-				.addSegStrokeR(0, param.H1)
-				.addSegStrokeR(-param.W1, 0)
-				.addSegStrokeR(0, -H3b)
-				.addSegStrokeR(-hLength + 2 * param.W1, 0)
-				.addSegStrokeR(0, H3b)
-				.addSegStrokeR(-param.W1, 0)
-				.closeSegStroke();
-			return rCtr;
-		}
-		figSide.addMainOI([shapeU(param.L2)]);
-		if (param.holes) {
-			const x1 = param.L2 / 2 - param.D1 / 2;
-			figSide.addSecond(ctrRectangle(x1, 0, param.D1, param.H2));
-		}
-		// figFace
-		figFace.addMainO(shapeU(param.L1));
-		if (param.holes) {
-			const x1 = param.L1 / 2 - param.D1 / 2;
-			figFace.addSecond(ctrRectangle(x1, 0, param.D1, param.H2));
-			const x2 = param.L1 / 2 + circleDelta - param.D2 / 2;
-			figFace.addSecond(ctrRectangle(x2, 0, param.D2, param.H2));
-		}
+		const ctrFext = ctrRectangle(0, 0, llex, lley);
+		const ctrFint = ctrRectangle(param.eth, param.eth, llix, lliy);
+		figTop.addMainOI([ctrFext, ctrFint]);
 		// final figure list
 		rGeome.fig = {
-			faceBottom: figBottom,
-			faceTop: figTop,
-			faceSide: figSide,
-			faceFace: figFace
+			faceTop: figTop
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_bottom`,
-					face: `${designName}_faceBottom`,
-					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.H2,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				},
-				{
 					outName: `subpax_${designName}_top`,
 					face: `${designName}_faceTop`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: H3b,
+					length: fh,
 					rotate: [0, 0, 0],
-					translate: [0, 0, param.H2]
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_bottom`, `subpax_${designName}_top`]
+					inList: [`subpax_${designName}_top`]
 				}
 			]
 		};
