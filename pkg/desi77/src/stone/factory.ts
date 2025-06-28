@@ -153,18 +153,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const fh = param.oh1 + param.oh2;
 		const olix = param.olx - 2 * param.ith;
 		const oliy = param.oly - 2 * param.ith;
+		const officeOx = param.eth + param.ewx;
+		const officeOy = param.eth + param.ewy;
 		// step-5 : checks on the parameter values
 		if (olix < 0) {
-			throw `err158: olix ${olix} is too small compare to ith ${param.ith}`;
+			throw `err158: olix ${ffix(olix)} is too small compare to ith ${param.ith}`;
 		}
 		if (oliy < 0) {
-			throw `err161: oliy ${oliy} is too small compare to ith ${param.ith}`;
+			throw `err161: oliy ${ffix(oliy)} is too small compare to ith ${param.ith}`;
 		}
 		if (param.olx < 2 * param.ith + param.swx1 + param.swx2) {
 			throw `err151: olx ${param.olx} is too small compare to swx1 ${param.swx1} and swx2 ${param.swx2}`;
 		}
 		if (param.oly < 2 * param.ith + param.fwx1 + param.fwx2 + param.fdx1 + param.fdx2) {
 			throw `err154: oly ${param.oly} is too small compare to fwx1 ${param.fwx1}, fwx2 ${param.fwx2}, fdx1 ${param.fdx1}, fdx2 ${param.fdx2}`;
+		}
+		if (Math.min(param.olx, param.oly) < param.bw) {
+			throw `err172: bw ${param.bw} is too large compare to olx ${param.olx} or oly ${param.oly}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `factory size: llex ${ffix(llexm)} x lley ${ffix(lleym)} m\n`;
@@ -176,11 +181,27 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop.addMainOI([ctrFext, ctrFint]);
 		for (let ii = 0; ii < param.onx; ii++) {
 			for (let jj = 0; jj < param.ony; jj++) {
-				const pox = param.eth + param.ewx + ii * (param.olx + param.iwx);
-				const poy = param.eth + param.ewy + jj * (param.oly + param.iwy);
+				const pox = officeOx + ii * (param.olx + param.iwx);
+				const poy = officeOy + jj * (param.oly + param.iwy);
 				const ctrOext = ctrRectangle(pox, poy, param.olx, param.oly);
 				const ctrOint = ctrRectangle(pox + param.ith, poy + param.ith, olix, oliy);
 				figTop.addMainOI([ctrOext, ctrOint]);
+			}
+		}
+		for (let ii = 0; ii < param.onx - 1; ii++) {
+			for (let jj = 0; jj < param.ony; jj++) {
+				const pox = officeOx + ii * (param.olx + param.iwx) + param.olx;
+				const poy = officeOy + jj * (param.oly + param.iwy) + (param.oly - param.bw) / 2;
+				const ctrBridge = ctrRectangle(pox, poy, param.iwx, param.bw);
+				figTop.addMainO(ctrBridge);
+			}
+		}
+		for (let ii = 0; ii < param.onx; ii++) {
+			for (let jj = 0; jj < param.ony - 1; jj++) {
+				const pox = officeOx + ii * (param.olx + param.iwx) + (param.olx - param.bw) / 2;
+				const poy = officeOy + jj * (param.oly + param.iwy) + param.oly;
+				const ctrBridge = ctrRectangle(pox, poy, param.bw, param.iwy);
+				figTop.addMainO(ctrBridge);
 			}
 		}
 		// final figure list
