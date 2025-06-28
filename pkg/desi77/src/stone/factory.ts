@@ -139,6 +139,7 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figTop = figure();
+	const figWest = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -204,9 +205,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figTop.addMainO(ctrBridge);
 			}
 		}
+		// figWest
+		figWest.addMainO(ctrRectangle(0, -param.eth, llex, param.eth));
+		figWest.addMainO(ctrRectangle(0, 0, param.eth, fh));
+		figWest.addMainO(ctrRectangle(llex - param.eth, 0, param.eth, fh));
+		for (let ii = 0; ii < param.onx; ii++) {
+			const pox = officeOx + ii * (param.olx + param.iwx);
+			figWest.addMainOI([
+				ctrRectangle(pox, 0, param.olx, param.oh1),
+				ctrRectangle(pox + param.ith, 0, olix, param.oh1 - param.ith)
+			]);
+		}
 		// final figure list
 		rGeome.fig = {
-			faceTop: figTop
+			faceTop: figTop,
+			faceWest: figWest
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
