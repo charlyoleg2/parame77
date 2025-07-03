@@ -1,18 +1,20 @@
-desi77-uis
+Desi77-uis
 ==========
 
 
 Presentation
 ------------
 
-*desi77-uis* is the static web-server of the web-app *desi77-ui*.
+*desi77-uis* is the mini-server package for enabling the local installation of the web-ui *desi77-ui*.
+
+Usually, this mini-server package desi77-uis is part of a mono-repo containing an other package for the web-ui and potentially an *universal* library backing the web-ui.
 
 
 Requirements
 ------------
 
-- [node](https://nodejs.org) > 20.10.0
-- [npm](https://docs.npmjs.com/cli) > 10.1.0
+- [node](https://nodejs.org) > 22.0.0
+- [npm](https://docs.npmjs.com/cli) > 11.0.0
 
 
 Installation
@@ -39,17 +41,5 @@ Usage without installation
 npx desi77-uis
 npx --package=desi77-uis desi77-uis
 npx --package=desi77-uis desi77-uis --help
-```
-
-
-Development
------------
-
-```bash
-git clone https://github.com/charlyoleg2/parame77
-cd parame77
-npm install
-npm run ci
-npm -w desi77-uis run run
 ```
 

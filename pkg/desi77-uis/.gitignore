@@ -1,4 +1,4 @@
-# .gitignore
+# .gitignore of the package desi77-uis
 dist/
 dist2/
 # vitest creates node_modules for the results.json
