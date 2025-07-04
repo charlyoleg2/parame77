@@ -13,12 +13,12 @@ import type {
 	//tSubDesign
 } from 'geometrix';
 import {
-	//contour,
+	contour,
 	//contourCircle,
 	ctrRectangle,
 	figure,
-	//degToRad,
-	//radToDeg,
+	degToRad,
+	radToDeg,
 	ffix,
 	pNumber,
 	pCheckbox,
@@ -28,6 +28,8 @@ import {
 	EBVolume,
 	initGeom
 } from 'geometrix';
+//import { triAPiPi, triAArA, triALArLL, triLALrL, triALLrL, triALLrLAA, triLLLrA, triLLLrAAA } from 'triangule';
+import { triALArLL } from 'triangule';
 
 // step-2 : definition of the parameters and more (part-name, svg associated to each parameter, simulation parameters)
 const pDef: tParamDef = {
@@ -51,9 +53,10 @@ const pDef: tParamDef = {
 		pSectionSeparator('heights and roof'),
 		pNumber('oh1', 'mm', 2800, 2000, 5000, 10),
 		pNumber('oh2', 'mm', 4000, 2000, 10000, 10),
+		pNumber('rtn', 'triangle', 6, 1, 1000, 1),
+		pNumber('ran', 'degree', 49.0, 20, 90, 0.1),
+		pNumber('ram', 'degree', 90, 80, 160, 0.1),
 		pNumber('rth', 'mm', 200, 10, 1000, 10),
-		pNumber('ras', 'degree', 49.0, 20, 90, 0.1),
-		pNumber('ran', 'degree', 90, 80, 160, 0.1),
 		pSectionSeparator('lateral windows'),
 		pNumber('swx1', 'mm', 1000, 10, 5000, 10),
 		pNumber('swx2', 'mm', 1000, 10, 5000, 10),
@@ -100,9 +103,10 @@ const pDef: tParamDef = {
 		bw: 'factory_top.svg',
 		oh1: 'factory_west.svg',
 		oh2: 'factory_west.svg',
-		rth: 'factory_west.svg',
-		ras: 'factory_west.svg',
+		rtn: 'factory_west.svg',
 		ran: 'factory_west.svg',
+		ram: 'factory_west.svg',
+		rth: 'factory_west.svg',
 		swx1: 'factory_side_window.svg',
 		swx2: 'factory_side_window.svg',
 		swh1: 'factory_side_window.svg',
@@ -156,6 +160,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const oliy = param.oly - 2 * param.ith;
 		const officeOx = param.eth + param.ewx;
 		const officeOy = param.eth + param.ewy;
+		// roof
+		const roofTriLx = llex / param.rtn;
+		const ran = degToRad(param.ran);
+		const ram = degToRad(param.ram);
+		const ras = Math.PI - ran - ram;
+		if (ras < 0.1) {
+			// arbitrary 0.1 rad
+			throw `err162: ras ${ffix(radToDeg(ras))} is too small. Reduce ran ${ffix(param.ran)} or ram ${ffix(param.ram)} degree`;
+		}
+		const [tr1lBC, tr1lCA, tr1Log] = triALArLL(ras, roofTriLx, ran);
+		rGeome.logstr += tr1Log;
+		const Rh = tr1lBC * Math.sin(ran);
+		const Rhx = tr1lBC * Math.cos(ran);
+		const Rhxs = roofTriLx - Rhx;
+		const Rhxp = (100 * Rhx) / roofTriLx;
+		const Rhxsp = (100 * Rhxs) / roofTriLx;
+		const Rhyp = (100 * Rh) / roofTriLx;
 		// step-5 : checks on the parameter values
 		if (olix < 0) {
 			throw `err158: olix ${ffix(olix)} is too small compare to ith ${param.ith}`;
@@ -175,6 +196,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `factory size: llex ${ffix(llexm)} x lley ${ffix(lleym)} m\n`;
 		rGeome.logstr += `factory surface: ext ${ffix(llexm * lleym)}, int ${ffix(llixm * lliym)} m2\n`;
+		rGeome.logstr += `roof: triL ${ffix(roofTriLx)}, Rh ${ffix(Rh)} m, Rhyp ${ffix(Rhyp)} %\n`;
+		rGeome.logstr += `roof north glass length ${ffix(tr1lBC)} m, Rhxp ${ffix(Rhxp)} %, roof south opaque ${ffix(tr1lCA)} m, Rhxsp ${ffix(Rhxsp)} %\n`;
 		// step-7 : drawing of the figures
 		// figTop
 		const ctrFext = ctrRectangle(0, 0, llex, lley);
@@ -216,6 +239,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				ctrRectangle(pox + param.ith, 0, olix, param.oh1 - param.ith)
 			]);
 		}
+		const ctrRoof = contour(0, fh);
+		for (let ii = 0; ii < param.rtn; ii++) {
+			ctrRoof.addSegStrokeR(Rhx, Rh).addSegStrokeR(Rhxs, -Rh);
+		}
+		ctrRoof.addSegStrokeR(0, param.rth);
+		for (let ii = 0; ii < param.rtn; ii++) {
+			ctrRoof.addSegStrokeR(-Rhxs, Rh).addSegStrokeR(-Rhx, -Rh);
+		}
+		ctrRoof.closeSegStroke();
+		figWest.addMainO(ctrRoof);
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
