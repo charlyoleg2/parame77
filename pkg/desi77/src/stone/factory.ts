@@ -196,8 +196,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `factory size: llex ${ffix(llexm)} x lley ${ffix(lleym)} m\n`;
 		rGeome.logstr += `factory surface: ext ${ffix(llexm * lleym)}, int ${ffix(llixm * lliym)} m2\n`;
-		rGeome.logstr += `roof: triL ${ffix(roofTriLx)}, Rh ${ffix(Rh)} m, Rhyp ${ffix(Rhyp)} %\n`;
-		rGeome.logstr += `roof north glass length ${ffix(tr1lBC)} m, Rhxp ${ffix(Rhxp)} %, roof south opaque ${ffix(tr1lCA)} m, Rhxsp ${ffix(Rhxsp)} %\n`;
+		rGeome.logstr += `roof: triL ${ffix(roofTriLx)}, Rh ${ffix(Rh)} mm, Rhyp ${ffix(Rhyp)} %\n`;
+		rGeome.logstr += `roof north glass length ${ffix(tr1lBC)} mm, Rhxp ${ffix(Rhxp)} %, roof south opaque ${ffix(tr1lCA)} mm, Rhxsp ${ffix(Rhxsp)} %\n`;
 		// step-7 : drawing of the figures
 		// figTop
 		const ctrFext = ctrRectangle(0, 0, llex, lley);
