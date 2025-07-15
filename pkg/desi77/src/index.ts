@@ -19,3 +19,4 @@ export * from './rccar/doubleBone';
 export * from './rccar/pcar';
 export * from './capsule/capsule';
 export * from './sysmix/square';
+export * from './sysmix/triangle';
