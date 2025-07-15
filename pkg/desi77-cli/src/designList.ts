@@ -19,6 +19,7 @@ import { singleBoneDef } from 'desi77';
 import { doubleBoneDef } from 'desi77';
 import { pcarDef } from 'desi77';
 import { capsuleDef } from 'desi77';
+import { squareDef } from 'desi77';
 
 const designList: tAllPageDef = {
 	'desi77/door1arc': door1arcDef,
@@ -38,7 +39,8 @@ const designList: tAllPageDef = {
 	'desi77/singleBone': singleBoneDef,
 	'desi77/doubleBone': doubleBoneDef,
 	'desi77/pcar': pcarDef,
-	'desi77/capsule': capsuleDef
+	'desi77/capsule': capsuleDef,
+	'desi77/squareDef': squareDef
 };
 
 export { designList };

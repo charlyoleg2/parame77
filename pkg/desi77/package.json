@@ -53,7 +53,8 @@
 		"svgo3": "svgo -f src/heliostat/svg -o dist/pgdsvg/",
 		"svgo4": "svgo -f src/rccar/svg -o dist/pgdsvg/",
 		"svgo5": "svgo -f src/capsule/svg -o dist/pgdsvg/",
-		"svgo": "run-s svgo1 svgo2 svgo3 svgo4 svgo5",
+		"svgo6": "svgo -f src/sysmix/svg -o dist/pgdsvg/",
+		"svgo": "run-s svgo1 svgo2 svgo3 svgo4 svgo5 svgo6",
 		"browserBundleA": "esbuild src/stone/door1arc.ts --bundle --format=esm --outfile=dist2/door1arc.js",
 		"browserBundleAll": "esbuild dist/index.js --bundle --format=esm --outfile=dist2/desi77.js",
 		"clean": "rimraf dist dist2 node_modules"
