@@ -20,3 +20,4 @@ export * from './rccar/pcar';
 export * from './capsule/capsule';
 export * from './sysmix/square';
 export * from './sysmix/triangle';
+export * from './sysmix/cylinder';
