@@ -42,9 +42,9 @@ const designList: tAllPageDef = {
 	'desi77/doubleBone': doubleBoneDef,
 	'desi77/pcar': pcarDef,
 	'desi77/capsule': capsuleDef,
-	'desi77/squareDef': squareDef,
-	'desi77/triangleDef': triangleDef,
-	'desi77/cylinderDef': cylinderDef
+	'desi77/square': squareDef,
+	'desi77/triangle': triangleDef,
+	'desi77/cylinder': cylinderDef
 };
 
 export { designList };

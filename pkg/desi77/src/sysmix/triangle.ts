@@ -36,7 +36,7 @@ import {
 //import { triALLrLAA } from 'triangule';
 
 const pDef: tParamDef = {
-	partName: 'square',
+	partName: 'triangle',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('W1', 'mm', 100, 5, 500, 1),
