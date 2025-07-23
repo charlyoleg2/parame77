@@ -18,7 +18,7 @@ import {
 	//point,
 	contour,
 	contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -60,6 +60,7 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figSquare = figure();
+	const figHeight = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -86,9 +87,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		const ctrHole = contourCircle(0, 0, Ri);
 		figSquare.addMainOI([ctrSquare, ctrHole]);
+		// figHeight
+		figHeight.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.T1));
+		figHeight.addSecond(ctrRectangle(-Ri, 0, 2 * Ri, param.T1));
 		// final figure list
 		rGeome.fig = {
-			faceSquare: figSquare
+			faceSquare: figSquare,
+			faceHeight: figHeight
 		};
 		// volume
 		const designName = rGeome.partName;
