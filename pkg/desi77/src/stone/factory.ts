@@ -238,6 +238,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		ctrRoof.closeSegStroke();
 		figWest.addMainO(ctrRoof);
+		const ctrWallEW = contour(0, 0).addSegStrokeR(llex, 0).addSegStrokeR(0, fh);
+		for (let ii = 0; ii < param.rtn; ii++) {
+			ctrWallEW.addSegStrokeR(-Rhxs, Rh).addSegStrokeR(-Rhx, -Rh);
+		}
+		ctrWallEW.closeSegStroke();
+		figWest.addMainO(ctrWallEW);
 		// figNorth
 		figNorth.addMainO(ctrRectangle(0, -param.eth, lley, param.eth));
 		figNorth.addMainO(ctrRectangle(0, 0, param.eth, fh));
@@ -264,6 +270,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figGround.addMainO(ctrFext);
 		// figWallEW
 		figWallEW.mergeFigure(figWest, true);
+		figWallEW.addMainO(ctrWallEW);
 		// figWallNS
 		figWallNS.mergeFigure(figNorth, true);
 		figWallNS.addMainO(ctrWallNS);
@@ -281,6 +288,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const designName = rGeome.partName;
 		const unionList: string[] = [];
 		unionList.push(`subpax_${designName}_wallSouth`);
+		unionList.push(`subpax_${designName}_wallEast`);
 		if (param.d3_roof) {
 			unionList.push(`subpax_${designName}_roof`);
 		}
@@ -289,6 +297,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (param.d3_wall) {
 			unionList.push(`subpax_${designName}_wallNorth`);
+			unionList.push(`subpax_${designName}_wallWest`);
 		}
 		rGeome.vol = {
 			extrudes: [
@@ -323,6 +332,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.eth,
 					rotate: [pi2, 0, pi2],
 					translate: [param.eth + llix, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wallWest`,
+					face: `${designName}_faceWallEW`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.eth,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.eth, 0]
+				},
+				{
+					outName: `subpax_${designName}_wallEast`,
+					face: `${designName}_faceWallEW`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.eth,
+					rotate: [pi2, 0, 0],
+					translate: [0, 2 * param.eth + lliy, 0]
 				}
 			],
 			volumes: [
