@@ -130,6 +130,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figNorth = figure();
 	const figRoof = figure();
 	const figGround = figure();
+	const figWallEW = figure();
+	const figWallNS = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -252,28 +254,41 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ctrRectangle(0, fh, lley, param.rth),
 			ctrRectangle(0, fh + Rh, lley, param.rth)
 		]);
+		const ctrWallNS = ctrRectangle(0, 0, lley, fh);
+		figNorth.addMainO(ctrWallNS);
 		// figRoof
 		figRoof.mergeFigure(figWest, true);
 		figRoof.addMainO(ctrRoof);
 		// figGround
 		figGround.mergeFigure(figTop, true);
 		figGround.addMainO(ctrFext);
+		// figWallEW
+		figWallEW.mergeFigure(figWest, true);
+		// figWallNS
+		figWallNS.mergeFigure(figNorth, true);
+		figWallNS.addMainO(ctrWallNS);
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
 			faceWest: figWest,
 			faceNorth: figNorth,
 			faceRoof: figRoof,
-			faceGround: figGround
+			faceGround: figGround,
+			faceWallEW: figWallEW,
+			faceWallNS: figWallNS
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
 		const unionList: string[] = [];
+		unionList.push(`subpax_${designName}_wallSouth`);
 		if (param.d3_roof) {
 			unionList.push(`subpax_${designName}_roof`);
 		}
 		if (param.d3_ground) {
 			unionList.push(`subpax_${designName}_ground`);
+		}
+		if (param.d3_wall) {
+			unionList.push(`subpax_${designName}_wallNorth`);
 		}
 		rGeome.vol = {
 			extrudes: [
@@ -292,6 +307,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: lley,
 					rotate: [pi2, 0, 0],
 					translate: [0, lley, 0]
+				},
+				{
+					outName: `subpax_${designName}_wallNorth`,
+					face: `${designName}_faceWallNS`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.eth,
+					rotate: [pi2, 0, pi2],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wallSouth`,
+					face: `${designName}_faceWallNS`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.eth,
+					rotate: [pi2, 0, pi2],
+					translate: [param.eth + llix, 0, 0]
 				}
 			],
 			volumes: [
