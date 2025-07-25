@@ -73,20 +73,10 @@ const pDef: tParamDef = {
 		pNumber('fdx2', 'mm', 1000, 10, 5000, 10),
 		pNumber('fdh2', 'mm', 2000, 10, 5000, 10),
 		pNumber('fdh3', 'mm', 200, 10, 5000, 10),
-		pSectionSeparator('to be deleted'),
-		pNumber('L1', 'mm', 120, 1, 400, 1),
-		pNumber('L2', 'mm', 80, 1, 400, 1),
-		pNumber('W1', 'mm', 2, 0.1, 10, 0.1),
-		pNumber('H1', 'mm', 40, 1, 400, 1),
-		pNumber('H2', 'mm', 2, 0.1, 10, 0.1),
-		//pSectionSeparator(name)
-		pSectionSeparator('hollow'),
-		//pCheckbox(name, init)
-		pCheckbox('holes', true),
-		pNumber('D1', 'mm', 10, 1, 400, 1),
-		pNumber('D2', 'mm', 5, 1, 400, 1),
-		pSectionSeparator('corners'),
-		pNumber('Rc', 'mm', 10, 0, 400, 1)
+		pSectionSeparator('Openings in 3D'),
+		pCheckbox('d3_roof', true),
+		pCheckbox('d3_wall', false),
+		pCheckbox('d3_ground', false)
 	],
 	paramSvg: {
 		onx: 'factory_top.svg',
@@ -121,16 +111,9 @@ const pDef: tParamDef = {
 		fdx2: 'factory_front_window.svg',
 		fdh2: 'factory_front_window.svg',
 		fdh3: 'factory_front_window.svg',
-		//
-		L1: 'factory_top.svg',
-		L2: 'factory_west.svg',
-		W1: 'factory_side_window.svg',
-		H1: 'factory_front_window.svg',
-		H2: 'factory_top.svg',
-		holes: 'factory_top.svg',
-		D1: 'factory_top.svg',
-		D2: 'factory_top.svg',
-		Rc: 'factory_top.svg'
+		d3_roof: 'factory_top.svg',
+		d3_wall: 'factory_top.svg',
+		d3_ground: 'factory_top.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -144,9 +127,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figTop = figure();
 	const figWest = figure();
+	const figNorth = figure();
+	const figRoof = figure();
+	const figGround = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const llix = param.onx * param.olx + (param.onx - 1) * param.iwx + 2 * param.ewx;
 		const llex = llix + 2 * param.eth;
 		const lliy = param.ony * param.oly + (param.ony - 1) * param.iwy + 2 * param.ewy;
@@ -249,29 +236,69 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		ctrRoof.closeSegStroke();
 		figWest.addMainO(ctrRoof);
+		// figNorth
+		figNorth.addMainO(ctrRectangle(0, -param.eth, lley, param.eth));
+		figNorth.addMainO(ctrRectangle(0, 0, param.eth, fh));
+		figNorth.addMainO(ctrRectangle(lley - param.eth, 0, param.eth, fh));
+		for (let ii = 0; ii < param.ony; ii++) {
+			const poy = officeOy + ii * (param.oly + param.iwy);
+			figNorth.addMainOI([
+				ctrRectangle(poy, 0, param.oly, param.oh1),
+				ctrRectangle(poy + param.ith, 0, oliy, param.oh1 - param.ith)
+			]);
+		}
+		figNorth.addMainOI([
+			ctrRectangle(0, fh, lley, Rh + param.rth),
+			ctrRectangle(0, fh, lley, param.rth),
+			ctrRectangle(0, fh + Rh, lley, param.rth)
+		]);
+		// figRoof
+		figRoof.mergeFigure(figWest, true);
+		figRoof.addMainO(ctrRoof);
+		// figGround
+		figGround.mergeFigure(figTop, true);
+		figGround.addMainO(ctrFext);
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
-			faceWest: figWest
+			faceWest: figWest,
+			faceNorth: figNorth,
+			faceRoof: figRoof,
+			faceGround: figGround
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
+		const unionList: string[] = [];
+		if (param.d3_roof) {
+			unionList.push(`subpax_${designName}_roof`);
+		}
+		if (param.d3_ground) {
+			unionList.push(`subpax_${designName}_ground`);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_top`,
-					face: `${designName}_faceTop`,
+					outName: `subpax_${designName}_ground`,
+					face: `${designName}_faceGround`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: fh,
+					length: param.eth,
 					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					translate: [0, 0, -param.eth]
+				},
+				{
+					outName: `subpax_${designName}_roof`,
+					face: `${designName}_faceRoof`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: lley,
+					rotate: [pi2, 0, 0],
+					translate: [0, lley, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_top`]
+					inList: unionList
 				}
 			]
 		};
