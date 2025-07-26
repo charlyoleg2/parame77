@@ -77,7 +77,8 @@ const pDef: tParamDef = {
 		pSectionSeparator('Openings in 3D'),
 		pCheckbox('d3_roof', true),
 		pCheckbox('d3_wall', false),
-		pCheckbox('d3_ground', false)
+		pCheckbox('d3_ground', false),
+		pCheckbox('d3_officeCeiling', true)
 	],
 	paramSvg: {
 		onx: 'factory_top.svg',
@@ -114,7 +115,8 @@ const pDef: tParamDef = {
 		fdh3: 'factory_front_window.svg',
 		d3_roof: 'factory_top.svg',
 		d3_wall: 'factory_top.svg',
-		d3_ground: 'factory_top.svg'
+		d3_ground: 'factory_top.svg',
+		d3_officeCeiling: 'factory_top.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -434,6 +436,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			unionList.push(`subpax_${designName}_wallNorth`);
 			unionList.push(`subpax_${designName}_wallWest`);
 		}
+		if (param.d3_officeCeiling) {
+			unionList.push(`subpax_${designName}_officeCeiling`);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
@@ -483,6 +488,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.eth,
 					rotate: [pi2, 0, 0],
 					translate: [0, 2 * param.eth + lliy, 0]
+				},
+				{
+					outName: `subpax_${designName}_officeCeiling`,
+					face: `${designName}_faceOCeiling`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.ith,
+					rotate: [0, 0, 0],
+					translate: [0, 0, param.oh1 - param.ith]
 				}
 			],
 			volumes: [
