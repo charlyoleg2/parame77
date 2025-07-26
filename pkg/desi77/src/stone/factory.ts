@@ -541,7 +541,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: param.ith,
 				rotate: [pi2, 0, 0],
-				translate: [0, iPos, 0]
+				translate: [0, param.ith + iPos, 0]
 			};
 			return rVol;
 		});
