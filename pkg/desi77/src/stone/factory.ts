@@ -133,6 +133,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figGround = figure();
 	const figWallEW = figure();
 	const figWallNS = figure();
+	const figOCeiling = figure();
+	const figOWallN = figure();
+	const figOWallS = figure();
+	const figOWallE = figure();
+	const figOWallW = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -386,6 +391,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figWallNS
 		figWallNS.mergeFigure(figNorth, true);
 		figWallNS.addMainO(ctrWallNS);
+		// figOCeiling
+		figOCeiling.mergeFigure(figTop, true);
+		for (const iCtr of ctrOfficeCeiling) {
+			figOCeiling.addMainO(iCtr);
+		}
+		// figOWallN
+		figOWallN.mergeFigure(figNorth, true);
+		// figOWallS
+		figOWallS.mergeFigure(figNorth, true);
+		// figOWallE
+		figOWallE.mergeFigure(figWest, true);
+		// figOWallW
+		figOWallW.mergeFigure(figWest, true);
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
@@ -394,7 +412,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceRoof: figRoof,
 			faceGround: figGround,
 			faceWallEW: figWallEW,
-			faceWallNS: figWallNS
+			faceWallNS: figWallNS,
+			faceOCeiling: figOCeiling,
+			faceOWallN: figOWallN,
+			faceOWallS: figOWallS,
+			faceOWallE: figOWallE,
+			faceOWallW: figOWallW
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
