@@ -10,6 +10,7 @@ import type {
 	tParamVal,
 	tGeom,
 	tPageDef,
+	tVec3,
 	tExtrude
 	//tVolume
 	//tSubInst
@@ -510,14 +511,38 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.d3_officeCeiling) {
 			unionList.push(`subpax_${designName}_officeCeiling`);
 		}
+		function rotateOfficeWall(iOfficeOrientation: number, iFrontBack: boolean): tVec3 {
+			const rRotate: tVec3 = [pi2, 0, 0];
+			let twoRot = iFrontBack;
+			if (iOfficeOrientation > 2) {
+				twoRot = !twoRot;
+			}
+			if (twoRot) {
+				rRotate[2] = pi2;
+			}
+			return rRotate;
+		}
+		function translateOfficeWall(iOO: number, iPos: number, iTh: number, iFB: boolean): tVec3 {
+			const rTranslate: tVec3 = [0, 0, 0];
+			let trans1 = iFB;
+			if (iOO > 2) {
+				trans1 = !trans1;
+			}
+			if (trans1) {
+				rTranslate[0] = iPos;
+			} else {
+				rTranslate[1] = iPos + iTh;
+			}
+			return rTranslate;
+		}
 		const volOWF = powF.map((iPos, idx) => {
 			const rVol: tExtrude = {
 				outName: `subpax_${designName}_OWF${idx}`,
 				face: `${designName}_faceOWallF`,
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: param.ith,
-				rotate: [pi2, 0, pi2],
-				translate: [iPos, 0, 0]
+				rotate: rotateOfficeWall(param.officeOrientation, true),
+				translate: translateOfficeWall(param.officeOrientation, iPos, param.ith, true)
 			};
 			return rVol;
 		});
@@ -528,8 +553,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				face: `${designName}_faceOWallB`,
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: param.ith,
-				rotate: [pi2, 0, pi2],
-				translate: [iPos, 0, 0]
+				rotate: rotateOfficeWall(param.officeOrientation, true),
+				translate: translateOfficeWall(param.officeOrientation, iPos, param.ith, true)
 			};
 			return rVol;
 		});
@@ -540,8 +565,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				face: `${designName}_faceOWallS`,
 				extrudeMethod: EExtrude.eLinearOrtho,
 				length: param.ith,
-				rotate: [pi2, 0, 0],
-				translate: [0, param.ith + iPos, 0]
+				rotate: rotateOfficeWall(param.officeOrientation, false),
+				translate: translateOfficeWall(param.officeOrientation, iPos, param.ith, false)
 			};
 			return rVol;
 		});
