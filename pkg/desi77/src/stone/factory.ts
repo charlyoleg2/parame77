@@ -3,7 +3,8 @@
 
 // step-1 : import from geometrix
 import type {
-	//tContour,
+	//Contour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -51,7 +52,7 @@ const pDef: tParamDef = {
 		pNumber('eth', 'mm', 400, 100, 2000, 10),
 		pNumber('bw', 'mm', 1500, 200, 10000, 10),
 		pSectionSeparator('heights and roof'),
-		pNumber('oh1', 'mm', 2800, 2000, 5000, 10),
+		pNumber('oh1', 'mm', 3000, 2000, 5000, 10),
 		pNumber('oh2', 'mm', 4000, 2000, 10000, 10),
 		pNumber('rtn', 'triangle', 6, 1, 1000, 1),
 		pNumber('ran', 'degree', 49.0, 20, 90, 0.1),
@@ -64,7 +65,7 @@ const pDef: tParamDef = {
 		pNumber('swh2', 'mm', 1000, 10, 5000, 10),
 		pNumber('swh3', 'mm', 200, 10, 5000, 10),
 		pSectionSeparator('front windows'),
-		pNumber('fwx1', 'mm', 1000, 10, 5000, 10),
+		pNumber('fwx1', 'mm', 600, 10, 5000, 10),
 		pNumber('fwx2', 'mm', 1000, 10, 5000, 10),
 		pNumber('fwh1', 'mm', 1000, 10, 5000, 10),
 		pNumber('fwh2', 'mm', 1000, 10, 5000, 10),
@@ -166,6 +167,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Rhxp = (100 * Rhx) / roofTriLx;
 		const Rhxsp = (100 * Rhxs) / roofTriLx;
 		const Rhyp = (100 * Rh) / roofTriLx;
+		// offices
+		let ofN = param.ony;
+		let ofW = param.oly;
+		let ofiw = param.iwy;
+		let ofew = param.ewy;
+		let osN = param.onx;
+		let osW = param.olx;
+		let osiw = param.iwx;
+		let osew = param.ewx;
+		if (param.officeOrientation > 2) {
+			ofN = param.onx;
+			ofW = param.olx;
+			ofiw = param.iwx;
+			ofew = param.ewx;
+			osN = param.ony;
+			osW = param.oly;
+			osiw = param.iwy;
+			osew = param.ewy;
+		}
+		if (param.officeOrientation > 5) {
+			throw `err189: officeOrientation ${param.officeOrientation} is out of range`;
+		}
+		const ofWmin = 2 * param.ith + param.fwx1 + param.fwx2 + param.fdx1 + param.fdx2;
+		const ofHmin1 = param.ith + param.fwh1 + param.fwh2 + param.fwh3;
+		const ofHmin2 = param.ith + param.fdh1 + param.fdh2;
+		const osWmin = 2 * param.ith + param.swx1 + param.swx2;
+		const osHmin = param.ith + param.swh1 + param.swh2 + param.swh3;
 		// step-5 : checks on the parameter values
 		if (olix < 0) {
 			throw `err158: olix ${ffix(olix)} is too small compare to ith ${param.ith}`;
@@ -173,11 +201,29 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (oliy < 0) {
 			throw `err161: oliy ${ffix(oliy)} is too small compare to ith ${param.ith}`;
 		}
-		if (param.olx < 2 * param.ith + param.swx1 + param.swx2) {
-			throw `err151: olx ${param.olx} is too small compare to swx1 ${param.swx1} and swx2 ${param.swx2}`;
+		if (ofW < ofWmin) {
+			throw `err201: ofW ${ofW} is too small compare to fwx1 ${param.fwx1}, fwx2 ${param.fwx2}, fdx1 ${param.fdx1}, fdx2 ${param.fdx2}`;
 		}
-		if (param.oly < 2 * param.ith + param.fwx1 + param.fwx2 + param.fdx1 + param.fdx2) {
-			throw `err154: oly ${param.oly} is too small compare to fwx1 ${param.fwx1}, fwx2 ${param.fwx2}, fdx1 ${param.fdx1}, fdx2 ${param.fdx2}`;
+		if (param.oh1 < ofHmin1) {
+			throw `err204: oh1 ${param.oh1} is too small compare to fwh1 ${param.fwh1}, fwh2 ${param.fwh2}, fwh3 ${param.fwh3}`;
+		}
+		if (param.oh1 < ofHmin2) {
+			throw `err207: oh1 ${param.oh1} is too small compare to fdh1 ${param.fdh1}, fdh2 ${param.fdh2}`;
+		}
+		if (osW < osWmin) {
+			throw `err210: osW ${osW} is too small compare to swx1 ${param.swx1} and swx2 ${param.swx2}`;
+		}
+		if (param.oh1 < osHmin) {
+			throw `err213: oh1 ${param.oh1} is too small compare to swh1 ${param.swh1}, swh2 ${param.swh2}, swh3 ${param.swh3}`;
+		}
+		if (param.fwx2 < 2 * param.fwh3) {
+			throw `err213: fwh3 ${param.fwh3} is too large compare to fwx2 ${param.fwx2}`;
+		}
+		if (param.fdx2 < 2 * param.fdh3) {
+			throw `err219: fdh3 ${param.fdh3} is too large compare to fdx2 ${param.fdx2}`;
+		}
+		if (param.swx2 < 2 * param.swh3) {
+			throw `err222: swh3 ${param.swh3} is too large compare to swx2 ${param.swx2}`;
 		}
 		if (Math.min(param.olx, param.oly) < param.bw) {
 			throw `err172: bw ${param.bw} is too large compare to olx ${param.olx} or oly ${param.oly}`;
@@ -188,6 +234,53 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `roof: triL ${ffix(roofTriLx)}, Rh ${ffix(Rh)} mm, Rhyp ${ffix(Rhyp)} %\n`;
 		rGeome.logstr += `roof north glass length ${ffix(tr1lBC)} mm, Rhxp ${ffix(Rhxp)} %, roof south opaque ${ffix(tr1lCA)} mm, Rhxsp ${ffix(Rhxsp)} %\n`;
 		// step-7 : drawing of the figures
+		// office walls
+		const ctrOfficeBack: tContour[] = [];
+		const ctrOfficeFront: tContour[] = [];
+		const ctrOfficeFrontW: tContour[] = [];
+		for (let ii = 0; ii < ofN; ii++) {
+			const ox = param.eth + ofew + ii * (ofW + ofiw);
+			const dox = param.ith + param.fwx1 + param.fwx2 + param.fdx1;
+			const dr = ofW - dox - param.fdx2;
+			const ctrOB = ctrRectangle(ox, 0, ofW, param.oh1);
+			const ctrOF = contour(ox, 0)
+				.addSegStrokeR(dox, 0)
+				.addSegStrokeR(0, param.fdh2)
+				.addPointR(param.fdx2 / 2, param.fdh3)
+				.addPointR(param.fdx2, 0)
+				.addSegArc2()
+				.addSegStrokeR(0, -param.fdh2)
+				.addSegStrokeR(dr, 0)
+				.addSegStrokeR(0, param.oh1)
+				.addSegStrokeR(-ofW, 0)
+				.closeSegStroke();
+			const ctrOFW = contour(ox + param.ith + param.fwx1, param.fwh1)
+				.addSegStrokeR(param.fwx2, 0)
+				.addSegStrokeR(0, param.fwh2)
+				.addPointR(-param.fwx2 / 2, param.fwh3)
+				.addPointR(-param.fwx2, 0)
+				.addSegArc2()
+				.closeSegStroke();
+			ctrOfficeBack.push(ctrOB);
+			ctrOfficeFront.push(ctrOF);
+			ctrOfficeFrontW.push(ctrOFW);
+		}
+		const ctrOfficeSide: tContour[] = [];
+		const ctrOfficeSideW: tContour[] = [];
+		for (let ii = 0; ii < osN; ii++) {
+			const ox = param.eth + osew + ii * (osW + osiw);
+			const ctrOS = ctrRectangle(ox, 0, osW, param.oh1);
+			const ctrOSW = contour(ox + param.ith + param.swx1, param.swh1)
+				.addSegStrokeR(param.swx2, 0)
+				.addSegStrokeR(0, param.swh2)
+				.addPointR(-param.swx2 / 2, param.swh3)
+				.addPointR(-param.swx2, 0)
+				.addSegArc2()
+				.closeSegStroke();
+			ctrOfficeSide.push(ctrOS);
+			ctrOfficeSideW.push(ctrOSW);
+		}
+		const ctrOfficeCeiling: tContour[] = [];
 		// figTop
 		const ctrFext = ctrRectangle(0, 0, llex, lley);
 		const ctrFint = ctrRectangle(param.eth, param.eth, llix, lliy);
@@ -199,6 +292,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				const ctrOext = ctrRectangle(pox, poy, param.olx, param.oly);
 				const ctrOint = ctrRectangle(pox + param.ith, poy + param.ith, olix, oliy);
 				figTop.addMainOI([ctrOext, ctrOint]);
+				ctrOfficeCeiling.push(ctrOext);
 			}
 		}
 		for (let ii = 0; ii < param.onx - 1; ii++) {
@@ -262,6 +356,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		]);
 		const ctrWallNS = ctrRectangle(0, 0, lley, fh);
 		figNorth.addMainO(ctrWallNS);
+		// adding office walls
+		if (param.officeOrientation < 3) {
+			for (let ii = 0; ii < ofN; ii++) {
+				figNorth.addMainOI([ctrOfficeFront[ii], ctrOfficeFrontW[ii]]);
+				figNorth.addMainO(ctrOfficeBack[ii]);
+			}
+			for (let ii = 0; ii < osN; ii++) {
+				figWest.addMainOI([ctrOfficeSide[ii], ctrOfficeSideW[ii]]);
+			}
+		} else {
+			for (let ii = 0; ii < ofN; ii++) {
+				figWest.addMainOI([ctrOfficeFront[ii], ctrOfficeFrontW[ii]]);
+				figWest.addMainO(ctrOfficeBack[ii]);
+			}
+			for (let ii = 0; ii < osN; ii++) {
+				figNorth.addMainOI([ctrOfficeSide[ii], ctrOfficeSideW[ii]]);
+			}
+		}
 		// figRoof
 		figRoof.mergeFigure(figWest, true);
 		figRoof.addMainO(ctrRoof);
