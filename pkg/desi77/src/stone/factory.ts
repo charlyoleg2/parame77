@@ -136,10 +136,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figWallEW = figure();
 	const figWallNS = figure();
 	const figOCeiling = figure();
-	const figOWallN = figure();
+	const figOWallF = figure();
+	const figOWallB = figure();
 	const figOWallS = figure();
-	const figOWallE = figure();
-	const figOWallW = figure();
+	const figOWallTop = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -201,6 +201,50 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ofHmin2 = param.ith + param.fdh1 + param.fdh2;
 		const osWmin = 2 * param.ith + param.swx1 + param.swx2;
 		const osHmin = param.ith + param.swh1 + param.swh2 + param.swh3;
+		// office wall positions
+		const Xidx = [...Array(param.onx).keys()];
+		const owpN = Xidx.map((ii) => param.eth + param.ewx + ii * (param.olx + param.iwx));
+		const owpS = Xidx.map(
+			(ii) => param.eth + param.ewx + ii * (param.olx + param.iwx) + param.olx - param.ith
+		);
+		const Yidx = [...Array(param.ony).keys()];
+		const owpW = Yidx.map((ii) => param.eth + param.ewy + ii * (param.oly + param.iwy));
+		const owpE = Yidx.map(
+			(ii) => param.eth + param.ewy + ii * (param.oly + param.iwy) + param.oly - param.ith
+		);
+		//if (param.officeOrientation == 0) // xdw : X-down
+		let powF = owpN;
+		let powB = owpS;
+		let powS1 = owpW;
+		let powS2 = owpE;
+		let powFBmin = owpN;
+		if (param.officeOrientation == 1) {
+			// xup : X-up
+			powF = owpS;
+			powB = owpN;
+		} else if (param.officeOrientation == 2) {
+			// xal : X-alternatif
+			powF = Xidx.map((ii) => (ii % 2 === 0 ? owpS[ii] : owpN[ii]));
+			powB = Xidx.map((ii) => (ii % 2 === 0 ? owpN[ii] : owpS[ii]));
+		} else if (param.officeOrientation == 3) {
+			// ydw : Y-down
+			powF = owpW;
+			powB = owpE;
+		} else if (param.officeOrientation == 4) {
+			// yup : Y-up
+			powF = owpE;
+			powB = owpW;
+		} else if (param.officeOrientation == 5) {
+			// yal : Y-alternatif
+			powF = Yidx.map((ii) => (ii % 2 === 0 ? owpE[ii] : owpW[ii]));
+			powB = Yidx.map((ii) => (ii % 2 === 0 ? owpW[ii] : owpE[ii]));
+		}
+		if (param.officeOrientation > 2) {
+			powS1 = owpN;
+			powS2 = owpS;
+			powFBmin = owpW;
+		}
+		const powS = [...powS1, ...powS2];
 		// step-5 : checks on the parameter values
 		if (olix < 0) {
 			throw `err158: olix ${ffix(olix)} is too small compare to ith ${param.ith}`;
@@ -398,14 +442,39 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (const iCtr of ctrOfficeCeiling) {
 			figOCeiling.addMainO(iCtr);
 		}
-		// figOWallN
-		figOWallN.mergeFigure(figNorth, true);
-		// figOWallS
-		figOWallS.mergeFigure(figNorth, true);
-		// figOWallE
-		figOWallE.mergeFigure(figWest, true);
-		// figOWallW
-		figOWallW.mergeFigure(figWest, true);
+		// figOWallF, figOWallB, figOWallS
+		if (param.officeOrientation < 3) {
+			figOWallF.mergeFigure(figNorth, true);
+			figOWallB.mergeFigure(figNorth, true);
+			figOWallS.mergeFigure(figWest, true);
+		} else {
+			figOWallF.mergeFigure(figWest, true);
+			figOWallB.mergeFigure(figWest, true);
+			figOWallS.mergeFigure(figNorth, true);
+		}
+		for (let ii = 0; ii < ofN; ii++) {
+			figOWallF.addMainOI([ctrOfficeFront[ii], ctrOfficeFrontW[ii]]);
+			figOWallB.addMainO(ctrOfficeBack[ii]);
+		}
+		for (let ii = 0; ii < osN; ii++) {
+			figOWallS.addMainOI([ctrOfficeSide[ii], ctrOfficeSideW[ii]]);
+		}
+		// figOWallTop
+		for (const iPosX of powF) {
+			for (const iPosY of powS1) {
+				figOWallTop.addMainO(ctrRectangle(iPosX, iPosY, param.ith, ofW));
+			}
+		}
+		for (const iPosX of powB) {
+			for (const iPosY of powS1) {
+				figOWallTop.addSecond(ctrRectangle(iPosX, iPosY, param.ith, ofW));
+			}
+		}
+		for (const iPosY of powS) {
+			for (const iPosX of powFBmin) {
+				figOWallTop.addSecond(ctrRectangle(iPosX, iPosY, osW, param.ith));
+			}
+		}
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
@@ -416,10 +485,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceWallEW: figWallEW,
 			faceWallNS: figWallNS,
 			faceOCeiling: figOCeiling,
-			faceOWallN: figOWallN,
+			faceOWallF: figOWallF,
+			faceOWallB: figOWallB,
 			faceOWallS: figOWallS,
-			faceOWallE: figOWallE,
-			faceOWallW: figOWallW
+			faceOWallTop: figOWallTop
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
