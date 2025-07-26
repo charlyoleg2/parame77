@@ -9,7 +9,9 @@ import type {
 	tParamDef,
 	tParamVal,
 	tGeom,
-	tPageDef
+	tPageDef,
+	tExtrude
+	//tVolume
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';
@@ -508,6 +510,42 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.d3_officeCeiling) {
 			unionList.push(`subpax_${designName}_officeCeiling`);
 		}
+		const volOWF = powF.map((iPos, idx) => {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_OWF${idx}`,
+				face: `${designName}_faceOWallF`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.ith,
+				rotate: [pi2, 0, pi2],
+				translate: [iPos, 0, 0]
+			};
+			return rVol;
+		});
+		unionList.push(...powF.map((iPos, idx) => `subpax_${designName}_OWF${idx}`));
+		const volOWB = powB.map((iPos, idx) => {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_OWB${idx}`,
+				face: `${designName}_faceOWallB`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.ith,
+				rotate: [pi2, 0, pi2],
+				translate: [iPos, 0, 0]
+			};
+			return rVol;
+		});
+		unionList.push(...powB.map((iPos, idx) => `subpax_${designName}_OWB${idx}`));
+		const volOWS = powS.map((iPos, idx) => {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_OWS${idx}`,
+				face: `${designName}_faceOWallS`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.ith,
+				rotate: [pi2, 0, 0],
+				translate: [0, iPos, 0]
+			};
+			return rVol;
+		});
+		unionList.push(...powS.map((iPos, idx) => `subpax_${designName}_OWS${idx}`));
 		rGeome.vol = {
 			extrudes: [
 				{
@@ -565,7 +603,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.ith,
 					rotate: [0, 0, 0],
 					translate: [0, 0, param.oh1 - param.ith]
-				}
+				},
+				...volOWF,
+				...volOWB,
+				...volOWS
 			],
 			volumes: [
 				{
