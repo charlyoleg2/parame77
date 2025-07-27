@@ -81,7 +81,8 @@ const pDef: tParamDef = {
 		pCheckbox('d3_roof', true),
 		pCheckbox('d3_wall', false),
 		pCheckbox('d3_ground', false),
-		pCheckbox('d3_officeCeiling', true)
+		pCheckbox('d3_officeCeiling', true),
+		pCheckbox('d3_bridge', true)
 	],
 	paramSvg: {
 		onx: 'factory_top.svg',
@@ -119,7 +120,8 @@ const pDef: tParamDef = {
 		d3_roof: 'factory_top.svg',
 		d3_wall: 'factory_top.svg',
 		d3_ground: 'factory_top.svg',
-		d3_officeCeiling: 'factory_top.svg'
+		d3_officeCeiling: 'factory_top.svg',
+		d3_bridge: 'factory_top.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -143,6 +145,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figOWallB = figure();
 	const figOWallS = figure();
 	const figOWallTop = figure();
+	const figBridgeW = figure();
+	const figBridgeN = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -248,6 +252,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			powFBmin = owpW;
 		}
 		const powS = [...powS1, ...powS2];
+		// bridge positions
+		const Xidx2 = [...Array(param.onx - 1).keys()];
+		const Yidx2 = [...Array(param.ony - 1).keys()];
+		const brxx = Xidx2.map(
+			(ii) => param.eth + param.ewx + param.olx + ii * (param.olx + param.iwx)
+		);
+		const bryy = Yidx2.map(
+			(ii) => param.eth + param.ewy + param.oly + ii * (param.oly + param.iwy)
+		);
+		const brdx = (param.olx - param.bw) / 2;
+		const brdy = (param.oly - param.bw) / 2;
+		const brxy = Yidx.map((ii) => param.eth + param.ewy + brdy + ii * (param.oly + param.iwy));
+		const bryx = Xidx.map((ii) => param.eth + param.ewx + brdx + ii * (param.olx + param.iwx));
+		const iwx2 = param.iwx / 2;
+		const iwy2 = param.iwy / 2;
+		const brxh = param.ith + iwx2;
+		const bryh = param.ith + iwy2;
 		// step-5 : checks on the parameter values
 		if (olix < 0) {
 			throw `err158: olix ${ffix(olix)} is too small compare to ith ${param.ith}`;
@@ -478,6 +499,36 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				figOWallTop.addSecond(ctrRectangle(iPosX, iPosY, osW, param.ith));
 			}
 		}
+		// figBridgeW
+		figBridgeW.mergeFigure(figWest, true);
+		for (const ox of brxx) {
+			const ctr = contour(ox, param.oh1)
+				.addSegStrokeR(0, -brxh)
+				.addPointR(iwx2, iwx2)
+				.addPointR(2 * iwx2, 0)
+				.addSegArc2()
+				.addSegStrokeR(0, brxh)
+				.closeSegStroke();
+			figBridgeW.addMainO(ctr);
+		}
+		for (const ox of bryx) {
+			figBridgeW.addSecond(ctrRectangle(ox, param.oh1 - bryh, param.bw, bryh));
+		}
+		// figBridgeN
+		figBridgeN.mergeFigure(figNorth, true);
+		for (const ox of bryy) {
+			const ctr = contour(ox, param.oh1)
+				.addSegStrokeR(0, -bryh)
+				.addPointR(iwy2, iwy2)
+				.addPointR(2 * iwy2, 0)
+				.addSegArc2()
+				.addSegStrokeR(0, bryh)
+				.closeSegStroke();
+			figBridgeN.addMainO(ctr);
+		}
+		for (const ox of brxy) {
+			figBridgeN.addSecond(ctrRectangle(ox, param.oh1 - brxh, param.bw, brxh));
+		}
 		// final figure list
 		rGeome.fig = {
 			faceTop: figTop,
@@ -491,7 +542,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceOWallF: figOWallF,
 			faceOWallB: figOWallB,
 			faceOWallS: figOWallS,
-			faceOWallTop: figOWallTop
+			faceOWallTop: figOWallTop,
+			faceBridgeW: figBridgeW,
+			faceBridgeN: figBridgeN
 		};
 		// step-8 : recipes of the 3D construction
 		const designName = rGeome.partName;
