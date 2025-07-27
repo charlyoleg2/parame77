@@ -624,6 +624,32 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			return rVol;
 		});
 		unionList.push(...powS.map((iPos, idx) => `subpax_${designName}_OWS${idx}`));
+		const volBW = brxy.map((iPos, idx) => {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_BW${idx}`,
+				face: `${designName}_faceBridgeW`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.bw,
+				rotate: [pi2, 0, 0],
+				translate: [0, param.bw + iPos, 0]
+			};
+			return rVol;
+		});
+		const volBN = bryx.map((iPos, idx) => {
+			const rVol: tExtrude = {
+				outName: `subpax_${designName}_BN${idx}`,
+				face: `${designName}_faceBridgeN`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: param.bw,
+				rotate: [pi2, 0, pi2],
+				translate: [iPos, 0, 0]
+			};
+			return rVol;
+		});
+		if (param.d3_bridge) {
+			unionList.push(...brxy.map((iPos, idx) => `subpax_${designName}_BW${idx}`));
+			unionList.push(...bryx.map((iPos, idx) => `subpax_${designName}_BN${idx}`));
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
@@ -684,7 +710,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				},
 				...volOWF,
 				...volOWB,
-				...volOWS
+				...volOWS,
+				...volBW,
+				...volBN
 			],
 			volumes: [
 				{
