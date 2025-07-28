@@ -18,6 +18,7 @@ export * from './rccar/singleBone';
 export * from './rccar/doubleBone';
 export * from './rccar/pcar';
 export * from './capsule/capsule';
+export * from './capsule/tunnel';
 export * from './sysmix/square';
 export * from './sysmix/triangle';
 export * from './sysmix/cylinder';
