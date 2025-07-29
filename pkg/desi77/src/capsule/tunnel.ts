@@ -2,7 +2,7 @@
 // A tunnel for the train-capsule
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//withinPiPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	contourCircle,
 	ctrRectangle,
@@ -44,10 +44,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Stone'),
 		pNumber('T1', 'mm', 400, 100, 1000, 1),
 		pNumber('T2', 'mm', 200, 100, 1000, 1),
-		pNumber('E1', 'mm', 5, 0, 50, 1),
-		// to be deleted
-		pNumber('D1', 'mm', 100, 5, 500, 1),
-		pNumber('Di', 'mm', 50, 2, 500, 1)
+		pNumber('E1', 'mm', 5, 0, 50, 1)
 	],
 	paramSvg: {
 		W1: 'tunnel_profile.svg',
@@ -73,6 +70,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const W12 = param.W1 / 2;
 		const a1 = degToRad(param.a1);
 		const sin = Math.sin(a1);
@@ -105,6 +103,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const BgStart = W12e + ABgFirstDx - stoneW / 2;
 		const BgN = Math.floor(BgStart / stoneW);
 		const BgLast = BgStart - BgN * stoneW;
+		const ABsLength = H2i / sin;
+		const AsLength = ABsLength - stoneW / 2;
+		const AsN = Math.floor(AsLength / stoneW);
+		const AsLast = AsLength - AsN * stoneW;
+		const BsN = Math.floor(ABsLength / stoneW);
+		const BsLast = ABsLength - BsN * stoneW;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
 		const surf2 = (H2i + BCi) * R1i * sin;
@@ -124,6 +128,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Surface ${ffix(surfaceM2)} m2\n`;
 		//rGeome.logstr += `dbg095: ADi ${ffix(ADi)} mm\n`;
 		//rGeome.logstr += `dbg123: AgLast ${ffix(AgLast)} mm\n`;
+		rGeome.logstr += `dbg131: AsN ${ffix(AsN)} stones\n`;
 		// sub-function
 		// figProfile
 		const ctrProfileI = contour(-W12, 0)
@@ -151,8 +156,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ctrRectangle(fsox, -param.T1, param.T2, param.H1 + 2 * param.T1),
 			ctrRectangle(fsox, 0, param.T2, param.H1)
 		]);
-		// figStoneA
-		figStoneA.mergeFigure(figProfile, true);
+		// figStoneA Ground
 		for (let ii = 0; ii < AgN; ii++) {
 			const ox = -AgStart + ii * stoneW + e12;
 			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
@@ -170,7 +174,6 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
 		}
 		// figStoneB
-		figStoneB.mergeFigure(figProfile, true);
 		figStoneB.addMainO(
 			ctrRectangle(-BgStart - stoneW / 2 + e12, -stoneW, stoneW / 2 - e1, stoneW)
 		);
@@ -191,6 +194,41 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figStoneB.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
 		}
 		figStoneB.addMainO(ctrRectangle(BgStart + e12, -stoneW, stoneW / 2 - e1, stoneW));
+		// figStoneA Side
+		function ctrSideStone(iD: number, iL: number, iRnL: number): tContour {
+			const aa1 = iRnL === 1 ? a1 : Math.PI - a1;
+			const pt = point(iRnL * W12, 0).translatePolar(aa1, iD + e12);
+			const rCtr = contour(pt.cx, pt.cy)
+				.addSegStrokeRP(aa1 - iRnL * pi2, stoneW)
+				.addSegStrokeRP(aa1, iL - e1)
+				.addSegStrokeRP(aa1 + iRnL * pi2, stoneW)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figStoneA.addMainO(ctrSideStone(0, stoneW / 2, 1));
+		figStoneA.addMainO(ctrSideStone(0, stoneW / 2, -1));
+		for (let ii = 0; ii < AsN; ii++) {
+			figStoneA.addMainO(ctrSideStone(stoneW / 2 + ii * stoneW, stoneW, 1));
+			figStoneA.addMainO(ctrSideStone(stoneW / 2 + ii * stoneW, stoneW, -1));
+		}
+		if (AsLast > e1) {
+			figStoneA.addMainO(ctrSideStone(stoneW / 2 + AsN * stoneW, AsLast, 1));
+			figStoneA.addMainO(ctrSideStone(stoneW / 2 + AsN * stoneW, AsLast, -1));
+		}
+		// figStoneB Side
+		for (let ii = 0; ii < BsN; ii++) {
+			figStoneB.addMainO(ctrSideStone(ii * stoneW, stoneW, 1));
+			figStoneB.addMainO(ctrSideStone(ii * stoneW, stoneW, -1));
+		}
+		if (BsLast > e1) {
+			figStoneB.addMainO(ctrSideStone(BsN * stoneW, BsLast, 1));
+			figStoneB.addMainO(ctrSideStone(BsN * stoneW, BsLast, -1));
+		}
+		// figStoneA Ceiling
+		// figStoneB Ceiling
+		// figStoneA figStoneB background
+		figStoneA.mergeFigure(figProfile, true);
+		figStoneB.mergeFigure(figStoneA, true);
 		// final figure list
 		rGeome.fig = {
 			faceProfile: figProfile,
