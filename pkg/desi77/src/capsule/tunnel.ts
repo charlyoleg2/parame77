@@ -113,6 +113,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ABcLength = R1e * (Math.PI - a1);
 		const AcN = Math.floor(ABcLength / stoneW);
 		const AcLast = ABcLength - AcN * stoneW;
+		const BcLength = ABcLength - stoneW / 2;
+		const BcN = Math.floor(BcLength / stoneW);
+		const BcLast = BcLength - BcN * stoneW;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
 		const surf2 = ccy * R1i * sin;
@@ -260,6 +263,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 		}
 		// figStoneB Ceiling
+		figStoneB.addMainO(ctrCeilingStone(0, stoneW / 2, 1));
+		figStoneB.addMainO(ctrCeilingStone(0, stoneW / 2, -1));
+		for (let ii = 0; ii < BcN; ii++) {
+			figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + ii * stoneW, stoneW, 1));
+			figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + ii * stoneW, stoneW, -1));
+		}
+		if (BcLast > e1) {
+			if (BcLast < stoneW / 2) {
+				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, 2 * BcLast, 1));
+			} else {
+				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, BcLast, 1));
+				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, BcLast, -1));
+			}
+		}
 		// figStoneA figStoneB background
 		figStoneA.mergeFigure(figProfile, true);
 		figStoneB.mergeFigure(figStoneA, true);
