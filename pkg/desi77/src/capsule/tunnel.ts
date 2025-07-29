@@ -85,7 +85,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			return [H2, R1, BC, AD];
 		}
 		const [H2i, R1i, BCi, ADi] = calc(W12, param.H1);
-		const H1ib = H2i + BCi + R1i;
+		const ccy = H2i + BCi;
+		const H1ib = ccy + R1i;
 		const fsox = param.T2 + param.E1;
 		const W12e = W12 + param.T1 * Math.tan(a1 / 2);
 		const H1e = param.H1 + 2 * param.T1;
@@ -109,9 +110,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const AsLast = AsLength - AsN * stoneW;
 		const BsN = Math.floor(ABsLength / stoneW);
 		const BsLast = ABsLength - BsN * stoneW;
+		const ABcLength = R1e * (Math.PI - a1);
+		const AcN = Math.floor(ABcLength / stoneW);
+		const AcLast = ABcLength - AcN * stoneW;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
-		const surf2 = (H2i + BCi) * R1i * sin;
+		const surf2 = ccy * R1i * sin;
 		const surf3 = W12 * H2i;
 		const surfaceM2 = (surf1 + surf2 + surf3) * 10 ** -6;
 		// step-5 : checks on the parameter values
@@ -121,7 +125,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (Math.abs(H1e - H1eb) > 0.1) {
 			throw `err102: H1e ${ffix(H1e)} and H1eb ${ffix(H1eb)} are not equal`;
 		}
-		if (Math.abs(H2e + BCe - param.T1 - (H2i + BCi)) > 0.1) {
+		if (Math.abs(H2e + BCe - param.T1 - ccy) > 0.1) {
 			throw `err106: H2e ${ffix(H2e)} and BCe ${ffix(BCe)} not match the other circle center`;
 		}
 		// step-6 : any logs
@@ -146,7 +150,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.closeSegStroke();
 		figProfile.addMainOI([ctrProfileE, ctrProfileI]);
-		figProfile.addSecond(contourCircle(0, H2i + BCi, R1i));
+		figProfile.addSecond(contourCircle(0, ccy, R1i));
 		// figSlice
 		figSlice.addMainOI([
 			ctrRectangle(0, -param.T1, param.T2, param.H1 + 2 * param.T1),
@@ -225,6 +229,36 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figStoneB.addMainO(ctrSideStone(BsN * stoneW, BsLast, -1));
 		}
 		// figStoneA Ceiling
+		function ctrCeilingStone(iD: number, iL: number, iRnL: number): tContour {
+			const a2 = -pi2 + iRnL * (a1 + iD / R1e);
+			const a3 = a2 + (iRnL * iL) / R1e;
+			const pt1 = point(0, ccy)
+				.translatePolar(a2, R1i)
+				.translatePolar(a2 + iRnL * pi2, e12);
+			const pt2 = pt1.translatePolar(a2, stoneW);
+			const pt4 = point(0, ccy)
+				.translatePolar(a3, R1i)
+				.translatePolar(a3 - iRnL * pi2, e12);
+			const pt3 = pt4.translatePolar(a3, stoneW);
+			const rCtr = contour(pt1.cx, pt1.cy)
+				.addSegStrokeA(pt2.cx, pt2.cy)
+				.addSegStrokeA(pt3.cx, pt3.cy)
+				.addSegStrokeA(pt4.cx, pt4.cy)
+				.closeSegStroke();
+			return rCtr;
+		}
+		for (let ii = 0; ii < AcN; ii++) {
+			figStoneA.addMainO(ctrCeilingStone(ii * stoneW, stoneW, 1));
+			figStoneA.addMainO(ctrCeilingStone(ii * stoneW, stoneW, -1));
+		}
+		if (AcLast > e1) {
+			if (AcLast < stoneW / 2) {
+				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, 2 * AcLast, 1));
+			} else {
+				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, AcLast, 1));
+				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, AcLast, -1));
+			}
+		}
 		// figStoneB Ceiling
 		// figStoneA figStoneB background
 		figStoneA.mergeFigure(figProfile, true);
