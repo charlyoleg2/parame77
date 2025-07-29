@@ -98,10 +98,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const e12 = e1 / 2;
 		const stoneW = param.T1;
 		const stoneW2 = stoneW - e1;
-		const AgFirstDx = stoneW / Math.tan(a1);
-		const AgStart = W12e + AgFirstDx;
+		const ABgFirstDx = stoneW / Math.tan(a1);
+		const AgStart = W12e + ABgFirstDx;
 		const AgN = Math.floor(AgStart / stoneW);
 		const AgLast = AgStart - AgN * stoneW;
+		const BgStart = W12e + ABgFirstDx - stoneW / 2;
+		const BgN = Math.floor(BgStart / stoneW);
+		const BgLast = BgStart - BgN * stoneW;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
 		const surf2 = (H2i + BCi) * R1i * sin;
@@ -120,7 +123,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Surface ${ffix(surfaceM2)} m2\n`;
 		//rGeome.logstr += `dbg095: ADi ${ffix(ADi)} mm\n`;
-		rGeome.logstr += `dbg123: AgLast ${ffix(AgLast)} mm\n`;
+		//rGeome.logstr += `dbg123: AgLast ${ffix(AgLast)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrProfileI = contour(-W12, 0)
@@ -154,7 +157,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const ox = -AgStart + ii * stoneW + e12;
 			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
 		}
-		if (AgLast > e1) {
+		if (AgLast > e12) {
 			if (2 * AgLast < stoneW) {
 				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, 2 * AgLast - e1, stoneW));
 			} else {
@@ -168,6 +171,26 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// figStoneB
 		figStoneB.mergeFigure(figProfile, true);
+		figStoneB.addMainO(
+			ctrRectangle(-BgStart - stoneW / 2 + e12, -stoneW, stoneW / 2 - e1, stoneW)
+		);
+		for (let ii = 0; ii < BgN; ii++) {
+			const ox = -BgStart + ii * stoneW + e12;
+			figStoneB.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+		}
+		if (BgLast > e12) {
+			if (2 * BgLast < stoneW) {
+				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -stoneW, 2 * BgLast - e1, stoneW));
+			} else {
+				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -stoneW, BgLast - e1, stoneW));
+				figStoneB.addMainO(ctrRectangle(e12, -stoneW, BgLast - e1, stoneW));
+			}
+		}
+		for (let ii = 0; ii < BgN; ii++) {
+			const ox = BgLast + ii * stoneW + e12;
+			figStoneB.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+		}
+		figStoneB.addMainO(ctrRectangle(BgStart + e12, -stoneW, stoneW / 2 - e1, stoneW));
 		// final figure list
 		rGeome.fig = {
 			faceProfile: figProfile,
