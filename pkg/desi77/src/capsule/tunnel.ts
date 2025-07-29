@@ -68,6 +68,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figProfile = figure();
 	const figSlice = figure();
+	const figStoneA = figure();
+	const figStoneB = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -91,6 +93,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H1e = param.H1 + 2 * param.T1;
 		const [H2e, R1e, BCe, ADe] = calc(W12e, H1e);
 		const H1eb = H2e + BCe + R1e;
+		// stones
+		const e1 = param.E1;
+		const e12 = e1 / 2;
+		const stoneW = param.T1;
+		const stoneW2 = stoneW - e1;
+		const AgFirstDx = stoneW / Math.tan(a1);
+		const AgStart = W12e + AgFirstDx;
+		const AgN = Math.round(AgStart / stoneW);
+		const AgLast = AgStart - AgN * stoneW;
+		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
 		const surf2 = (H2i + BCi) * R1i * sin;
 		const surf3 = W12 * H2i;
@@ -135,29 +147,54 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ctrRectangle(fsox, -param.T1, param.T2, param.H1 + 2 * param.T1),
 			ctrRectangle(fsox, 0, param.T2, param.H1)
 		]);
+		// figStoneA
+		figStoneA.mergeFigure(figProfile, true);
+		for (let ii = 0; ii < AgN; ii++) {
+			const ox = -AgStart + ii * stoneW + e12;
+			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+		}
+		if (AgLast > e1) {
+			figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, 2 * AgLast - e1, stoneW));
+		}
+		for (let ii = 0; ii < AgN; ii++) {
+			const ox = AgLast + ii * stoneW + e12;
+			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+		}
+		// figStoneB
+		figStoneB.mergeFigure(figProfile, true);
 		// final figure list
 		rGeome.fig = {
 			faceProfile: figProfile,
-			faceSlice: figSlice
+			faceSlice: figSlice,
+			faceStoneA: figStoneA,
+			faceStoneB: figStoneB
 		};
 		// volume
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_slice1`,
-					face: `${designName}_faceProfile`,
+					outName: `subpax_${designName}_A`,
+					face: `${designName}_faceStoneA`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.T1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_B`,
+					face: `${designName}_faceStoneB`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, fsox]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_slice1`]
+					inList: [`subpax_${designName}_A`, `subpax_${designName}_B`]
 				}
 			]
 		};
