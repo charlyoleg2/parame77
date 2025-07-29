@@ -86,8 +86,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		const [H2i, R1i, BCi, ADi] = calc(W12, param.H1);
 		const H1ib = H2i + BCi + R1i;
-		const fgox = param.T1 + param.E1;
-		const W12e = W12 + 2 * param.T1;
+		const fsox = param.T2 + param.E1;
+		const W12e = W12 + param.T1 * Math.tan(a1 / 2);
 		const H1e = param.H1 + 2 * param.T1;
 		const [H2e, R1e, BCe, ADe] = calc(W12e, H1e);
 		const H1eb = H2e + BCe + R1e;
@@ -101,6 +101,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (Math.abs(H1e - H1eb) > 0.1) {
 			throw `err102: H1e ${ffix(H1e)} and H1eb ${ffix(H1eb)} are not equal`;
+		}
+		if (Math.abs(H2e + BCe - param.T1 - (H2i + BCi)) > 0.1) {
+			throw `err106: H2e ${ffix(H2e)} and BCe ${ffix(BCe)} not match the other circle center`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Surface ${ffix(surfaceM2)} m2\n`;
@@ -125,12 +128,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figProfile.addSecond(contourCircle(0, H2i + BCi, R1i));
 		// figSlice
 		figSlice.addMainOI([
-			ctrRectangle(0, -param.T1, param.T2, param.H1 + 2 * param.T2),
+			ctrRectangle(0, -param.T1, param.T2, param.H1 + 2 * param.T1),
 			ctrRectangle(0, 0, param.T2, param.H1)
 		]);
 		figSlice.addMainOI([
-			ctrRectangle(fgox, -param.T1, param.T2, param.H1 + 2 * param.T2),
-			ctrRectangle(fgox, 0, param.T2, param.H1)
+			ctrRectangle(fsox, -param.T1, param.T2, param.H1 + 2 * param.T1),
+			ctrRectangle(fsox, 0, param.T2, param.H1)
 		]);
 		// final figure list
 		rGeome.fig = {
