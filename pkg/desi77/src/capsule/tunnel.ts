@@ -100,7 +100,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const stoneW2 = stoneW - e1;
 		const AgFirstDx = stoneW / Math.tan(a1);
 		const AgStart = W12e + AgFirstDx;
-		const AgN = Math.round(AgStart / stoneW);
+		const AgN = Math.floor(AgStart / stoneW);
 		const AgLast = AgStart - AgN * stoneW;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
@@ -120,6 +120,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Surface ${ffix(surfaceM2)} m2\n`;
 		//rGeome.logstr += `dbg095: ADi ${ffix(ADi)} mm\n`;
+		rGeome.logstr += `dbg123: AgLast ${ffix(AgLast)} mm\n`;
 		// sub-function
 		// figProfile
 		const ctrProfileI = contour(-W12, 0)
@@ -154,7 +155,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
 		}
 		if (AgLast > e1) {
-			figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, 2 * AgLast - e1, stoneW));
+			if (2 * AgLast < stoneW) {
+				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, 2 * AgLast - e1, stoneW));
+			} else {
+				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, AgLast - e1, stoneW));
+				figStoneA.addMainO(ctrRectangle(e12, -stoneW, AgLast - e1, stoneW));
+			}
 		}
 		for (let ii = 0; ii < AgN; ii++) {
 			const ox = AgLast + ii * stoneW + e12;
