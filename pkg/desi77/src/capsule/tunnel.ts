@@ -184,9 +184,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figStoneA.addMainO(ctrRectangle(ox, -T1, T32, T1));
 		}
 		// figStoneB
-		figStoneB.addMainO(
-			ctrRectangle(-BgStart - T3 / 2 + e12, -T1, T3 / 2 - e1, T1)
-		);
+		figStoneB.addMainO(ctrRectangle(-BgStart - T3 / 2 + e12, -T1, T3 / 2 - e1, T1));
 		for (let ii = 0; ii < BgN; ii++) {
 			const ox = -BgStart + ii * T3 + e12;
 			figStoneB.addMainO(ctrRectangle(ox, -T1, T32, T1));
