@@ -44,6 +44,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Stone'),
 		pNumber('T1', 'mm', 400, 100, 1000, 1),
 		pNumber('T2', 'mm', 200, 100, 1000, 1),
+		pNumber('T3Max', 'mm', 400, 100, 1000, 1),
 		pNumber('E1', 'mm', 5, 0, 50, 1)
 	],
 	paramSvg: {
@@ -52,6 +53,7 @@ const pDef: tParamDef = {
 		a1: 'tunnel_profile.svg',
 		T1: 'tunnel_profile.svg',
 		T2: 'tunnel_profile.svg',
+		T3Max: 'tunnel_profile.svg',
 		E1: 'tunnel_profile.svg'
 	},
 	sim: {
@@ -95,27 +97,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// stones
 		const e1 = param.E1;
 		const e12 = e1 / 2;
-		const stoneW = param.T1;
-		const stoneW2 = stoneW - e1;
-		const ABgFirstDx = stoneW / Math.tan(a1);
+		const T1 = param.T1;
+		const T3 = param.T3Max;
+		const T32 = T3 - e1;
+		const ABgFirstDx = T3 / Math.tan(a1);
 		const AgStart = W12e + ABgFirstDx;
-		const AgN = Math.floor(AgStart / stoneW);
-		const AgLast = AgStart - AgN * stoneW;
-		const BgStart = W12e + ABgFirstDx - stoneW / 2;
-		const BgN = Math.floor(BgStart / stoneW);
-		const BgLast = BgStart - BgN * stoneW;
+		const AgN = Math.floor(AgStart / T3);
+		const AgLast = AgStart - AgN * T3;
+		const BgStart = W12e + ABgFirstDx - T3 / 2;
+		const BgN = Math.floor(BgStart / T3);
+		const BgLast = BgStart - BgN * T3;
 		const ABsLength = H2i / sin;
-		const AsLength = ABsLength - stoneW / 2;
-		const AsN = Math.floor(AsLength / stoneW);
-		const AsLast = AsLength - AsN * stoneW;
-		const BsN = Math.floor(ABsLength / stoneW);
-		const BsLast = ABsLength - BsN * stoneW;
+		const AsLength = ABsLength - T3 / 2;
+		const AsN = Math.floor(AsLength / T3);
+		const AsLast = AsLength - AsN * T3;
+		const BsN = Math.floor(ABsLength / T3);
+		const BsLast = ABsLength - BsN * T3;
 		const ABcLength = R1e * (Math.PI - a1);
-		const AcN = Math.floor(ABcLength / stoneW);
-		const AcLast = ABcLength - AcN * stoneW;
-		const BcLength = ABcLength - stoneW / 2;
-		const BcN = Math.floor(BcLength / stoneW);
-		const BcLast = BcLength - BcN * stoneW;
+		const AcN = Math.floor(ABcLength / T3);
+		const AcLast = ABcLength - AcN * T3;
+		const BcLength = ABcLength - T3 / 2;
+		const BcN = Math.floor(BcLength / T3);
+		const BcLast = BcLength - BcN * T3;
 		// surfaces
 		const surf1 = R1i ** 2 * (Math.PI - a1);
 		const surf2 = ccy * R1i * sin;
@@ -165,71 +168,71 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		]);
 		// figStoneA Ground
 		for (let ii = 0; ii < AgN; ii++) {
-			const ox = -AgStart + ii * stoneW + e12;
-			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+			const ox = -AgStart + ii * T3 + e12;
+			figStoneA.addMainO(ctrRectangle(ox, -T1, T32, T1));
 		}
 		if (AgLast > e12) {
-			if (2 * AgLast < stoneW) {
-				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, 2 * AgLast - e1, stoneW));
+			if (2 * AgLast < T3) {
+				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -T1, 2 * AgLast - e1, T1));
 			} else {
-				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -stoneW, AgLast - e1, stoneW));
-				figStoneA.addMainO(ctrRectangle(e12, -stoneW, AgLast - e1, stoneW));
+				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -T1, AgLast - e1, T1));
+				figStoneA.addMainO(ctrRectangle(e12, -T1, AgLast - e1, T1));
 			}
 		}
 		for (let ii = 0; ii < AgN; ii++) {
-			const ox = AgLast + ii * stoneW + e12;
-			figStoneA.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+			const ox = AgLast + ii * T3 + e12;
+			figStoneA.addMainO(ctrRectangle(ox, -T1, T32, T1));
 		}
 		// figStoneB
 		figStoneB.addMainO(
-			ctrRectangle(-BgStart - stoneW / 2 + e12, -stoneW, stoneW / 2 - e1, stoneW)
+			ctrRectangle(-BgStart - T3 / 2 + e12, -T1, T3 / 2 - e1, T1)
 		);
 		for (let ii = 0; ii < BgN; ii++) {
-			const ox = -BgStart + ii * stoneW + e12;
-			figStoneB.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+			const ox = -BgStart + ii * T3 + e12;
+			figStoneB.addMainO(ctrRectangle(ox, -T1, T32, T1));
 		}
 		if (BgLast > e12) {
-			if (2 * BgLast < stoneW) {
-				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -stoneW, 2 * BgLast - e1, stoneW));
+			if (2 * BgLast < T3) {
+				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -T1, 2 * BgLast - e1, T1));
 			} else {
-				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -stoneW, BgLast - e1, stoneW));
-				figStoneB.addMainO(ctrRectangle(e12, -stoneW, BgLast - e1, stoneW));
+				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -T1, BgLast - e1, T1));
+				figStoneB.addMainO(ctrRectangle(e12, -T1, BgLast - e1, T1));
 			}
 		}
 		for (let ii = 0; ii < BgN; ii++) {
-			const ox = BgLast + ii * stoneW + e12;
-			figStoneB.addMainO(ctrRectangle(ox, -stoneW, stoneW2, stoneW));
+			const ox = BgLast + ii * T3 + e12;
+			figStoneB.addMainO(ctrRectangle(ox, -T1, T32, T1));
 		}
-		figStoneB.addMainO(ctrRectangle(BgStart + e12, -stoneW, stoneW / 2 - e1, stoneW));
+		figStoneB.addMainO(ctrRectangle(BgStart + e12, -T1, T3 / 2 - e1, T1));
 		// figStoneA Side
 		function ctrSideStone(iD: number, iL: number, iRnL: number): tContour {
 			const aa1 = iRnL === 1 ? a1 : Math.PI - a1;
 			const pt = point(iRnL * W12, 0).translatePolar(aa1, iD + e12);
 			const rCtr = contour(pt.cx, pt.cy)
-				.addSegStrokeRP(aa1 - iRnL * pi2, stoneW)
+				.addSegStrokeRP(aa1 - iRnL * pi2, T1)
 				.addSegStrokeRP(aa1, iL - e1)
-				.addSegStrokeRP(aa1 + iRnL * pi2, stoneW)
+				.addSegStrokeRP(aa1 + iRnL * pi2, T1)
 				.closeSegStroke();
 			return rCtr;
 		}
-		figStoneA.addMainO(ctrSideStone(0, stoneW / 2, 1));
-		figStoneA.addMainO(ctrSideStone(0, stoneW / 2, -1));
+		figStoneA.addMainO(ctrSideStone(0, T3 / 2, 1));
+		figStoneA.addMainO(ctrSideStone(0, T3 / 2, -1));
 		for (let ii = 0; ii < AsN; ii++) {
-			figStoneA.addMainO(ctrSideStone(stoneW / 2 + ii * stoneW, stoneW, 1));
-			figStoneA.addMainO(ctrSideStone(stoneW / 2 + ii * stoneW, stoneW, -1));
+			figStoneA.addMainO(ctrSideStone(T3 / 2 + ii * T3, T3, 1));
+			figStoneA.addMainO(ctrSideStone(T3 / 2 + ii * T3, T3, -1));
 		}
 		if (AsLast > e1) {
-			figStoneA.addMainO(ctrSideStone(stoneW / 2 + AsN * stoneW, AsLast, 1));
-			figStoneA.addMainO(ctrSideStone(stoneW / 2 + AsN * stoneW, AsLast, -1));
+			figStoneA.addMainO(ctrSideStone(T3 / 2 + AsN * T3, AsLast, 1));
+			figStoneA.addMainO(ctrSideStone(T3 / 2 + AsN * T3, AsLast, -1));
 		}
 		// figStoneB Side
 		for (let ii = 0; ii < BsN; ii++) {
-			figStoneB.addMainO(ctrSideStone(ii * stoneW, stoneW, 1));
-			figStoneB.addMainO(ctrSideStone(ii * stoneW, stoneW, -1));
+			figStoneB.addMainO(ctrSideStone(ii * T3, T3, 1));
+			figStoneB.addMainO(ctrSideStone(ii * T3, T3, -1));
 		}
 		if (BsLast > e1) {
-			figStoneB.addMainO(ctrSideStone(BsN * stoneW, BsLast, 1));
-			figStoneB.addMainO(ctrSideStone(BsN * stoneW, BsLast, -1));
+			figStoneB.addMainO(ctrSideStone(BsN * T3, BsLast, 1));
+			figStoneB.addMainO(ctrSideStone(BsN * T3, BsLast, -1));
 		}
 		// figStoneA Ceiling
 		function ctrCeilingStone(iD: number, iL: number, iRnL: number): tContour {
@@ -238,11 +241,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const pt1 = point(0, ccy)
 				.translatePolar(a2, R1i)
 				.translatePolar(a2 + iRnL * pi2, e12);
-			const pt2 = pt1.translatePolar(a2, stoneW);
+			const pt2 = pt1.translatePolar(a2, T1);
 			const pt4 = point(0, ccy)
 				.translatePolar(a3, R1i)
 				.translatePolar(a3 - iRnL * pi2, e12);
-			const pt3 = pt4.translatePolar(a3, stoneW);
+			const pt3 = pt4.translatePolar(a3, T1);
 			const rCtr = contour(pt1.cx, pt1.cy)
 				.addSegStrokeA(pt2.cx, pt2.cy)
 				.addSegStrokeA(pt3.cx, pt3.cy)
@@ -251,30 +254,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			return rCtr;
 		}
 		for (let ii = 0; ii < AcN; ii++) {
-			figStoneA.addMainO(ctrCeilingStone(ii * stoneW, stoneW, 1));
-			figStoneA.addMainO(ctrCeilingStone(ii * stoneW, stoneW, -1));
+			figStoneA.addMainO(ctrCeilingStone(ii * T3, T3, 1));
+			figStoneA.addMainO(ctrCeilingStone(ii * T3, T3, -1));
 		}
 		if (AcLast > e1) {
-			if (AcLast < stoneW / 2) {
-				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, 2 * AcLast, 1));
+			if (AcLast < T3 / 2) {
+				figStoneA.addMainO(ctrCeilingStone(AcN * T3, 2 * AcLast, 1));
 			} else {
-				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, AcLast, 1));
-				figStoneA.addMainO(ctrCeilingStone(AcN * stoneW, AcLast, -1));
+				figStoneA.addMainO(ctrCeilingStone(AcN * T3, AcLast, 1));
+				figStoneA.addMainO(ctrCeilingStone(AcN * T3, AcLast, -1));
 			}
 		}
 		// figStoneB Ceiling
-		figStoneB.addMainO(ctrCeilingStone(0, stoneW / 2, 1));
-		figStoneB.addMainO(ctrCeilingStone(0, stoneW / 2, -1));
+		figStoneB.addMainO(ctrCeilingStone(0, T3 / 2, 1));
+		figStoneB.addMainO(ctrCeilingStone(0, T3 / 2, -1));
 		for (let ii = 0; ii < BcN; ii++) {
-			figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + ii * stoneW, stoneW, 1));
-			figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + ii * stoneW, stoneW, -1));
+			figStoneB.addMainO(ctrCeilingStone(T3 / 2 + ii * T3, T3, 1));
+			figStoneB.addMainO(ctrCeilingStone(T3 / 2 + ii * T3, T3, -1));
 		}
 		if (BcLast > e1) {
-			if (BcLast < stoneW / 2) {
-				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, 2 * BcLast, 1));
+			if (BcLast < T3 / 2) {
+				figStoneB.addMainO(ctrCeilingStone(T3 / 2 + BcN * T3, 2 * BcLast, 1));
 			} else {
-				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, BcLast, 1));
-				figStoneB.addMainO(ctrCeilingStone(stoneW / 2 + BcN * stoneW, BcLast, -1));
+				figStoneB.addMainO(ctrCeilingStone(T3 / 2 + BcN * T3, BcLast, 1));
+				figStoneB.addMainO(ctrCeilingStone(T3 / 2 + BcN * T3, BcLast, -1));
 			}
 		}
 		// figStoneA figStoneB background
@@ -295,7 +298,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_A`,
 					face: `${designName}_faceStoneA`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.T1,
+					length: param.T2,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				},
@@ -303,7 +306,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_B`,
 					face: `${designName}_faceStoneB`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.T1,
+					length: param.T2,
 					rotate: [0, 0, 0],
 					translate: [0, 0, fsox]
 				}
