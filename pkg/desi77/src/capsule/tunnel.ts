@@ -77,6 +77,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const a1 = degToRad(param.a1);
 		const sin = Math.sin(a1);
 		const cos = Math.cos(a1);
+		const tan = Math.tan(pi2 - a1);
 		function calc(iW12: number, iH1: number): [number, number, number, number] {
 			const kA = (iW12 * (1 + cos)) / sin;
 			const kB = sin ** 2 / (1 + cos);
@@ -99,8 +100,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const e12 = e1 / 2;
 		const T1 = param.T1;
 		const T3 = param.T3Max;
-		const T32 = T3 - e1;
-		const ABgFirstDx = T3 / Math.tan(a1);
+		const ABgFirstDx = T1 / Math.tan(a1);
 		const AgStart = W12e + ABgFirstDx;
 		const AgN = Math.floor(AgStart / T3);
 		const AgLast = AgStart - AgN * T3;
@@ -167,41 +167,47 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ctrRectangle(fsox, 0, param.T2, param.H1)
 		]);
 		// figStoneA Ground
+		function ctrGroundStone(iX: number, iL: number, iRnL: number): tContour {
+			const x1 = iX + iRnL * e12;
+			const x2 = x1 + iRnL * (iL - e1);
+			const y1 = Math.min(0, -(iRnL * x1 - W12) * tan);
+			const y2 = Math.min(0, -(iRnL * x2 - W12) * tan);
+			const rCtr = contour(x1, -T1).addSegStrokeA(x2, -T1).addSegStrokeA(x2, y2);
+			if (Math.abs(x1) < W12 && Math.abs(x2) > W12) {
+				rCtr.addSegStrokeA(iRnL * W12, 0);
+			}
+			rCtr.addSegStrokeA(x1, y1).closeSegStroke();
+			return rCtr;
+		}
 		for (let ii = 0; ii < AgN; ii++) {
-			const ox = -AgStart + ii * T3 + e12;
-			figStoneA.addMainO(ctrRectangle(ox, -T1, T32, T1));
+			const ox = AgLast + ii * T3;
+			figStoneA.addMainO(ctrGroundStone(ox, T3, 1));
+			figStoneA.addMainO(ctrGroundStone(-ox, T3, -1));
 		}
 		if (AgLast > e12) {
 			if (2 * AgLast < T3) {
-				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -T1, 2 * AgLast - e1, T1));
+				figStoneA.addMainO(ctrGroundStone(-AgLast, 2 * AgLast, 1));
 			} else {
-				figStoneA.addMainO(ctrRectangle(-AgLast + e12, -T1, AgLast - e1, T1));
-				figStoneA.addMainO(ctrRectangle(e12, -T1, AgLast - e1, T1));
+				figStoneA.addMainO(ctrGroundStone(0, AgLast, -1));
+				figStoneA.addMainO(ctrGroundStone(0, AgLast, 1));
 			}
 		}
-		for (let ii = 0; ii < AgN; ii++) {
-			const ox = AgLast + ii * T3 + e12;
-			figStoneA.addMainO(ctrRectangle(ox, -T1, T32, T1));
-		}
 		// figStoneB
-		figStoneB.addMainO(ctrRectangle(-BgStart - T3 / 2 + e12, -T1, T3 / 2 - e1, T1));
+		figStoneB.addMainO(ctrGroundStone(BgLast + BgN * T3, T3 / 2, 1));
+		figStoneB.addMainO(ctrGroundStone(-BgLast - BgN * T3, T3 / 2, -1));
 		for (let ii = 0; ii < BgN; ii++) {
-			const ox = -BgStart + ii * T3 + e12;
-			figStoneB.addMainO(ctrRectangle(ox, -T1, T32, T1));
+			const ox = BgLast + ii * T3;
+			figStoneB.addMainO(ctrGroundStone(ox, T3, 1));
+			figStoneB.addMainO(ctrGroundStone(-ox, T3, -1));
 		}
 		if (BgLast > e12) {
 			if (2 * BgLast < T3) {
-				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -T1, 2 * BgLast - e1, T1));
+				figStoneB.addMainO(ctrGroundStone(-BgLast, 2 * BgLast, 1));
 			} else {
-				figStoneB.addMainO(ctrRectangle(-BgLast + e12, -T1, BgLast - e1, T1));
-				figStoneB.addMainO(ctrRectangle(e12, -T1, BgLast - e1, T1));
+				figStoneB.addMainO(ctrGroundStone(0, BgLast, 1));
+				figStoneB.addMainO(ctrGroundStone(0, BgLast, -1));
 			}
 		}
-		for (let ii = 0; ii < BgN; ii++) {
-			const ox = BgLast + ii * T3 + e12;
-			figStoneB.addMainO(ctrRectangle(ox, -T1, T32, T1));
-		}
-		figStoneB.addMainO(ctrRectangle(BgStart + e12, -T1, T3 / 2 - e1, T1));
 		// figStoneA Side
 		function ctrSideStone(iD: number, iL: number, iRnL: number): tContour {
 			const aa1 = iRnL === 1 ? a1 : Math.PI - a1;
