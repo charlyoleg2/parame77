@@ -100,6 +100,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const e12 = e1 / 2;
 		const T1 = param.T1;
 		const T3 = param.T3Max;
+		const x2Max = W12e + (T1 - (W12e - W12) * tan) / (tan + Math.tan(a1));
 		const ABgFirstDx = T1 / Math.tan(a1);
 		const AgStart = W12e + ABgFirstDx;
 		const AgN = Math.floor(AgStart / T3);
@@ -169,10 +170,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figStoneA Ground
 		function ctrGroundStone(iX: number, iL: number, iRnL: number): tContour {
 			const x1 = iX + iRnL * e12;
-			const x2 = x1 + iRnL * (iL - e1);
+			let x2 = x1 + iRnL * (iL - e1);
+			let lastGround = false;
+			if (Math.abs(x2) > x2Max) {
+				x2 = iRnL * x2Max;
+				lastGround = true;
+			}
 			const y1 = Math.min(0, -(iRnL * x1 - W12) * tan);
 			const y2 = Math.min(0, -(iRnL * x2 - W12) * tan);
-			const rCtr = contour(x1, -T1).addSegStrokeA(x2, -T1).addSegStrokeA(x2, y2);
+			const rCtr = contour(x1, -T1);
+			if (lastGround) {
+				rCtr.addSegStrokeA(iRnL * W12e, -T1).addSegStrokeA(x2, y2);
+			} else {
+				rCtr.addSegStrokeA(x2, -T1).addSegStrokeA(x2, y2);
+			}
 			if (Math.abs(x1) < W12 && Math.abs(x2) > W12) {
 				rCtr.addSegStrokeA(iRnL * W12, 0);
 			}
