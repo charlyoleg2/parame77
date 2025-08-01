@@ -14,6 +14,9 @@ import { springOneDef } from 'desi77';
 import { springSideDef } from 'desi77';
 import { springIntDef } from 'desi77';
 import { heliostatDef } from 'desi77';
+import { minifootDef } from 'desi77';
+import { minihelioDef } from 'desi77';
+import { minimirDef } from 'desi77';
 import { rccarDef } from 'desi77';
 import { singleBoneDef } from 'desi77';
 import { doubleBoneDef } from 'desi77';
@@ -38,6 +41,9 @@ const designList: tAllPageDef = {
 	'desi77/springSide': springSideDef,
 	'desi77/springInt': springIntDef,
 	'desi77/heliostat': heliostatDef,
+	'desi77/minifoot': minifootDef,
+	'desi77/minihelio': minihelioDef,
+	'desi77/minimir': minimirDef,
 	'desi77/rccar': rccarDef,
 	'desi77/singleBone': singleBoneDef,
 	'desi77/doubleBone': doubleBoneDef,
