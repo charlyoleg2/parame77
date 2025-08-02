@@ -91,10 +91,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const [aDCA, triLog4] = triLLLrA(lCD, R6, R4);
 		rGeome.logstr += triLog1 + triLog2 + triLog3 + triLog4;
 		// case N1 = 1 or N1 = 2
-		const lCE = Math.sqrt(R4 ** 2 - R6 ** 2);
-		const aACE = Math.acos(lCE / R4);
-		const aECF = Math.acos(r3 / lCE);
+		const lCG = r3 - R6;
+		const aCAG = Math.asin(lCG / R4);
+		const aCAE = Math.PI / 2 + aCAG;
+		const [lCE, triLog5] = triLALrL(R4, aCAE, R6);
+		const [aACE, triLog6] = triLLLrA(R4, R6, lCE);
+		const lAG = Math.sqrt(R4 ** 2 - lCG ** 2);
+		const [aECF, triLog7] = triLLLrA(lCE, lAG, r3);
 		const aACF = aACE + aECF;
+		rGeome.logstr += triLog5 + triLog6 + triLog7;
 		// step-5 : checks on the parameter values
 		if (r3 < R2) {
 			throw `err098: D3 ${param.D3} is too small compare to D1 ${param.D1} and S1 ${param.S1}`;
@@ -138,7 +143,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		let ctrFoot: tContour = contourCircle(0, 0, r3);
 		if (param.N1 > 0) {
-			if (param.N1 > 2 || (param.N1 === 2 && aACF > Math.PI / 2)) {
+			if (param.N1 > 2 || (param.N1 === 2 && aACF > Math.PI / 2 - 0.001)) {
 				ctrFoot = ctrFoot3();
 			} else {
 				ctrFoot = ctrFoot2();
