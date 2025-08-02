@@ -90,6 +90,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const [lCD, triLog3] = triLALrL(R4, aCAD, R6);
 		const [aDCA, triLog4] = triLLLrA(lCD, R6, R4);
 		rGeome.logstr += triLog1 + triLog2 + triLog3 + triLog4;
+		// case N1 = 1 or N1 = 2
+		const lCE = Math.sqrt(R4 ** 2 - R6 ** 2);
+		const aACE = Math.acos(lCE / R4);
+		const aECF = Math.acos(r3 / lCE);
+		const aACF = aACE + aECF;
 		// step-5 : checks on the parameter values
 		if (r3 < R2) {
 			throw `err098: D3 ${param.D3} is too small compare to D1 ${param.D1} and S1 ${param.S1}`;
@@ -101,18 +106,44 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `aCAD ${ffix(radToDeg(aCAD))}, aDCA ${ffix(radToDeg(aDCA))} degree\n`;
 		// sub-function
 		// figFoot
-		const ctrFoot3 = contour(r3, 0);
-		for (let ii = 0; ii < param.N1; ii++) {
-			const ai = ii * an * 2;
-			ctrFoot3
-				.addCornerRounded(param.R3)
-				.addSegStrokeAP(ai + an - aDCA, lCD)
-				.addPointAP(ai + an, R4 + R6)
-				.addPointAP(ai + an + aDCA, lCD)
-				.addSegArc2()
-				.addSegStrokeAP(ai + 2 * an, r3);
+		function ctrFoot3(): tContour {
+			const rCtr = contour(r3, 0);
+			for (let ii = 0; ii < param.N1; ii++) {
+				const ai = ii * an * 2;
+				rCtr.addCornerRounded(param.R3)
+					.addSegStrokeAP(ai + an - aDCA, lCD)
+					.addPointAP(ai + an, R4 + R6)
+					.addPointAP(ai + an + aDCA, lCD)
+					.addSegArc2()
+					.addSegStrokeAP(ai + 2 * an, r3);
+			}
+			return rCtr;
 		}
-		const ctrFoot = param.N1 > 2 ? ctrFoot3 : contourCircle(0, 0, r3);
+		function ctrFoot2(): tContour {
+			const aInit = an - aACF;
+			const pt = point(0, 0).translatePolar(aInit, r3);
+			const rCtr = contour(pt.cx, pt.cy);
+			for (let ii = 0; ii < param.N1; ii++) {
+				const ai = ii * an * 2 + aInit;
+				rCtr.addSegStrokeAP(ai + aECF, lCE)
+					.addPointAP(ai + aACF, R4 + R6)
+					.addPointAP(ai + aACF + aACE, lCE)
+					.addSegArc2()
+					.addSegStrokeAP(ai + 2 * aACF, r3)
+					.addPointAP(ai + an + aACF, r3)
+					.addPointAP(ai + 2 * an, r3)
+					.addSegArc2();
+			}
+			return rCtr;
+		}
+		let ctrFoot: tContour = contourCircle(0, 0, r3);
+		if (param.N1 > 0) {
+			if (param.N1 > 2 || (param.N1 === 2 && aACF > Math.PI / 2)) {
+				ctrFoot = ctrFoot3();
+			} else {
+				ctrFoot = ctrFoot2();
+			}
+		}
 		const ctrCircle1 = contourCircle(0, 0, R1);
 		const ctrCircle2 = contourCircle(0, 0, R2);
 		const ctrHoles: tContour[] = [];
