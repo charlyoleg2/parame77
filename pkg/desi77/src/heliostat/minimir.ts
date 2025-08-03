@@ -111,11 +111,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Laxis = Lww + 2 * param.G3;
 		const wha2 = param.N1 > 0 ? Math.PI / param.N1 : 1;
 		const S12 = param.S1 / 2;
-		let R3b = R3;
-		if (R3b < S12) {
-			R3b = S12;
-			rGeome.logstr += `warn116: R3 is updated from ${ffix(R3)} to ${ffix(R3b)} mm\n`;
-		}
+		const R3b = R3;
+		//let R3b = R3;
+		//if (R3b < S12) {
+		//	R3b = S12;
+		//	rGeome.logstr += `warn116: R3 is updated from ${ffix(R3)} to ${ffix(R3b)} mm\n`;
+		//}
 		const wha3 = Math.asin(S12 / R3b);
 		const wha4 = Math.asin(S12 / R4);
 		const wh3R = S12 / Math.sin(wha2);
@@ -126,6 +127,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-5 : checks on the parameter values
 		if (param.D2 < param.D1 + minDiff) {
 			throw `err114: D2 ${param.D2} is too small compare to D1 ${param.D1}`;
+		}
+		if (R3 < S12) {
+			throw `err132: D3 ${param.D3} is too small compare to S1 ${param.S1}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Lww: ${ffix(Lww)} mm, Laxis: ${ffix(Laxis)} mm\n`;
