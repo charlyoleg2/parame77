@@ -111,7 +111,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Laxis = Lww + 2 * param.G3;
 		const wha2 = param.N1 > 0 ? Math.PI / param.N1 : 1;
 		const S12 = param.S1 / 2;
-		const wha3 = Math.asin(S12 / R3);
+		let R3b = R3;
+		if (R3b < S12) {
+			R3b = S12;
+			rGeome.logstr += `warn116: R3 is updated from ${ffix(R3)} to ${ffix(R3b)} mm\n`;
+		}
+		const wha3 = Math.asin(S12 / R3b);
 		const wha4 = Math.asin(S12 / R4);
 		const wh3R = S12 / Math.sin(wha2);
 		const wh3Rb = param.R6 / Math.sin(wha2);
@@ -128,7 +133,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figWheel
 		const ctrCircle1 = contourCircle(0, 0, R1);
 		const ctrCircle2 = contourCircle(0, 0, R2);
-		const ctrCircle3 = contourCircle(0, 0, R3);
+		const ctrCircle3 = contourCircle(0, 0, R3b);
 		const ctrCircle4 = contourCircle(0, 0, R4);
 		const ctrCircle5 = contourCircle(0, 0, R5);
 		const wHollow: tContour[] = [];
@@ -144,10 +149,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			if (wh3n4) {
 				iCtr.addSegStrokeAP(ia + wha2, wh3R).addCornerRounded(param.R6);
 			} else {
-				iCtr.addSegStrokeAP(ia + 2 * wha2 - wha3, R3)
+				iCtr.addSegStrokeAP(ia + 2 * wha2 - wha3, R3b)
 					.addCornerRounded(param.R6)
-					.addPointAP(ia + wha2, R3)
-					.addPointAP(ia + wha3, R3)
+					.addPointAP(ia + wha2, R3b)
+					.addPointAP(ia + wha3, R3b)
 					.addSegArc2()
 					.addCornerRounded(param.R6);
 			}
