@@ -1,5 +1,5 @@
 // minimir.ts
-// a mirror of the heliostat-model
+// a mirror-support of the heliostat-model
 
 import type {
 	//tContour,
@@ -18,7 +18,7 @@ import {
 	//point,
 	contour,
 	contourCircle,
-	ctrRectangle,
+	//ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -38,17 +38,55 @@ const pDef: tParamDef = {
 	partName: 'minimir',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('W1', 'mm', 100, 5, 500, 1),
-		pNumber('Di', 'mm', 50, 2, 500, 1),
-		pSectionSeparator('Details and thickness'),
-		pNumber('R1', 'mm', 0, 0, 50, 1),
-		pNumber('T1', 'mm', 30, 1, 500, 1)
+		pNumber('L1', 'mm', 50, 10, 2000, 1),
+		pNumber('G1', 'mm', 50, 10, 2000, 1),
+		pNumber('G2', 'mm', 5, 1, 500, 1),
+		pNumber('G3', 'mm', 5, 1, 500, 1),
+		pSectionSeparator('Wheel'),
+		pNumber('D1', 'mm', 1, 0, 200, 0.5),
+		pNumber('D2', 'mm', 2, 0.5, 200, 0.5),
+		pNumber('D3', 'mm', 5, 1, 2000, 1),
+		pNumber('D4', 'mm', 40, 1, 2000, 1),
+		pNumber('D5', 'mm', 50, 1, 2000, 1),
+		pNumber('N1', 'arms', 5, 0, 20, 1),
+		pNumber('S1', 'mm', 5, 1, 200, 1),
+		pNumber('R6', 'mm', 5, 0, 200, 1),
+		pSectionSeparator('Frame'),
+		pNumber('W1', 'mm', 5, 1, 200, 1),
+		pNumber('W2', 'mm', 5, 1, 200, 1),
+		pNumber('W3', 'mm', 5, 1, 200, 1),
+		pNumber('R7', 'mm', 5, 0, 200, 1),
+		pNumber('R8', 'mm', 5, 0, 200, 1),
+		pSectionSeparator('Transversal and thickness'),
+		pNumber('S2', 'mm', 2, 1, 50, 1),
+		pNumber('S3', 'mm', 10, 1, 200, 1),
+		pNumber('T1', 'mm', 1, 1, 50, 1),
+		pNumber('T2', 'mm', 2, 1, 200, 1),
+		pNumber('T3', 'mm', 1, 1, 50, 1)
 	],
 	paramSvg: {
-		W1: 'minifoot_top.svg',
-		Di: 'minifoot_top.svg',
-		R1: 'minifoot_top.svg',
-		T1: 'minifoot_top.svg'
+		L1: 'minimir_top.svg',
+		G1: 'minimir_top.svg',
+		G2: 'minimir_top.svg',
+		G3: 'minimir_top.svg',
+		D1: 'minimir_wheel.svg',
+		D2: 'minimir_wheel.svg',
+		D3: 'minimir_wheel.svg',
+		D4: 'minimir_wheel.svg',
+		D5: 'minimir_wheel.svg',
+		N1: 'minimir_wheel.svg',
+		S1: 'minimir_wheel.svg',
+		R6: 'minimir_wheel.svg',
+		W1: 'minimir_top.svg',
+		W2: 'minimir_top.svg',
+		W3: 'minimir_top.svg',
+		R7: 'minimir_top.svg',
+		R8: 'minimir_top.svg',
+		S2: 'minimir_wheel.svg',
+		S3: 'minimir_wheel.svg',
+		T1: 'minimir_wheel.svg',
+		T2: 'minimir_wheel.svg',
+		T3: 'minimir_wheel.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -59,49 +97,59 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figSquare = figure();
-	const figHeight = figure();
+	const figWheel = figure();
+	const figFrame = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const Ri = param.Di / 2;
-		const W12 = param.W1 / 2;
-		const surface = param.W1 ** 2 - Math.PI * Ri ** 2;
-		const volume = surface * param.T1;
+		const R1 = param.D1 / 2;
+		const R2 = param.D2 / 2;
+		const R3 = param.D3 / 2;
+		const R4 = param.D4 / 2;
+		const R5 = param.D5 / 2;
+		const Lww = 2 * param.T1 + 2 * param.G2 + param.G1;
+		const Laxis = Lww + 2 * param.G3;
+		const minDiff = 0.1;
 		// step-5 : checks on the parameter values
-		if (param.W1 < param.Di) {
-			throw `err069: W1 ${param.W1} is too small compare to Di ${param.Di}`;
+		if (param.D2 < param.D1 + minDiff) {
+			throw `err114: D2 ${param.D2} is too small compare to D1 ${param.D1}`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Surface ${ffix(surface)} mm2, volume ${ffix(volume)} mm3\n`;
+		rGeome.logstr += `Lww: ${ffix(Lww)} mm, Laxis: ${ffix(Laxis)} mm\n`;
 		// sub-function
-		// figSquare
-		const ctrSquare = contour(-W12, -W12)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(param.W1, 0)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(0, param.W1)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(-param.W1, 0)
-			.addCornerRounded(param.R1)
+		// figWheel
+		const ctrCircle1 = contourCircle(0, 0, R1);
+		const ctrCircle2 = contourCircle(0, 0, R2);
+		const ctrCircle3 = contourCircle(0, 0, R3);
+		const ctrCircle4 = contourCircle(0, 0, R4);
+		const ctrCircle5 = contourCircle(0, 0, R5);
+		figWheel.addMainOI([ctrCircle5, ctrCircle2]);
+		figWheel.addSecond(ctrCircle4);
+		figWheel.addSecond(ctrCircle3);
+		figWheel.addSecond(ctrCircle1);
+		// figFrame
+		const ctrFrameExt = contour(-param.G1 / 2, -param.L1 / 2)
+			.addCornerRounded(param.R7)
+			.addSegStrokeR(param.G1, 0)
+			.addCornerRounded(param.R7)
+			.addSegStrokeR(0, param.L1)
+			.addCornerRounded(param.R7)
+			.addSegStrokeR(-param.G1, 0)
+			.addCornerRounded(param.R7)
 			.closeSegStroke();
-		const ctrHole = contourCircle(0, 0, Ri);
-		figSquare.addMainOI([ctrSquare, ctrHole]);
-		// figHeight
-		figHeight.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.T1));
-		figHeight.addSecond(ctrRectangle(-Ri, 0, 2 * Ri, param.T1));
+		figFrame.addMainO(ctrFrameExt);
 		// final figure list
 		rGeome.fig = {
-			faceSquare: figSquare,
-			faceHeight: figHeight
+			faceWheel: figWheel,
+			faceFrame: figFrame
 		};
 		// volume
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_square`,
-					face: `${designName}_faceSquare`,
+					outName: `subpax_${designName}_wheel`,
+					face: `${designName}_faceWheel`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.T1,
 					rotate: [0, 0, 0],
@@ -112,7 +160,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_square`]
+					inList: [`subpax_${designName}_wheel`]
 				}
 			]
 		};
@@ -130,7 +178,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 
 const minimirDef: tPageDef = {
 	pTitle: 'minimir',
-	pDescription: 'mirror of the heliostat-model',
+	pDescription: 'support of mirror of the heliostat-model',
 	pDef: pDef,
 	pGeom: pGeom
 };
