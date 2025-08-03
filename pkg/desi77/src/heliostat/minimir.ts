@@ -2,7 +2,7 @@
 // a mirror-support of the heliostat-model
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//withinPiPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	contourCircle,
 	//ctrRectangle,
@@ -109,6 +109,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R5 = param.D5 / 2;
 		const Lww = 2 * param.T1 + 2 * param.G2 + param.G1;
 		const Laxis = Lww + 2 * param.G3;
+		const wha2 = param.N1 > 0 ? Math.PI / param.N1 : 1;
+		const S12 = param.S1 / 2;
+		const wha3 = Math.asin(S12 / R3);
+		const wha4 = Math.asin(S12 / R4);
+		const wh3R = S12 / Math.sin(wha2);
+		const wh3Rb = param.R6 / Math.sin(wha2);
+		const wha3b = Math.asin(param.R6 / (wh3R + wh3Rb));
+		const wh3n4 = wha3b > wha2 - wha3;
 		const minDiff = 0.1;
 		// step-5 : checks on the parameter values
 		if (param.D2 < param.D1 + minDiff) {
@@ -123,7 +131,30 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const ctrCircle3 = contourCircle(0, 0, R3);
 		const ctrCircle4 = contourCircle(0, 0, R4);
 		const ctrCircle5 = contourCircle(0, 0, R5);
-		figWheel.addMainOI([ctrCircle5, ctrCircle2]);
+		const wHollow: tContour[] = [];
+		for (let ii = 0; ii < param.N1; ii++) {
+			const ia = ii * 2 * wha2;
+			const pt = point(0, 0).translatePolar(ia + wha4, R4);
+			const iCtr = contour(pt.cx, pt.cy)
+				.addCornerRounded(param.R6)
+				.addPointAP(ia + wha2, R4)
+				.addPointAP(ia + 2 * wha2 - wha4, R4)
+				.addSegArc2()
+				.addCornerRounded(param.R6);
+			if (wh3n4) {
+				iCtr.addSegStrokeAP(ia + wha2, wh3R).addCornerRounded(param.R6);
+			} else {
+				iCtr.addSegStrokeAP(ia + 2 * wha2 - wha3, R3)
+					.addCornerRounded(param.R6)
+					.addPointAP(ia + wha2, R3)
+					.addPointAP(ia + wha3, R3)
+					.addSegArc2()
+					.addCornerRounded(param.R6);
+			}
+			iCtr.closeSegStroke();
+			wHollow.push(iCtr);
+		}
+		figWheel.addMainOI([ctrCircle5, ctrCircle2, ...wHollow]);
 		figWheel.addSecond(ctrCircle4);
 		figWheel.addSecond(ctrCircle3);
 		figWheel.addSecond(ctrCircle1);
