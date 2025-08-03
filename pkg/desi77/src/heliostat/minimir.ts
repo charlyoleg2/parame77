@@ -18,13 +18,13 @@ import {
 	point,
 	contour,
 	contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
 	ffix,
 	pNumber,
-	//pCheckbox,
+	pCheckbox,
 	//pDropdown,
 	pSectionSeparator,
 	EExtrude,
@@ -62,7 +62,8 @@ const pDef: tParamDef = {
 		pNumber('S3', 'mm', 10, 1, 200, 1),
 		pNumber('T1', 'mm', 1, 1, 50, 1),
 		pNumber('T2', 'mm', 2, 1, 200, 1),
-		pNumber('T3', 'mm', 1, 1, 50, 1)
+		pNumber('T3', 'mm', 1, 1, 50, 1),
+		pCheckbox('d3_rod', true)
 	],
 	paramSvg: {
 		L1: 'minimir_top.svg',
@@ -86,7 +87,8 @@ const pDef: tParamDef = {
 		S3: 'minimir_wheel.svg',
 		T1: 'minimir_wheel.svg',
 		T2: 'minimir_wheel.svg',
-		T3: 'minimir_wheel.svg'
+		T3: 'minimir_wheel.svg',
+		d3_rod: 'minimir_wheel.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -98,7 +100,10 @@ const pDef: tParamDef = {
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figWheel = figure();
+	const figRod = figure();
+	const figTransversal = figure();
 	const figFrame = figure();
+	const figLift = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -111,6 +116,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Laxis = Lww + 2 * param.G3;
 		const wha2 = param.N1 > 0 ? Math.PI / param.N1 : 1;
 		const S12 = param.S1 / 2;
+		const S22 = param.S2 / 2;
 		const R3b = R3;
 		//let R3b = R3;
 		//if (R3b < S12) {
@@ -123,6 +129,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const wh3Rb = param.R6 / Math.sin(wha2);
 		const wha3b = Math.asin(param.R6 / (wh3R + wh3Rb));
 		const wh3n4 = wha3b > wha2 - wha3;
+		const l34 = R4 - R3;
+		const lFI = param.G1 - 2 * param.W2;
+		const hFI = param.L1 / 2 - param.W1 / 2 - param.W3;
 		const minDiff = 0.1;
 		// step-5 : checks on the parameter values
 		if (param.D2 < param.D1 + minDiff) {
@@ -130,6 +139,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (R3 < S12) {
 			throw `err132: D3 ${param.D3} is too small compare to S1 ${param.S1}`;
+		}
+		if (param.S1 < param.S2) {
+			throw `err141: S1 ${param.S1} is too small compare to S2 ${param.S2}`;
+		}
+		if (l34 < 2 * param.R6) {
+			throw `err145: l34 ${ffix(l34)} is too small compare to R6 ${param.R6}`;
+		}
+		if (l34 < param.S3) {
+			throw `err148: l34 ${ffix(l34)} is too small compare to S3 ${param.S3}`;
+		}
+		if (lFI < 2 * param.R8) {
+			throw `err153: lFI ${ffix(lFI)} is too small compare to R8 ${param.R8}`;
+		}
+		if (hFI < 2 * param.R8) {
+			throw `err156: hFI ${ffix(hFI)} is too small compare to R8 ${param.R8}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Lww: ${ffix(Lww)} mm, Laxis: ${ffix(Laxis)} mm\n`;
@@ -167,6 +191,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figWheel.addSecond(ctrCircle4);
 		figWheel.addSecond(ctrCircle3);
 		figWheel.addSecond(ctrCircle1);
+		// figRod
+		figRod.addMainOI([ctrCircle2, ctrCircle1]);
+		figRod.mergeFigure(figWheel, true);
+		// figTransversal
+		const ctrTransversal1 = ctrRectangle(-R4, -S22, param.S3, param.S2);
+		const ctrTransversal2 = ctrRectangle(R4 - param.S3, -S22, param.S3, param.S2);
+		figTransversal.addMainO(ctrTransversal1);
+		figTransversal.addMainO(ctrTransversal2);
+		figTransversal.mergeFigure(figWheel, true);
+		figWheel.addSecond(ctrTransversal1);
+		figWheel.addSecond(ctrTransversal2);
 		// figFrame
 		const ctrFrameExt = contour(-param.G1 / 2, -param.L1 / 2)
 			.addCornerRounded(param.R7)
@@ -177,11 +212,43 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(-param.G1, 0)
 			.addCornerRounded(param.R7)
 			.closeSegStroke();
-		figFrame.addMainO(ctrFrameExt);
+		const ctrFrameInt1 = contour(-param.G1 / 2 + param.W2, -param.L1 / 2 + param.W3)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(lFI, 0)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(0, hFI)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(-lFI, 0)
+			.addCornerRounded(param.R8)
+			.closeSegStroke();
+		const ctrFrameInt2 = contour(-param.G1 / 2 + param.W2, param.W1 / 2)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(lFI, 0)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(0, hFI)
+			.addCornerRounded(param.R8)
+			.addSegStrokeR(-lFI, 0)
+			.addCornerRounded(param.R8)
+			.closeSegStroke();
+		figFrame.addMainOI([ctrFrameExt, ctrFrameInt1, ctrFrameInt2]);
+		// figLift
+		figLift.mergeFigure(figFrame, true);
+		const ctrLift: tContour[] = [];
+		ctrLift.push(ctrRectangle(-param.G1 / 2, R4 - param.S3, param.W2, param.S3));
+		ctrLift.push(ctrRectangle(-param.G1 / 2, -R4, param.W2, param.S3));
+		ctrLift.push(ctrRectangle(param.G1 / 2 - param.W2, R4 - param.S3, param.W2, param.S3));
+		ctrLift.push(ctrRectangle(param.G1 / 2 - param.W2, -R4, param.W2, param.S3));
+		for (const iCtr of ctrLift) {
+			figLift.addMainO(iCtr);
+			figFrame.addSecond(iCtr);
+		}
 		// final figure list
 		rGeome.fig = {
 			faceWheel: figWheel,
-			faceFrame: figFrame
+			faceRod: figRod,
+			faceTransversal: figTransversal,
+			faceFrame: figFrame,
+			faceLift: figLift
 		};
 		// volume
 		const designName = rGeome.partName;
