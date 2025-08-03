@@ -107,6 +107,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const R1 = param.D1 / 2;
 		const R2 = param.D2 / 2;
 		const R3 = param.D3 / 2;
@@ -252,22 +253,71 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		};
 		// volume
 		const designName = rGeome.partName;
+		const volList: string[] = [];
+		volList.push(`subpax_${designName}_wheel1`);
+		volList.push(`subpax_${designName}_wheel2`);
+		if (param.d3_rod) {
+			volList.push(`subpax_${designName}_rod`);
+		}
+		volList.push(`subpax_${designName}_transversal`);
+		volList.push(`subpax_${designName}_frame`);
+		volList.push(`subpax_${designName}_lift`);
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_wheel`,
+					outName: `subpax_${designName}_wheel1`,
 					face: `${designName}_faceWheel`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.T1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_wheel2`,
+					face: `${designName}_faceWheel`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, Lww - param.T1]
+				},
+				{
+					outName: `subpax_${designName}_rod`,
+					face: `${designName}_faceRod`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: Laxis,
+					rotate: [0, 0, 0],
+					translate: [0, 0, -param.G3]
+				},
+				{
+					outName: `subpax_${designName}_transversal`,
+					face: `${designName}_faceTransversal`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: Lww,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_frame`,
+					face: `${designName}_faceFrame`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T3,
+					rotate: [0, pi2, pi2],
+					translate: [0, S22 + param.T2, Lww / 2]
+				},
+				{
+					outName: `subpax_${designName}_lift`,
+					face: `${designName}_faceLift`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [0, pi2, pi2],
+					translate: [0, S22, Lww / 2]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_wheel`]
+					inList: volList
 				}
 			]
 		};
