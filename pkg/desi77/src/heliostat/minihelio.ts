@@ -38,6 +38,21 @@ const pDef: tParamDef = {
 	partName: 'minihelio',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
+		pNumber('N1', 'mirror', 3, 1, 20, 1),
+		pNumber('W1', 'mm', 100, 5, 500, 1),
+		pSectionSeparator('Foot'),
+		pNumber('D1', 'mm', 100, 5, 500, 1),
+		pNumber('D2', 'mm', 100, 5, 500, 1),
+		pNumber('D3', 'mm', 100, 5, 500, 1),
+		pSectionSeparator('Profile widths'),
+		pNumber('W4', 'mm', 100, 5, 500, 1),
+		pNumber('W5', 'mm', 100, 5, 500, 1),
+		pSectionSeparator('Mirror'),
+		pNumber('Wm', 'mm', 100, 5, 500, 1),
+		pNumber('Hm', 'mm', 100, 5, 500, 1),
+		pNumber('Dm', 'mm', 100, 5, 500, 1),
+		pNumber('Sm', 'mm', 100, 5, 500, 1),
+		// to be deleted
 		pNumber('W1', 'mm', 100, 5, 500, 1),
 		pNumber('Di', 'mm', 50, 2, 500, 1),
 		pSectionSeparator('Details and thickness'),
@@ -45,10 +60,17 @@ const pDef: tParamDef = {
 		pNumber('T1', 'mm', 30, 1, 500, 1)
 	],
 	paramSvg: {
-		W1: 'minifoot_top.svg',
-		Di: 'minifoot_top.svg',
-		R1: 'minifoot_top.svg',
-		T1: 'minifoot_top.svg'
+		N1: 'minihelio_front.svg',
+		W1: 'minihelio_front.svg',
+		D1: 'minihelio_front.svg',
+		D2: 'minihelio_front.svg',
+		D3: 'minihelio_front.svg',
+		W4: 'minihelio_side.svg',
+		W5: 'minihelio_side.svg',
+		Wm: 'minihelio_mirror.svg',
+		Hm: 'minihelio_mirror.svg',
+		Dm: 'minihelio_mirror.svg',
+		Sm: 'minihelio_mirror.svg'
 	},
 	sim: {
 		tMax: 180,
