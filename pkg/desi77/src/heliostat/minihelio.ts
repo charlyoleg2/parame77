@@ -2,7 +2,7 @@
 // a table-top model of an heliostat
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -39,40 +39,40 @@ const pDef: tParamDef = {
 	params: [
 		//pNumber(name, unit, init, min, max, step)
 		pNumber('N1', 'mirror', 3, 1, 20, 1),
-		pNumber('W1', 'mm', 100, 5, 500, 1),
-		pNumber('W2', 'mm', 100, 5, 500, 1),
-		pNumber('H4', 'mm', 100, 5, 500, 1),
-		pNumber('H5', 'mm', 100, 5, 500, 1),
-		pNumber('H6', 'mm', 100, 5, 500, 1),
-		pNumber('H7', 'mm', 100, 5, 500, 1),
-		pNumber('H8', 'mm', 100, 5, 500, 1),
-		pNumber('D8', 'mm', 100, 5, 500, 1),
+		pNumber('W1', 'mm', 100, 5, 2000, 1),
+		pNumber('W2', 'mm', 5, 1, 200, 1),
+		pNumber('H4', 'mm', 30, 1, 2000, 1),
+		pNumber('H5', 'mm', 10, 1, 2000, 1),
+		pNumber('H6', 'mm', 120, 5, 2000, 1),
+		pNumber('H7', 'mm', 10, 1, 2000, 1),
+		pNumber('H8', 'mm', 50, 1, 2000, 1),
+		pNumber('D8', 'mm', 3, 1, 50, 1),
 		pSectionSeparator('Frame side'),
-		pNumber('T1', 'mm', 100, 5, 500, 1),
-		pNumber('T2', 'mm', 100, 5, 500, 1),
-		pNumber('W3', 'mm', 100, 5, 500, 1),
-		pNumber('W4', 'mm', 100, 5, 500, 1),
-		pNumber('W5', 'mm', 100, 5, 500, 1),
-		pNumber('HW3', 'mm', 100, 5, 500, 1),
-		pNumber('HW53', 'mm', 100, 5, 500, 1),
+		pNumber('T1', 'mm', 1, 0.5, 10, 0.1),
+		pNumber('T2', 'mm', 1, 0.5, 10, 0.1),
+		pNumber('W3', 'mm', 5, 1, 500, 1),
+		pNumber('W4', 'mm', 10, 1, 500, 1),
+		pNumber('W5', 'mm', 30, 1, 500, 1),
+		pNumber('HW3', 'mm', 40, 1, 2000, 1),
+		pNumber('HW53', 'mm', 60, 1, 2000, 1),
 		pSectionSeparator('Foot'),
-		pNumber('D1', 'mm', 100, 5, 500, 1),
-		pNumber('D2', 'mm', 100, 5, 500, 1),
-		pNumber('D3', 'mm', 100, 5, 500, 1),
-		pNumber('H1', 'mm', 100, 5, 500, 1),
-		pNumber('H2', 'mm', 100, 5, 500, 1),
-		pNumber('H3', 'mm', 100, 5, 500, 1),
+		pNumber('D1', 'mm', 10, 5, 1000, 1),
+		pNumber('D2', 'mm', 20, 5, 1000, 1),
+		pNumber('D3', 'mm', 10, 5, 1000, 1),
+		pNumber('H1', 'mm', 10, 5, 2000, 1),
+		pNumber('H2', 'mm', 20, 5, 2000, 1),
+		pNumber('H3', 'mm', 40, 5, 2000, 1),
 		pSectionSeparator('Mirror'),
-		pNumber('Wm', 'mm', 100, 5, 500, 1),
-		pNumber('Hm', 'mm', 100, 5, 500, 1),
-		pNumber('Tm', 'mm', 100, 5, 500, 1),
-		pNumber('Dm', 'mm', 100, 5, 500, 1),
-		pNumber('Sm', 'mm', 100, 5, 500, 1),
+		pNumber('Wm', 'mm', 60, 5, 2000, 1),
+		pNumber('Hm', 'mm', 60, 5, 2000, 1),
+		pNumber('Tm', 'mm', 1, 0.5, 10, 0.1),
+		pNumber('Dm', 'mm', 2, 0.1, 50, 0.1),
+		pNumber('Sm', 'mm', 5, 1, 200, 1),
 		pSectionSeparator('Simulation'),
-		pNumber('aSun', 'degree', 100, 5, 500, 1),
-		pNumber('Lt', 'm', 100, 5, 500, 0.1),
-		pNumber('Ht1', 'm', 100, 5, 500, 0.1),
-		pNumber('Ht2', 'm', 100, 5, 500, 0.1)
+		pNumber('aSun', 'degree', 45, 0, 90, 1),
+		pNumber('Lt', 'm', 10, 1, 200, 0.1),
+		pNumber('Ht1', 'm', 2, 0.1, 20, 0.1),
+		pNumber('Ht2', 'm', 1, 0.1, 20, 0.1)
 	],
 	paramSvg: {
 		N1: 'minihelio_front.svg',
@@ -116,28 +116,60 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
+	const figFoot = figure();
 	const figMirrorSide = figure();
 	const figMirrorAxis = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const R1 = param.D1 / 2;
+		const R2 = param.D2 / 2;
+		const R3 = param.D3 / 2;
 		const Rm = param.Dm / 2;
+		const R12 = R2 - R1;
+		const R23 = R2 - R3;
 		const Hm2 = param.Hm / 2 - Rm;
 		const mirrorSurface = param.Hm * param.Wm;
 		const mirrorSurfaceN = param.N1 * mirrorSurface;
 		// step-5 : checks on the parameter values
+		if (R12 < 0.1) {
+			throw `err134: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
+		}
+		if (R23 < 0.1) {
+			throw `err139: D2 ${ffix(param.D2)} is too small compare to D3 ${ffix(param.D3)} mm`;
+		}
+		if (param.H2 < param.T1) {
+			throw `err142: H2 ${ffix(param.h2)} is too small compare to T1 ${ffix(param.T1)} mm`;
+		}
 		if (Hm2 < 0) {
-			throw `err096: Hm ${ffix(param.Hm)} is too small compare to Dm ${ffix(param.Dm)}`;
+			throw `err096: Hm ${ffix(param.Hm)} is too small compare to Dm ${ffix(param.Dm)} mm`;
 		}
 		if (param.Sm < Rm) {
-			throw `err099: Sm ${ffix(param.Sm)} is too small compare to Dm ${ffix(param.Dm)}`;
+			throw `err099: Sm ${ffix(param.Sm)} is too small compare to Dm ${ffix(param.Dm)} mm`;
 		}
 		if (param.D8 < param.Dm) {
-			throw `err102: D8 ${ffix(param.D8)} is too small compare to Dm ${ffix(param.Dm)}`;
+			throw `err102: D8 ${ffix(param.D8)} is too small compare to Dm ${ffix(param.Dm)} mm`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Mirror surface: One: ${ffix(mirrorSurface)}, N: ${param.N1} : ${ffix(mirrorSurfaceN)} mm2\n`;
 		// sub-function
+		// figFoot
+		function ctrFoot(sign: number): tContour {
+			const rCtr = contour(sign * R1, 0)
+				.addSegStrokeR(0, param.H1)
+				.addSegStrokeR(sign * R12, 0)
+				.addSegStrokeR(0, param.H2)
+				.addSegStrokeR(-sign * R23, param.H3)
+				.addSegStrokeR(-sign * param.T1, 0)
+				.addSegStrokeR(sign * R23, -param.H3)
+				.addSegStrokeR(0, -param.H2 + param.T1)
+				.addSegStrokeR(-sign * R12, 0)
+				.addSegStrokeR(0, -param.H1 - param.T1)
+				.closeSegStroke();
+			return rCtr;
+		}
+		figFoot.addMainO(ctrFoot(1));
+		figFoot.addSecond(ctrFoot(-1));
 		// figMirrorSide
 		const ctrMirrorSide = contour(-Rm, 0)
 			.addPointR(Rm, -Rm)
@@ -158,6 +190,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figMirrorAxis.addSecond(ctrMirrorSide);
 		// final figure list
 		rGeome.fig = {
+			faceFoot: figFoot,
 			faceMirrorSide: figMirrorSide,
 			faceMirrorAxis: figMirrorAxis
 		};
@@ -165,6 +198,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
+				{
+					outName: `subpax_${designName}_foot`,
+					face: `${designName}_faceFoot`,
+					extrudeMethod: EExtrude.eRotate,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
 				{
 					outName: `subpax_${designName}_mirrorSide`,
 					face: `${designName}_faceMirrorSide`,
