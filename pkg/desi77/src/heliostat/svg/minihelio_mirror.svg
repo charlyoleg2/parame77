@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="377.59912"
-   height="246.05969"
-   viewBox="0 0 99.906434 65.103294"
+   width="351.47919"
+   height="224.39929"
+   viewBox="0 0 92.995535 59.372313"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="0.55496673"
-     inkscape:cx="111.71841"
-     inkscape:cy="1449.6365"
+     inkscape:zoom="0.78484148"
+     inkscape:cx="233.16811"
+     inkscape:cy="1337.2127"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -35,8 +35,8 @@
     <inkscape:page
        x="0"
        y="0"
-       width="99.906433"
-       height="65.103294"
+       width="92.995537"
+       height="59.372314"
        id="page2"
        margin="0"
        bleed="0" />
@@ -118,14 +118,17 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-29.903292,-484.2511)">
+     transform="translate(-34.454369,-488.12793)">
     <rect
        style="fill:#ffffff;stroke:#ffffff;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none"
        id="rect56"
-       width="99.641853"
-       height="64.838722"
-       x="30.035583"
-       y="484.38339" />
+       width="92.730957"
+       height="59.107731"
+       x="34.586662"
+       y="488.26022"
+       inkscape:export-filename="minihelio_mirror.svg"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
     <rect
        style="fill:#ffe6d5;stroke:#ffb380;stroke-width:0.264583;stroke-linejoin:round;stroke-dasharray:none"
        id="rect49"
@@ -178,7 +181,7 @@
          id="tspan2">Tm</tspan></text>
     <text
        xml:space="preserve"
-       transform="scale(0.26458333)"
+       transform="matrix(0.26458333,0,0,0.26458333,37.712299,1.3484678)"
        id="text51"
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect52);fill:#000000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="204.51758"
@@ -186,7 +189,7 @@
          id="tspan3">D8</tspan></text>
     <text
        xml:space="preserve"
-       transform="scale(0.26458333)"
+       transform="matrix(0.26458333,0,0,0.26458333,-35.672534,-0.34976445)"
        id="text52"
        style="font-size:16px;line-height:normal;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';text-decoration-color:#000000;white-space:pre;shape-inside:url(#rect53);fill:#000000;stroke-width:1;-inkscape-stroke:none;stop-color:#000000"><tspan
          x="347.31836"
