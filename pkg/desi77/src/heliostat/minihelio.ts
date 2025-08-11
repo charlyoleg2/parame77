@@ -20,8 +20,8 @@ import {
 	contourCircle,
 	ctrRectangle,
 	figure,
-	//degToRad,
-	//radToDeg,
+	degToRad,
+	radToDeg,
 	ffix,
 	pNumber,
 	//pCheckbox,
@@ -69,7 +69,9 @@ const pDef: tParamDef = {
 		pNumber('Dm', 'mm', 2, 0.1, 50, 0.1),
 		pNumber('Sm', 'mm', 5, 1, 200, 1),
 		pSectionSeparator('Simulation'),
-		pNumber('aSun', 'degree', 45, 0, 90, 1),
+		pNumber('aSunMin', 'degree', 0, -10, 120, 1),
+		pNumber('aSunMax', 'degree', 80, -10, 120, 1),
+		pNumber('aSolidSun', 'degree', 0.54, 0.1, 1.0, 0.01),
 		pNumber('Lt', 'm', 0.5, 0.1, 200, 0.1),
 		pNumber('Ht1', 'm', 0.2, 0.1, 20, 0.1),
 		pNumber('Ht2', 'm', 0.1, 0.1, 20, 0.1)
@@ -102,13 +104,15 @@ const pDef: tParamDef = {
 		Tm: 'minihelio_mirror.svg',
 		Dm: 'minihelio_mirror.svg',
 		Sm: 'minihelio_mirror.svg',
-		aSun: 'minihelio_side.svg',
+		aSunMin: 'minihelio_side.svg',
+		aSunMax: 'minihelio_side.svg',
+		aSolidSun: 'minihelio_side.svg',
 		Lt: 'minihelio_side.svg',
 		Ht1: 'minihelio_side.svg',
 		Ht2: 'minihelio_side.svg'
 	},
 	sim: {
-		tMax: 180,
+		tMax: 100,
 		tStep: 0.5,
 		tUpdate: 500 // every 0.5 second
 	}
@@ -127,9 +131,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const aSunMin = degToRad(param.aSunMin);
+		const aSunMax = degToRad(param.aSunMax);
+		const aSun = aSunMin + (t * (aSunMax - aSunMin)) / 100;
 		const R1 = param.D1 / 2;
 		const R2 = param.D2 / 2;
 		const R3 = param.D3 / 2;
+		const R8 = param.D8 / 2;
 		const Rm = param.Dm / 2;
 		const R12 = R2 - R1;
 		const R23 = R2 - R3;
@@ -203,6 +211,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Mirror surface: One: ${ffix(mirrorSurface)}, N: ${param.N1} : ${ffix(mirrorSurfaceN)} mm2\n`;
 		rGeome.logstr += `Height: Foot: ${ffix(H123)}, Frame: ${ffix(Hframe)}, Total : ${ffix(H123 + Hframe)} mm\n`;
+		rGeome.logstr += `aSun: ${ffix(radToDeg(aSun))} degree\n`;
 		// sub-function
 		function ctrFoot(sign: number): tContour {
 			const rCtr = contour(sign * R1, 0)
@@ -299,6 +308,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N1 + 1; ii++) {
 			figFrameSide.addSecond(ctrRectangle(-param.W4 / 2, H15 + ii * H6b, param.W4, param.T2));
 		}
+		const ctrSideHoles: tContour[] = [];
+		for (let ii = 0; ii < param.N1; ii++) {
+			figFrameSide.addSecond(contourCircle(0, H18pre + ii * H6b, Rm));
+			ctrSideHoles.push(contourCircle(0, H18pre + ii * H6b, R8));
+		}
 		figFrameSide.addSecond(ctrRectangle(Lt, Ht1, Ht2 * 0.05, Ht2));
 		const ctrSide = contour(param.W3 / 2, H123 + param.H4)
 			.addSegStrokeR(0, Hside1)
@@ -311,7 +325,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc3(-Math.PI / 2, true)
 			.addSegStrokeR(0, -Hside1)
 			.closeSegStroke();
-		figFrameSide.addMainO(ctrSide);
+		figFrameSide.addMainOI([ctrSide, ...ctrSideHoles]);
 		// figMirrorSide
 		const ctrMirrorSide = contour(-Rm, 0)
 			.addPointR(Rm, -Rm)
@@ -330,6 +344,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// figMirrorAxis
 		figMirrorAxis.addMainO(ctrMirrorAxis);
 		figMirrorAxis.addSecond(ctrMirrorSide);
+		// simulation
+		for (let ii = 0; ii < param.N1; ii++) {
+			const ia = aSun - (ii * Math.PI) / 8;
+			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia).translate(0, H18pre + ii * H6b));
+		}
 		// final figure list
 		rGeome.fig = {
 			faceFoot: figFoot,
