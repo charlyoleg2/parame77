@@ -50,7 +50,7 @@ const pDef: tParamDef = {
 		pSectionSeparator('Frame side'),
 		pNumber('T1', 'mm', 1, 0.5, 10, 0.1),
 		pNumber('T2', 'mm', 1, 0.5, 10, 0.1),
-		pNumber('W3', 'mm', 5, 1, 500, 1),
+		pNumber('W3', 'mm', 50, 1, 500, 1),
 		pNumber('W4', 'mm', 10, 1, 500, 1),
 		pNumber('W5', 'mm', 30, 1, 500, 1),
 		pNumber('HW3', 'mm', 40, 1, 2000, 1),
@@ -70,9 +70,9 @@ const pDef: tParamDef = {
 		pNumber('Sm', 'mm', 5, 1, 200, 1),
 		pSectionSeparator('Simulation'),
 		pNumber('aSun', 'degree', 45, 0, 90, 1),
-		pNumber('Lt', 'm', 10, 1, 200, 0.1),
-		pNumber('Ht1', 'm', 2, 0.1, 20, 0.1),
-		pNumber('Ht2', 'm', 1, 0.1, 20, 0.1)
+		pNumber('Lt', 'm', 0.5, 0.1, 200, 0.1),
+		pNumber('Ht1', 'm', 0.2, 0.1, 20, 0.1),
+		pNumber('Ht2', 'm', 0.1, 0.1, 20, 0.1)
 	],
 	paramSvg: {
 		N1: 'minihelio_front.svg',
@@ -138,12 +138,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H567 = param.H5 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7;
 		const W12 = param.W1 / 2;
 		const W1b = param.W1 - 2 * param.T2;
+		const W1b2 = W1b / 2;
 		const H15 = H123 + param.H4 + param.H5;
 		const H6b = param.H6 + param.T2;
 		const H18pre = H15 + param.T2 + param.H8;
 		const H18b = H18pre - Rm;
 		const H18 = H18pre - param.Hm / 2;
 		const L8 = (param.W1 - param.Wm) / 2;
+		const H17 = H15 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7;
+		const H42 = param.H4 - param.T2;
+		const Hframe =
+			param.H4 + param.H5 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7 + W12;
+		const H47 = Hframe - 2 * param.T2;
+		const W35 = (param.W3 - param.W5) / 2;
+		const Hside = Hframe - W12 - param.H4;
+		const Hside1 = param.HW3 - param.H4;
+		const Hside2 = Hside - Hside1 - param.HW53;
+		const Lt = param.Lt * 1000;
+		const Ht1 = param.Ht1 * 1000;
+		const Ht2 = param.Ht2 * 1000;
 		const Hm2 = param.Hm / 2 - Rm;
 		const mirrorSurface = param.Hm * param.Wm;
 		const mirrorSurfaceN = param.N1 * mirrorSurface;
@@ -163,6 +176,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (W1b < 0) {
 			throw `err158: W1 ${ffix(param.W1)} is too small compare to T2 ${ffix(param.T2)} mm`;
 		}
+		if (param.W3 < param.D3) {
+			throw `err172: W3 ${ffix(param.W3)} is too small compare to D3 ${ffix(param.D3)} mm`;
+		}
+		if (W35 < 0.1) {
+			throw `err175: W3 ${ffix(param.W3)} is too small compare to W5 ${ffix(param.W5)} mm`;
+		}
+		if (param.W5 < param.W4 + 2 * param.T2) {
+			throw `err178: W5 ${ffix(param.W5)} is too small compare to W4 ${ffix(param.W4)} mm`;
+		}
+		if (Hside1 < 0.1) {
+			throw `err182: HW3 ${ffix(param.HW3)} is too small compare to H4 ${ffix(param.H4)} mm`;
+		}
+		if (Hside2 < 0.1) {
+			throw `err192: Hside2 ${ffix(Hside2)} is too small because of HW3 ${ffix(param.HW3)} or HW53 ${ffix(param.HW53)} mm`;
+		}
 		if (Hm2 < 0) {
 			throw `err096: Hm ${ffix(param.Hm)} is too small compare to Dm ${ffix(param.Dm)} mm`;
 		}
@@ -174,6 +202,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Mirror surface: One: ${ffix(mirrorSurface)}, N: ${param.N1} : ${ffix(mirrorSurfaceN)} mm2\n`;
+		rGeome.logstr += `Height: Foot: ${ffix(H123)}, Frame: ${ffix(Hframe)}, Total : ${ffix(H123 + Hframe)} mm\n`;
 		// sub-function
 		function ctrFoot(sign: number): tContour {
 			const rCtr = contour(sign * R1, 0)
@@ -228,11 +257,61 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// figFrameTop
 		figFrameTop.mergeFigure(figFrameMid, true);
+		const ctrFrameTop = contour(-W1b2, H17)
+			.addPointR(W1b2, W1b2)
+			.addPointR(2 * W1b2, 0)
+			.addSegArc2()
+			.addSegStrokeR(param.T2, 0)
+			.addPointR(-W12, W12)
+			.addPointR(-2 * W12, 0)
+			.addSegArc2()
+			.closeSegStroke();
+		figFrameTop.addMainO(ctrFrameTop);
 		// figFrameBottom
 		figFrameBottom.mergeFigure(figFrameMid, true);
+		const ctrFrameBottom = contour(Wbottom2, H123)
+			.addPointR(param.H4, param.H4)
+			.addSegArc(param.H4, false, true)
+			.addSegStrokeR(-param.T2, 0)
+			.addPointR(-H42, -H42)
+			.addSegArc(H42, false, false)
+			.addSegStrokeR(-2 * Wbottom2, 0)
+			.addPointR(-H42, H42)
+			.addSegArc(H42, false, false)
+			.addSegStrokeR(-param.T2, 0)
+			.addPointR(param.H4, -param.H4)
+			.addSegArc(param.H4, false, true)
+			.closeSegStroke();
+		figFrameBottom.addMainO(ctrFrameBottom);
 		// figFrameSide
 		figFrameSide.addSecond(ctrFoot(1));
 		figFrameSide.addSecond(ctrFoot(-1));
+		figFrameSide.addSecond(ctrRectangle(-param.W3 / 2, H123, param.W3, param.H4));
+		figFrameSide.addSecond(ctrRectangle(-param.W3 / 2, H123, param.W3, param.T2));
+		figFrameSide.addSecond(ctrRectangle(-param.W5 / 2, H17, param.W5, W12));
+		figFrameSide.addSecond(
+			ctrRectangle(-param.W5 / 2, H17 + W12 - param.T2, param.W5, param.T2)
+		);
+		figFrameSide.addSecond(
+			ctrRectangle(-param.W4 / 2 - param.T2, H123 + param.T2, param.T2, H47)
+		);
+		figFrameSide.addSecond(ctrRectangle(param.W4 / 2, H123 + param.T2, param.T2, H47));
+		for (let ii = 0; ii < param.N1 + 1; ii++) {
+			figFrameSide.addSecond(ctrRectangle(-param.W4 / 2, H15 + ii * H6b, param.W4, param.T2));
+		}
+		figFrameSide.addSecond(ctrRectangle(Lt, Ht1, Ht2 * 0.05, Ht2));
+		const ctrSide = contour(param.W3 / 2, H123 + param.H4)
+			.addSegStrokeR(0, Hside1)
+			.addPointR(-W35, param.HW53)
+			.addSegArc3(-Math.PI / 2, false)
+			.addSegStrokeR(0, Hside2)
+			.addSegStrokeR(-param.W5, 0)
+			.addSegStrokeR(0, -Hside2)
+			.addPointR(-W35, -param.HW53)
+			.addSegArc3(-Math.PI / 2, true)
+			.addSegStrokeR(0, -Hside1)
+			.closeSegStroke();
+		figFrameSide.addMainO(ctrSide);
 		// figMirrorSide
 		const ctrMirrorSide = contour(-Rm, 0)
 			.addPointR(Rm, -Rm)
