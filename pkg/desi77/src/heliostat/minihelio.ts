@@ -15,7 +15,7 @@ import {
 	//withinZeroPi,
 	//withinPiPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	contourCircle,
 	ctrRectangle,
@@ -243,6 +243,34 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
+		function ctrSunRay(
+			iYm: number,
+			iXt: number,
+			iYt: number,
+			iRm: number,
+			ia1: number,
+			iXd: number,
+			iaSun: number
+		): [tContour, number] {
+			const a2 = iaSun - ia1;
+			const aReflection = ia1 - a2;
+			// Limitation of the simulation for avoiding too big number
+			const aReflection2 = Math.abs(aReflection) < Math.PI / 3 ? aReflection : Math.PI / 3;
+			const xh1 = iXd * Math.cos(ia1 + Math.PI / 2);
+			const yh1 = iXd * Math.sin(ia1 + Math.PI / 2);
+			const xh2 = iRm * Math.cos(ia1);
+			const yh2 = iRm * Math.sin(ia1);
+			const xh = -xh1 - xh2 + iXt;
+			const yh = yh1 + yh2 + iYm - iYt;
+			const yReflection = xh * Math.tan(aReflection2);
+			const rY = yReflection + yh;
+			const pt1 = point(xh1 + xh2, iYm + yh1 + yh2);
+			const pt2 = pt1.translatePolar(iaSun, 4 * iRm);
+			const rCtr = contour(pt2.cx, pt2.cy, 'yellow')
+				.addSegStrokeA(pt1.cx, pt1.cy)
+				.addSegStrokeA(iXt, iYt + rY);
+			return [rCtr, rY];
+		}
 		// figFoot
 		figFoot.addMainO(ctrFoot(1));
 		figFoot.addSecond(ctrFoot(-1));
@@ -347,7 +375,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// simulation
 		for (let ii = 0; ii < param.N1; ii++) {
 			const ia = aSun - (ii * Math.PI) / 8;
-			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia).translate(0, H18pre + ii * H6b));
+			const yM = H18pre + ii * H6b;
+			const yT = Ht1 + Ht2 / 2;
+			const Rm = param.Sm + param.Tm;
+			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia).translate(0, yM));
+			const [ctrRay, yS] = ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun);
+			figFrameSide.addDynamics(ctrRay);
+			rGeome.logstr += `dbg382: ii ${ii} yS ${ffix(yS)} mm\n`;
 		}
 		// final figure list
 		rGeome.fig = {
