@@ -295,16 +295,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			iXd: number,
 			iaSun: number
 		): [number, number] {
-			let rA1 = 0;
+			let rA1 = iaSun / 2;
 			let rCnt = 0;
-			let tY = iaSun / 2;
-			[tY] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
-			let a1Step = Math.min(Math.max(Math.abs(iaSun) / 2, Math.PI / 8), Math.PI / 3);
+			let [tY, xhm, yhm] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
 			while (Math.abs(tY) > 0.5 && rCnt < 100) {
-				a1Step = a1Step / 2;
+				const aErr =
+					Math.atan((iYm + yhm - iYt + tY) / (iXt - xhm)) -
+					Math.atan((iYm + yhm - iYt) / (iXt - xhm));
+				const a1Step = 0.5 * Math.abs(aErr);
 				rA1 -= Math.sign(tY) * a1Step;
+				//rA1 = Math.min(Math.max(rA1, -Math.PI / 4), Math.PI / 2);
 				rCnt += 1;
-				[tY] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
+				[tY, xhm, yhm] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
 			}
 			return [rA1, rCnt];
 		}
