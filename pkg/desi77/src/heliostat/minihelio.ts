@@ -168,6 +168,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Hm2 = param.Hm / 2 - Rm;
 		const mirrorSurface = param.Hm * param.Wm;
 		const mirrorSurfaceN = param.N1 * mirrorSurface;
+		const mh2 = param.Hm / 2;
+		const aSSun2 = degToRad(param.aSolidSun) / 2;
 		// step-5 : checks on the parameter values
 		if (R12 < 0.1) {
 			throw `err134: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -275,12 +277,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			iRm: number,
 			ia1: number,
 			iXd: number,
-			iaSun: number
+			iaSun: number,
+			iColor: string
 		): tContour {
 			const [yRay, xhm, yhm] = calcYray(iYm, iXt, iYt, iRm, ia1, iXd, iaSun);
 			const pt1 = point(xhm, iYm + yhm);
 			const pt2 = pt1.translatePolar(iaSun, 4 * iRm);
-			const rCtr = contour(pt2.cx, pt2.cy, 'yellow').addSegStrokeA(pt1.cx, pt1.cy);
+			const rCtr = contour(pt2.cx, pt2.cy, iColor).addSegStrokeA(pt1.cx, pt1.cy);
 			const yRayMax = 2 * (iYm + iYt); // Don't draw sun-ray if number are to big
 			if (Math.abs(yRay) < yRayMax) {
 				rCtr.addSegStrokeA(iXt, iYt + yRay);
@@ -420,8 +423,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const [ia, cycleCnt] = searchA1(yM, Lt, yT, Rm, 0, aSun);
 			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
 			const [yS] = calcYray(yM, Lt, yT, Rm, ia, 0, aSun);
-			const ctrRay = ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun);
-			figFrameSide.addDynamics(ctrRay);
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun, 'yellow'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun - aSSun2, 'red'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun + aSSun2, 'orange'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun + aSSun2, 'red'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun - aSSun2, 'orange'));
 			rGeome.logstr += `dbg382: ii ${ii}: yS ${ffix(yS)} mm, ia ${ffix(radToDeg(ia))} degree, cycleCnt ${cycleCnt}\n`;
 		}
 		// final figure list
