@@ -243,6 +243,31 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.closeSegStroke();
 			return rCtr;
 		}
+		function calcYray(
+			iYm: number,
+			iXt: number,
+			iYt: number,
+			iRm: number,
+			ia1: number,
+			iXd: number,
+			iaSun: number
+		): [number, number, number] {
+			const a2 = iaSun - ia1;
+			const aReflection = ia1 - a2; // 2 * ia1 - iaSun
+			const xh1 = iXd * Math.cos(ia1 + Math.PI / 2);
+			const yh1 = iXd * Math.sin(ia1 + Math.PI / 2);
+			const xh2 = iRm * Math.cos(ia1);
+			const yh2 = iRm * Math.sin(ia1);
+			const xh = -xh1 - xh2 + iXt;
+			const yh = yh1 + yh2 + iYm - iYt;
+			const yReflection = xh * Math.tan(aReflection);
+			const yRay = yReflection + yh;
+			const bigYray = 100 + 10 * (iYm + iYt);
+			const rY = a2 < Math.PI / 2 ? yRay : Math.sign(a2) * bigYray;
+			const rXm = xh1 + xh2;
+			const rYm = yh1 + yh2;
+			return [rY, rXm, rYm];
+		}
 		function ctrSunRay(
 			iYm: number,
 			iXt: number,
@@ -251,25 +276,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			ia1: number,
 			iXd: number,
 			iaSun: number
-		): [tContour, number] {
-			const a2 = iaSun - ia1;
-			const aReflection = ia1 - a2;
-			// Limitation of the simulation for avoiding too big number
-			const aReflection2 = Math.abs(aReflection) < Math.PI / 3 ? aReflection : Math.PI / 3;
-			const xh1 = iXd * Math.cos(ia1 + Math.PI / 2);
-			const yh1 = iXd * Math.sin(ia1 + Math.PI / 2);
-			const xh2 = iRm * Math.cos(ia1);
-			const yh2 = iRm * Math.sin(ia1);
-			const xh = -xh1 - xh2 + iXt;
-			const yh = yh1 + yh2 + iYm - iYt;
-			const yReflection = xh * Math.tan(aReflection2);
-			const rY = yReflection + yh;
-			const pt1 = point(xh1 + xh2, iYm + yh1 + yh2);
+		): tContour {
+			const [yRay, xhm, yhm] = calcYray(iYm, iXt, iYt, iRm, ia1, iXd, iaSun);
+			const pt1 = point(xhm, iYm + yhm);
 			const pt2 = pt1.translatePolar(iaSun, 4 * iRm);
-			const rCtr = contour(pt2.cx, pt2.cy, 'yellow')
-				.addSegStrokeA(pt1.cx, pt1.cy)
-				.addSegStrokeA(iXt, iYt + rY);
-			return [rCtr, rY];
+			const rCtr = contour(pt2.cx, pt2.cy, 'yellow').addSegStrokeA(pt1.cx, pt1.cy);
+			const yRayMax = 2 * (iYm + iYt); // Don't draw sun-ray if number are to big
+			if (Math.abs(yRay) < yRayMax) {
+				rCtr.addSegStrokeA(iXt, iYt + yRay);
+			}
+			return rCtr;
+		}
+		function searchA1(
+			iYm: number,
+			iXt: number,
+			iYt: number,
+			iRm: number,
+			iXd: number,
+			iaSun: number
+		): [number, number] {
+			let rA1 = 0;
+			let rCnt = 0;
+			let tY = iaSun / 2;
+			[tY] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
+			let a1Step = Math.min(Math.max(Math.abs(iaSun) / 2, Math.PI / 8), Math.PI / 3);
+			while (Math.abs(tY) > 0.5 && rCnt < 100) {
+				a1Step = a1Step / 2;
+				rA1 -= Math.sign(tY) * a1Step;
+				rCnt += 1;
+				[tY] = calcYray(iYm, iXt, iYt, iRm, rA1, iXd, iaSun);
+			}
+			return [rA1, rCnt];
 		}
 		// figFoot
 		figFoot.addMainO(ctrFoot(1));
@@ -374,14 +411,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figMirrorAxis.addSecond(ctrMirrorSide);
 		// simulation
 		for (let ii = 0; ii < param.N1; ii++) {
-			const ia = aSun - (ii * Math.PI) / 8;
 			const yM = H18pre + ii * H6b;
 			const yT = Ht1 + Ht2 / 2;
 			const Rm = param.Sm + param.Tm;
-			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia).translate(0, yM));
-			const [ctrRay, yS] = ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun);
+			//const ia = ((ii + 1) * aSun) / 6;
+			const [ia, cycleCnt] = searchA1(yM, Lt, yT, Rm, 0, aSun);
+			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
+			const [yS] = calcYray(yM, Lt, yT, Rm, ia, 0, aSun);
+			const ctrRay = ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun);
 			figFrameSide.addDynamics(ctrRay);
-			rGeome.logstr += `dbg382: ii ${ii} yS ${ffix(yS)} mm\n`;
+			rGeome.logstr += `dbg382: ii ${ii}: yS ${ffix(yS)} mm, ia ${ffix(radToDeg(ia))} degree, cycleCnt ${cycleCnt}\n`;
 		}
 		// final figure list
 		rGeome.fig = {
