@@ -282,7 +282,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		): tContour {
 			const [yRay, xhm, yhm] = calcYray(iYm, iXt, iYt, iRm, ia1, iXd, iaSun);
 			const pt1 = point(xhm, iYm + yhm);
-			const pt2 = pt1.translatePolar(iaSun, 4 * iRm);
+			const pt2 = pt1.translatePolar(iaSun, 20 * iRm);
 			const rCtr = contour(pt2.cx, pt2.cy, iColor).addSegStrokeA(pt1.cx, pt1.cy);
 			const yRayMax = 2 * (iYm + iYt); // Don't draw sun-ray if number are to big
 			if (Math.abs(yRay) < yRayMax) {
@@ -415,6 +415,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figMirrorAxis.addMainO(ctrMirrorAxis);
 		figMirrorAxis.addSecond(ctrMirrorSide);
 		// simulation
+		let sunLinearAcc = 0;
+		let tyS1 = 0;
+		let tyS2 = Ht2;
+		let tyS3 = -Ht2;
+		let tyS4 = 0;
+		let a1Min = Math.PI / 2;
+		let a1Max = -Math.PI / 2;
 		for (let ii = 0; ii < param.N1; ii++) {
 			const yM = H18pre + ii * H6b;
 			const yT = Ht1 + Ht2 / 2;
@@ -423,13 +430,34 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			const [ia, cycleCnt] = searchA1(yM, Lt, yT, Rm, 0, aSun);
 			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
 			const [yS] = calcYray(yM, Lt, yT, Rm, ia, 0, aSun);
+			const [yS1] = calcYray(yM, Lt, yT, Rm, ia, mh2, aSun - aSSun2);
+			const [yS2] = calcYray(yM, Lt, yT, Rm, ia, mh2, aSun + aSSun2);
+			const [yS4] = calcYray(yM, Lt, yT, Rm, ia, -mh2, aSun + aSSun2);
+			const [yS3] = calcYray(yM, Lt, yT, Rm, ia, -mh2, aSun - aSSun2);
 			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun, 'yellow'));
 			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun - aSSun2, 'red'));
 			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun + aSSun2, 'orange'));
 			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun + aSSun2, 'red'));
 			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun - aSSun2, 'orange'));
-			rGeome.logstr += `dbg382: ii ${ii}: yS ${ffix(yS)} mm, ia ${ffix(radToDeg(ia))} degree, cycleCnt ${cycleCnt}\n`;
+			const sunLinear = 2 * mh2 * Math.cos(aSun - ia); // m
+			const tHigh = yS2 - yS3; // m
+			const tLow = yS1 - yS4; // m
+			rGeome.logstr += `Mirror ${ii + 1}: yS ${ffix(yS)} mm, ia ${ffix(radToDeg(ia))} degree, cycleCnt ${cycleCnt}, linear ${ffix(sunLinear)} mm, target: ${ffix(tHigh)} ${ffix(tLow)} mm ${ffix((100 * tHigh) / tLow)} %\n`;
+			sunLinearAcc += sunLinear;
+			tyS1 = Math.max(tyS1, yS1);
+			tyS2 = Math.min(tyS2, yS2);
+			tyS3 = Math.max(tyS3, yS3);
+			tyS4 = Math.min(tyS4, yS4);
+			a1Min = Math.min(a1Min, ia);
+			a1Max = Math.max(a1Max, ia);
 		}
+		rGeome.logstr += `mirror angles: min ${ffix(radToDeg(a1Min))} max ${ffix(radToDeg(a1Max))} diff ${ffix(radToDeg(a1Max - a1Min))} degree\n`;
+		//rGeome.logstr += `dbg450: tyS1234 ${ffix(tyS1)} ${ffix(tyS2)} ${ffix(tyS3)} ${ffix(tyS4)}\n`;
+		const targetHigh = tyS2 - tyS3;
+		const targetLow = tyS1 - tyS4;
+		rGeome.logstr += `sunLinearAcc: ${ffix(sunLinearAcc)} mm, target: ${ffix(targetHigh)} ${ffix(targetLow)} mm ${ffix((100 * targetHigh) / targetLow)} %\n`;
+		rGeome.logstr += `sun concentration: ${ffix((100 * sunLinearAcc) / targetLow)} %\n`;
+		rGeome.logstr += `target usage: bottom ${ffix(tyS4 + Ht2 / 2)} top ${ffix(Ht2 / 2 - tyS1)} mm, ${ffix((100 * targetLow) / Ht2)} %\n`;
 		// final figure list
 		rGeome.fig = {
 			faceFoot: figFoot,
