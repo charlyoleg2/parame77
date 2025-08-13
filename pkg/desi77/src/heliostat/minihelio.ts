@@ -298,6 +298,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			}
 			return rCtr;
 		}
+		// using Monte-Carlo because of complex equation acos(f(a1))=aSun-a3-2*a1
 		function searchA1(
 			iYm: number,
 			iXt: number,
