@@ -45,7 +45,7 @@ const pDef: tParamDef = {
 	],
 	paramSvg: {
 		D1: 'bridge_panorama.svg',
-		Di: 'bridge_panorama.svg',
+		Di: 'bridge_column.svg',
 		T1: 'bridge_panorama.svg'
 	},
 	sim: {
