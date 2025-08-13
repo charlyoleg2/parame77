@@ -131,6 +131,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const aSunMin = degToRad(param.aSunMin);
 		const aSunMax = degToRad(param.aSunMax);
 		const aSun = aSunMin + (t * (aSunMax - aSunMin)) / 100;
@@ -481,6 +482,62 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					translate: [0, 0, 0]
 				},
 				{
+					outName: `subpax_${designName}_frameBand1`,
+					face: `${designName}_faceFrameBand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [pi2, 0, 0],
+					translate: [0, -param.W4 / 2, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameBand2`,
+					face: `${designName}_faceFrameBand`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.W4 / 2 + param.T2, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameTop`,
+					face: `${designName}_faceFrameTop`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W5,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.W5 / 2, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameBottom`,
+					face: `${designName}_faceFrameBottom`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W3,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.W3 / 2, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameMid`,
+					face: `${designName}_faceFrameMid`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.W4,
+					rotate: [pi2, 0, 0],
+					translate: [0, param.W4 / 2, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameSide1`,
+					face: `${designName}_faceFrameSide`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [pi2, 0, pi2],
+					translate: [W1b2, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameSide2`,
+					face: `${designName}_faceFrameSide`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [pi2, 0, pi2],
+					translate: [-W1b2 - param.T2, 0, 0]
+				},
+				{
 					outName: `subpax_${designName}_mirrorSide`,
 					face: `${designName}_faceMirrorSide`,
 					extrudeMethod: EExtrude.eLinearOrtho,
@@ -501,7 +558,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_mirrorSide`, `subpax_${designName}_mirrorSide`]
+					inList: [
+						`subpax_${designName}_foot`,
+						`subpax_${designName}_frameBand1`,
+						`subpax_${designName}_frameBand2`,
+						`subpax_${designName}_frameTop`,
+						`subpax_${designName}_frameBottom`,
+						`subpax_${designName}_frameMid`,
+						`subpax_${designName}_frameSide1`,
+						`subpax_${designName}_frameSide2`
+					]
 				}
 			]
 		};
