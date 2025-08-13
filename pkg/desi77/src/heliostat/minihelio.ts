@@ -59,7 +59,7 @@ const pDef: tParamDef = {
 		pNumber('D1', 'mm', 30, 5, 1000, 1),
 		pNumber('D2', 'mm', 40, 5, 1000, 1),
 		pNumber('D3', 'mm', 20, 5, 1000, 1),
-		pNumber('H1', 'mm', 20, 5, 2000, 1),
+		pNumber('H1', 'mm', 40, 5, 2000, 1),
 		pNumber('H2', 'mm', 40, 5, 2000, 1),
 		pNumber('H3', 'mm', 80, 5, 2000, 1),
 		pSectionSeparator('Mirror'),

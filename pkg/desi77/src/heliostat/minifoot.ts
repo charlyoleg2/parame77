@@ -38,17 +38,17 @@ const pDef: tParamDef = {
 	partName: 'minifoot',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('D1', 'mm', 30, 2, 500, 1),
-		pNumber('D3', 'mm', 50, 2, 500, 1),
-		pNumber('D4', 'mm', 100, 2, 500, 1),
+		pNumber('D1', 'mm', 31, 2, 500, 0.1),
+		pNumber('D3', 'mm', 30, 2, 500, 1),
+		pNumber('D4', 'mm', 200, 2, 500, 1),
 		pNumber('D5', 'mm', 3, 0, 100, 1),
-		pNumber('N1', 'foot', 3, 0, 12, 1),
+		pNumber('N1', 'foot', 5, 0, 12, 1),
 		pSectionSeparator('Heights and details'),
 		pNumber('S1', 'mm', 1, 0.1, 5, 0.1),
 		pNumber('S5', 'mm', 2, 1, 20, 1),
 		pNumber('R3', 'mm', 10, 0, 100, 1),
 		pNumber('H1', 'mm', 2, 0.1, 10, 0.1),
-		pNumber('H2', 'mm', 10, 0, 100, 1)
+		pNumber('H2', 'mm', 40, 0, 100, 1)
 	],
 	paramSvg: {
 		D1: 'minifoot_top.svg',
@@ -102,9 +102,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += triLog5 + triLog6 + triLog7;
 		const selFoot = param.N1 > 2 || (param.N1 === 2 && aACF > Math.PI / 2 - 0.001);
 		// step-5 : checks on the parameter values
-		if (r3 < R2) {
-			throw `err098: D3 ${param.D3} is too small compare to D1 ${param.D1} and S1 ${param.S1}`;
-		}
+		//if (r3 < R2) { // too restrictive because of rounded corner
+		//	throw `err098: D3 ${param.D3} is too small compare to D1 ${param.D1} and S1 ${param.S1}`;
+		//}
 		if (R4 < r3) {
 			throw `err101: D4 ${param.D4} is too small compare to D3 ${param.D3}`;
 		}
