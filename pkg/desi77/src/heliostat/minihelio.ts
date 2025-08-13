@@ -24,7 +24,7 @@ import {
 	radToDeg,
 	ffix,
 	pNumber,
-	//pCheckbox,
+	pCheckbox,
 	//pDropdown,
 	pSectionSeparator,
 	EExtrude,
@@ -74,7 +74,11 @@ const pDef: tParamDef = {
 		pNumber('aSolidSun', 'degree', 0.54, 0.1, 1.0, 0.01),
 		pNumber('Lt', 'm', 0.5, 0.1, 200, 0.1),
 		pNumber('Ht1', 'm', 0.2, 0.1, 20, 0.1),
-		pNumber('Ht2', 'm', 0.1, 0.1, 20, 0.1)
+		pNumber('Ht2', 'm', 0.1, 0.1, 20, 0.1),
+		pSectionSeparator('3D parts'),
+		pCheckbox('d3_foot', true),
+		pCheckbox('d3_frame', true),
+		pCheckbox('d3_mirrors', false)
 	],
 	paramSvg: {
 		N1: 'minihelio_front.svg',
@@ -109,7 +113,10 @@ const pDef: tParamDef = {
 		aSolidSun: 'minihelio_side.svg',
 		Lt: 'minihelio_side.svg',
 		Ht1: 'minihelio_side.svg',
-		Ht2: 'minihelio_side.svg'
+		Ht2: 'minihelio_side.svg',
+		d3_foot: 'minihelio_side.svg',
+		d3_frame: 'minihelio_side.svg',
+		d3_mirrors: 'minihelio_side.svg'
 	},
 	sim: {
 		tMax: 100,
@@ -397,7 +404,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(0, -Hside1)
 			.closeSegStroke();
 		figFrameSide.addMainOI([ctrSide, ...ctrSideHoles]);
-		// figMirrorSide
+		// figMirrorSide figMirrorAxis
 		const ctrMirrorSide = contour(-Rm, 0)
 			.addPointR(Rm, -Rm)
 			.addPointR(2 * Rm, 0)
@@ -410,11 +417,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(Hm2, 0)
 			.closeSegStroke();
 		const ctrMirrorAxis = contourCircle(0, 0, Rm);
-		figMirrorSide.addMainO(ctrMirrorSide);
-		figMirrorSide.addSecond(ctrMirrorAxis);
-		// figMirrorAxis
-		figMirrorAxis.addMainO(ctrMirrorAxis);
-		figMirrorAxis.addSecond(ctrMirrorSide);
+		//figMirrorSide.addMainO(ctrMirrorSide);
+		//figMirrorSide.addSecond(ctrMirrorAxis);
+		//figMirrorAxis.addMainO(ctrMirrorAxis);
+		//figMirrorAxis.addSecond(ctrMirrorSide);
+		figMirrorSide.mergeFigure(figFrameSide, true);
+		figMirrorAxis.mergeFigure(figFrameSide, true);
 		// simulation
 		let sunLinearAcc = 0;
 		let tyS1 = 0;
@@ -451,6 +459,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			tyS4 = Math.min(tyS4, yS4);
 			a1Min = Math.min(a1Min, ia);
 			a1Max = Math.max(a1Max, ia);
+			// figMirrorSide figMirrorAxis
+			figMirrorSide.addMainO(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
+			figMirrorSide.addSecond(ctrMirrorAxis.translate(0, yM));
+			figMirrorAxis.addMainO(ctrMirrorAxis.translate(0, yM));
+			figMirrorAxis.addSecond(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
 		}
 		rGeome.logstr += `mirror angles: min ${ffix(radToDeg(a1Min))} max ${ffix(radToDeg(a1Max))} diff ${ffix(radToDeg(a1Max - a1Min))} degree\n`;
 		//rGeome.logstr += `dbg450: tyS1234 ${ffix(tyS1)} ${ffix(tyS2)} ${ffix(tyS3)} ${ffix(tyS4)}\n`;
@@ -472,6 +485,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		};
 		// volume
 		const designName = rGeome.partName;
+		const d3Foot: string[] = [];
+		const d3Frame: string[] = [];
+		const d3Mirror: string[] = [];
+		if (param.d3_foot === 1) {
+			d3Foot.push(`subpax_${designName}_foot`);
+		}
+		if (param.d3_frame === 1) {
+			d3Frame.push(`subpax_${designName}_frameBand1`);
+			d3Frame.push(`subpax_${designName}_frameBand2`);
+			d3Frame.push(`subpax_${designName}_frameTop`);
+			d3Frame.push(`subpax_${designName}_frameBottom`);
+			d3Frame.push(`subpax_${designName}_frameMid`);
+			d3Frame.push(`subpax_${designName}_frameSide1`);
+			d3Frame.push(`subpax_${designName}_frameSide2`);
+		}
+		if (param.d3_mirrors === 1) {
+			d3Mirror.push(`subpax_${designName}_mirrorSide`);
+			d3Mirror.push(`subpax_${designName}_mirrorAxis`);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
@@ -542,32 +574,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					face: `${designName}_faceMirrorSide`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.Wm,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					rotate: [pi2, 0, pi2],
+					translate: [-param.Wm / 2, 0, 0]
 				},
 				{
 					outName: `subpax_${designName}_mirrorAxis`,
 					face: `${designName}_faceMirrorAxis`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.W1,
-					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					rotate: [pi2, 0, pi2],
+					translate: [-param.W1 / 2, 0, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [
-						`subpax_${designName}_foot`,
-						`subpax_${designName}_frameBand1`,
-						`subpax_${designName}_frameBand2`,
-						`subpax_${designName}_frameTop`,
-						`subpax_${designName}_frameBottom`,
-						`subpax_${designName}_frameMid`,
-						`subpax_${designName}_frameSide1`,
-						`subpax_${designName}_frameSide2`
-					]
+					inList: [...d3Foot, ...d3Frame, ...d3Mirror]
 				}
 			]
 		};
