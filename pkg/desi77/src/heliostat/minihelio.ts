@@ -43,9 +43,9 @@ const pDef: tParamDef = {
 		pNumber('W2', 'mm', 5, 1, 200, 1),
 		pNumber('H4', 'mm', 30, 1, 2000, 1),
 		pNumber('H5', 'mm', 10, 1, 2000, 1),
-		pNumber('H6', 'mm', 120, 5, 2000, 1),
+		pNumber('H6', 'mm', 70, 5, 2000, 1),
 		pNumber('H7', 'mm', 10, 1, 2000, 1),
-		pNumber('H8', 'mm', 50, 1, 2000, 1),
+		pNumber('H8', 'mm', 32, 1, 2000, 1),
 		pNumber('D8', 'mm', 3, 1, 50, 1),
 		pSectionSeparator('Frame side'),
 		pNumber('T1', 'mm', 1, 0.5, 10, 0.1),
@@ -68,6 +68,7 @@ const pDef: tParamDef = {
 		pNumber('Tm', 'mm', 1, 0.5, 10, 0.1),
 		pNumber('Dm', 'mm', 2, 0.1, 50, 0.1),
 		pNumber('Sm', 'mm', 5, 1, 200, 1),
+		pNumber('Em', 'mm', 1, 0.5, 5, 0.1),
 		pSectionSeparator('Simulation'),
 		pNumber('aSunMin', 'degree', 0, -10, 120, 1),
 		pNumber('aSunMax', 'degree', 80, -10, 120, 1),
@@ -78,7 +79,8 @@ const pDef: tParamDef = {
 		pSectionSeparator('3D parts'),
 		pCheckbox('d3_foot', true),
 		pCheckbox('d3_frame', true),
-		pCheckbox('d3_mirrors', false)
+		pCheckbox('d3_mirrors', false),
+		pCheckbox('d3_one_mirror', false)
 	],
 	paramSvg: {
 		N1: 'minihelio_front.svg',
@@ -108,6 +110,7 @@ const pDef: tParamDef = {
 		Tm: 'minihelio_mirror.svg',
 		Dm: 'minihelio_mirror.svg',
 		Sm: 'minihelio_mirror.svg',
+		Em: 'minihelio_mirror.svg',
 		aSunMin: 'minihelio_side.svg',
 		aSunMax: 'minihelio_side.svg',
 		aSolidSun: 'minihelio_side.svg',
@@ -116,7 +119,8 @@ const pDef: tParamDef = {
 		Ht2: 'minihelio_side.svg',
 		d3_foot: 'minihelio_side.svg',
 		d3_frame: 'minihelio_side.svg',
-		d3_mirrors: 'minihelio_side.svg'
+		d3_mirrors: 'minihelio_side.svg',
+		d3_one_mirror: 'minihelio_side.svg'
 	},
 	sim: {
 		tMax: 100,
@@ -135,6 +139,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figFrameMid = figure();
 	const figMirrorSide = figure();
 	const figMirrorAxis = figure();
+	const figOneMirror = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -147,6 +152,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R3 = param.D3 / 2;
 		const R8 = param.D8 / 2;
 		const Rm = param.Dm / 2;
+		const RmE = Rm + param.Em;
 		const R12 = R2 - R1;
 		const R23 = R2 - R3;
 		const Wbottom2 = param.W1 / 2 - param.H4;
@@ -173,7 +179,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Lt = param.Lt * 1000;
 		const Ht1 = param.Ht1 * 1000;
 		const Ht2 = param.Ht2 * 1000;
-		const Hm2 = param.Hm / 2 - Rm;
+		const Hm2 = param.Hm / 2 - RmE;
 		const mirrorSurface = param.Hm * param.Wm;
 		const mirrorSurfaceN = param.N1 * mirrorSurface;
 		const mh2 = param.Hm / 2;
@@ -210,7 +216,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err192: Hside2 ${ffix(Hside2)} is too small because of HW3 ${ffix(param.HW3)} or HW53 ${ffix(param.HW53)} mm`;
 		}
 		if (Hm2 < 0) {
-			throw `err096: Hm ${ffix(param.Hm)} is too small compare to Dm ${ffix(param.Dm)} mm`;
+			throw `err096: Hm ${ffix(param.Hm)} is too small compare to Dm ${ffix(param.Dm)} and Em ${ffix(param.Em)} mm`;
 		}
 		if (param.Sm < Rm) {
 			throw `err099: Sm ${ffix(param.Sm)} is too small compare to Dm ${ffix(param.Dm)} mm`;
@@ -406,9 +412,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figFrameSide.addMainOI([ctrSide, ...ctrSideHoles]);
 		// figMirrorSide figMirrorAxis
-		const ctrMirrorSide = contour(-Rm, 0)
-			.addPointR(Rm, -Rm)
-			.addPointR(2 * Rm, 0)
+		const ctrMirrorSide = contour(-RmE, 0)
+			.addPointR(RmE, -RmE)
+			.addPointR(2 * RmE, 0)
 			.addSegArc2()
 			.addSegStrokeR(0, param.Sm)
 			.addSegStrokeR(Hm2, 0)
@@ -424,6 +430,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		//figMirrorAxis.addSecond(ctrMirrorSide);
 		figMirrorSide.mergeFigure(figFrameSide, true);
 		figMirrorAxis.mergeFigure(figFrameSide, true);
+		// figOneMirror
+		figOneMirror.addMainOI([ctrMirrorSide, ctrMirrorAxis]);
 		// simulation
 		let sunLinearAcc = 0;
 		let tyS1 = 0;
@@ -435,20 +443,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		for (let ii = 0; ii < param.N1; ii++) {
 			const yM = H18pre + ii * H6b;
 			const yT = Ht1 + Ht2 / 2;
-			const Rm = param.Sm + param.Tm;
+			const tRm = param.Sm + param.Tm;
 			//const ia = ((ii + 1) * aSun) / 6;
-			const [ia, cycleCnt] = searchA1(yM, Lt, yT, Rm, 0, aSun);
+			const [ia, cycleCnt] = searchA1(yM, Lt, yT, tRm, 0, aSun);
 			figFrameSide.addSecond(ctrMirrorSide.rotate(0, 0, ia - Math.PI / 2).translate(0, yM));
-			const [yS] = calcYray(yM, Lt, yT, Rm, ia, 0, aSun);
-			const [yS1] = calcYray(yM, Lt, yT, Rm, ia, mh2, aSun - aSSun2);
-			const [yS2] = calcYray(yM, Lt, yT, Rm, ia, mh2, aSun + aSSun2);
-			const [yS4] = calcYray(yM, Lt, yT, Rm, ia, -mh2, aSun + aSSun2);
-			const [yS3] = calcYray(yM, Lt, yT, Rm, ia, -mh2, aSun - aSSun2);
-			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, 0, aSun, 'yellow'));
-			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun - aSSun2, 'red'));
-			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, mh2, aSun + aSSun2, 'orange'));
-			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun + aSSun2, 'red'));
-			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, Rm, ia, -mh2, aSun - aSSun2, 'orange'));
+			const [yS] = calcYray(yM, Lt, yT, tRm, ia, 0, aSun);
+			const [yS1] = calcYray(yM, Lt, yT, tRm, ia, mh2, aSun - aSSun2);
+			const [yS2] = calcYray(yM, Lt, yT, tRm, ia, mh2, aSun + aSSun2);
+			const [yS4] = calcYray(yM, Lt, yT, tRm, ia, -mh2, aSun + aSSun2);
+			const [yS3] = calcYray(yM, Lt, yT, tRm, ia, -mh2, aSun - aSSun2);
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, tRm, ia, 0, aSun, 'yellow'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, tRm, ia, mh2, aSun - aSSun2, 'red'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, tRm, ia, mh2, aSun + aSSun2, 'orange'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, tRm, ia, -mh2, aSun + aSSun2, 'red'));
+			figFrameSide.addDynamics(ctrSunRay(yM, Lt, yT, tRm, ia, -mh2, aSun - aSSun2, 'orange'));
 			const sunLinear = 2 * mh2 * Math.cos(aSun - ia); // m
 			const tHigh = yS2 - yS3; // m
 			const tLow = yS1 - yS4; // m
@@ -482,13 +490,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceFrameSide: figFrameSide,
 			faceFrameMid: figFrameMid,
 			faceMirrorSide: figMirrorSide,
-			faceMirrorAxis: figMirrorAxis
+			faceMirrorAxis: figMirrorAxis,
+			faceOneMirror: figOneMirror
 		};
 		// volume
 		const designName = rGeome.partName;
 		const d3Foot: string[] = [];
 		const d3Frame: string[] = [];
 		const d3Mirror: string[] = [];
+		const d3OneMirror: string[] = [];
 		if (param.d3_foot === 1) {
 			d3Foot.push(`subpax_${designName}_foot`);
 		}
@@ -504,6 +514,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (param.d3_mirrors === 1) {
 			d3Mirror.push(`subpax_${designName}_mirrorSide`);
 			d3Mirror.push(`subpax_${designName}_mirrorAxis`);
+		}
+		if (param.d3_one_mirror === 1) {
+			d3OneMirror.push(`subpax_${designName}_oneMirror`);
 		}
 		rGeome.vol = {
 			extrudes: [
@@ -585,13 +598,21 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.W1,
 					rotate: [pi2, 0, pi2],
 					translate: [-param.W1 / 2, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_oneMirror`,
+					face: `${designName}_faceOneMirror`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.Wm,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [...d3Foot, ...d3Frame, ...d3Mirror]
+					inList: [...d3Foot, ...d3Frame, ...d3Mirror, ...d3OneMirror]
 				}
 			]
 		};
