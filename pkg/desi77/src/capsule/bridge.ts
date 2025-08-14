@@ -7,7 +7,9 @@ import type {
 	tParamDef,
 	tParamVal,
 	tGeom,
-	tPageDef
+	tPageDef,
+	tExtrude
+	//tVolume
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';
@@ -112,6 +114,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-4 : some preparation calculation
 		const pi2 = Math.PI / 2;
 		const W12 = param.W1 / 2;
+		const W22 = param.W2 / 2;
 		const W32 = param.W3 / 2;
 		const W42 = param.W4 / 2;
 		const Hg = W12 + param.Ea;
@@ -206,22 +209,39 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		};
 		// volume
 		const designName = rGeome.partName;
+		const volColumn: tExtrude[] = [];
+		const volColumnN: string[] = [];
+		for (let ii = 0; ii < param.N1 + 1; ii++) {
+			const px = ii * (param.W2 + param.W1);
+			const iVolN = `subpax_${designName}_col${String(ii).padStart(3, '0')}`;
+			const iVol: tExtrude = {
+				outName: iVolN,
+				face: `${designName}_faceColumn`,
+				extrudeMethod: EExtrude.eLinearOrtho,
+				length: 2 * W22,
+				rotate: [0, pi2, 0],
+				translate: [px, 0, 0]
+			};
+			volColumn.push(iVol);
+			volColumnN.push(iVolN);
+		}
 		rGeome.vol = {
 			extrudes: [
 				{
 					outName: `subpax_${designName}_arcade`,
 					face: `${designName}_faceArcade`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.W3,
+					length: 2 * W32,
 					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
-				}
+					translate: [0, 0, -W32]
+				},
+				...volColumn
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_arcade`]
+					inList: [`subpax_${designName}_arcade`, ...volColumnN]
 				}
 			]
 		};
