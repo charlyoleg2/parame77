@@ -1,5 +1,5 @@
-// square.ts
-// simple square shape for experimenting systemix
+// trackXZ.ts
+// simulation of train-capsule on XZ-track
 
 import type {
 	//tContour,
@@ -18,7 +18,7 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	contour,
+	//contour,
 	contourCircle,
 	ctrRectangle,
 	figure,
@@ -37,20 +37,18 @@ import {
 //import { triALLrLAA } from 'triangule';
 
 const pDef: tParamDef = {
-	partName: 'square',
+	partName: 'trackXZ',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('W1', 'mm', 100, 5, 500, 1),
+		pNumber('D1', 'mm', 100, 5, 500, 1),
 		pNumber('Di', 'mm', 50, 2, 500, 1),
-		pSectionSeparator('Details and thickness'),
-		pNumber('R1', 'mm', 0, 0, 50, 1),
+		pSectionSeparator('Thickness'),
 		pNumber('T1', 'mm', 30, 1, 500, 1)
 	],
 	paramSvg: {
-		W1: 'square_top.svg',
-		Di: 'square_top.svg',
-		R1: 'square_top.svg',
-		T1: 'square_top.svg'
+		D1: 'trackXZ_top.svg',
+		Di: 'trackXZ_side.svg',
+		T1: 'trackXZ_section.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -61,40 +59,32 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figSquare = figure();
+	const figCylinder = figure();
 	const figHeight = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
 		const Ri = param.Di / 2;
-		const W12 = param.W1 / 2;
-		const surface = param.W1 ** 2 - Math.PI * Ri ** 2;
+		const R1 = param.D1 / 2;
+		const surface = Math.PI * R1 ** 2 - Math.PI * Ri ** 2;
 		const volume = surface * param.T1;
 		// step-5 : checks on the parameter values
-		if (param.W1 < param.Di) {
-			throw `err069: W1 ${param.W1} is too small compare to Di ${param.Di}`;
+		if (R1 < Ri) {
+			throw `err071: D1 ${param.D1} is too small compare to Di ${param.Di}`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Surface ${ffix(surface)} mm2, volume ${ffix(volume)} mm3\n`;
 		// sub-function
-		// figSquare
-		const ctrSquare = contour(-W12, -W12)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(param.W1, 0)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(0, param.W1)
-			.addCornerRounded(param.R1)
-			.addSegStrokeR(-param.W1, 0)
-			.addCornerRounded(param.R1)
-			.closeSegStroke();
+		// figCylinder
+		const ctrCylinder = contourCircle(0, 0, R1);
 		const ctrHole = contourCircle(0, 0, Ri);
-		figSquare.addMainOI([ctrSquare, ctrHole]);
+		figCylinder.addMainOI([ctrCylinder, ctrHole]);
 		// figHeight
-		figHeight.addMainO(ctrRectangle(-W12, 0, 2 * W12, param.T1));
+		figHeight.addMainO(ctrRectangle(-R1, 0, 2 * R1, param.T1));
 		figHeight.addSecond(ctrRectangle(-Ri, 0, 2 * Ri, param.T1));
 		// final figure list
 		rGeome.fig = {
-			faceSquare: figSquare,
+			faceCylinder: figCylinder,
 			faceHeight: figHeight
 		};
 		// volume
@@ -102,8 +92,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_square`,
-					face: `${designName}_faceSquare`,
+					outName: `subpax_${designName}_cyl`,
+					face: `${designName}_faceCylinder`,
 					extrudeMethod: EExtrude.eLinearOrtho,
 					length: param.T1,
 					rotate: [0, 0, 0],
@@ -113,15 +103,15 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			volumes: [
 				{
 					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_square`]
+					boolMethod: EBVolume.eIdentity,
+					inList: [`subpax_${designName}_cyl`]
 				}
 			]
 		};
 		// sub-design
 		rGeome.sub = {};
 		// finalize
-		rGeome.logstr += 'square drawn successfully!\n';
+		rGeome.logstr += 'trackXZ drawn successfully!\n';
 		rGeome.calcErr = false;
 	} catch (emsg) {
 		rGeome.logstr += emsg as string;
@@ -130,11 +120,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	return rGeome;
 }
 
-const squareDef: tPageDef = {
-	pTitle: 'square',
-	pDescription: 'simple square shape for experimenting systemix',
+const trackXZDef: tPageDef = {
+	pTitle: 'trackXZ',
+	pDescription: 'simulation of train-capsule on XZ-track',
 	pDef: pDef,
 	pGeom: pGeom
 };
 
-export { squareDef };
+export { trackXZDef };

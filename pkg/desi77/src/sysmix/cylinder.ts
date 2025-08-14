@@ -8,6 +8,8 @@ import type {
 	tParamVal,
 	tGeom,
 	tPageDef
+	//tExtrude
+	//tVolume
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';

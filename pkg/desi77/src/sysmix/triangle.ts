@@ -9,6 +9,8 @@ import type {
 	tGeom,
 	tPageDef
 	//tExtrude
+	//tVolume
+	//tExtrude
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';

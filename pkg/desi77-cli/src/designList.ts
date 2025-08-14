@@ -24,6 +24,8 @@ import { pcarDef } from 'desi77';
 import { capsuleDef } from 'desi77';
 import { tunnelDef } from 'desi77';
 import { bridgeDef } from 'desi77';
+import { trackXYDef } from 'desi77';
+import { trackXZDef } from 'desi77';
 import { squareDef } from 'desi77';
 import { triangleDef } from 'desi77';
 import { cylinderDef } from 'desi77';
@@ -52,6 +54,8 @@ const designList: tAllPageDef = {
 	'desi77/capsule': capsuleDef,
 	'desi77/tunnel': tunnelDef,
 	'desi77/bridge': bridgeDef,
+	'desi77/trackXY': trackXYDef,
+	'desi77/trackXZ': trackXZDef,
 	'desi77/square': squareDef,
 	'desi77/triangle': triangleDef,
 	'desi77/cylinder': cylinderDef

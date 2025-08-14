@@ -23,6 +23,8 @@ export * from './rccar/pcar';
 export * from './capsule/capsule';
 export * from './capsule/tunnel';
 export * from './capsule/bridge';
+export * from './capsule/trackXY';
+export * from './capsule/trackXZ';
 export * from './sysmix/square';
 export * from './sysmix/triangle';
 export * from './sysmix/cylinder';
