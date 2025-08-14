@@ -18,7 +18,7 @@ import {
 	//point,
 	contour,
 	//contourCircle,
-	//ctrRectangle,
+	ctrRectangle,
 	figure,
 	//degToRad,
 	//radToDeg,
@@ -118,12 +118,19 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H12 = param.H1 + param.H2;
 		const La = param.W2 + param.N1 * (param.W1 + param.W2);
 		const Lb = La - param.Ix1 - param.Ix2;
+		const H34 = H12 - param.H3 - param.H4;
 		// step-5 : checks on the parameter values
 		if (param.H2 < W12 && param.arcStyle === 1) {
 			throw `err116: H2 ${param.H2} is too small compare to W1 ${param.W1} m`;
 		}
 		if (param.H2 < Hg && param.arcStyle === 0) {
 			throw `err125: H2 ${param.H2} is too small compare to W1 ${param.W1} and Ea ${param.Ea} m`;
+		}
+		if (param.W4 < param.W3) {
+			throw `err129: W4 ${param.W4} is too small compare to W3 ${param.W3} m`;
+		}
+		if (H34 < 0) {
+			throw `err133: H2 ${param.H2} is too small compare to H3 ${param.H3} or H4 ${param.H4} m`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bridge length: ${ffix(Lb)} m\n`;
@@ -141,6 +148,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						.addSegArc2()
 						.addSegStrokeR(0, -param.H2 + W12)
 						.addSegStrokeR(param.W2, 0);
+					figColumn.addSecond(ctrRectangle(-W32, -param.H1 - W12, 2 * W32, W12));
 					break;
 				case 0:
 					// gothic
@@ -152,6 +160,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						.addSegArc3(pi2, false)
 						.addSegStrokeR(0, -param.H2 + Hg)
 						.addSegStrokeR(param.W2, 0);
+					figColumn.addSecond(ctrRectangle(-W32, -param.H1 - Hg, 2 * W32, Hg));
 					break;
 				default:
 					// rectangular
@@ -160,16 +169,35 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 						.addSegStrokeR(param.W1, 0)
 						.addSegStrokeR(0, -param.H2)
 						.addSegStrokeR(param.W2, 0);
+					figColumn.addSecond(ctrRectangle(-W32, -param.H1, 2 * W32, param.H1));
 			}
 		}
 		ctrArcade.addSegStrokeR(0, H12).closeSegStroke();
 		figArcade.addMainO(ctrArcade);
+		for (let ii = 0; ii < param.N1 + 1; ii++) {
+			const px = ii * (param.W2 + param.W1);
+			figArcade.addSecond(ctrRectangle(px, -param.H3 - H34, param.W2, H34));
+			figArcade.addSecond(ctrRectangle(px, -H12, param.W2, param.H4));
+		}
 		// figColumn
-		const ctrColumn = contour(-W32, 0)
-			.addSegStrokeR(W32 - W42, -H12)
+		const ctrColumn = contour(-W42, -H12)
 			.addSegStrokeR(2 * W42, 0)
-			.addSegStrokeR(0, H12)
-			.closeSegStroke();
+			.addSegStrokeR(0, param.H4);
+		if (param.sideStyle === 1) {
+			ctrColumn.addPointR(-W42 + W32, H34).addSegArc3(-pi2, false);
+		} else {
+			ctrColumn.addSegStrokeR(-W42 + W32, H34);
+		}
+		ctrColumn
+			.addSegStrokeR(0, param.H3)
+			.addSegStrokeR(-param.W3, 0)
+			.addSegStrokeR(0, -param.H3);
+		if (param.sideStyle === 1) {
+			ctrColumn.addPointR(W32 - W42, -H34).addSegArc3(-pi2, true);
+		} else {
+			ctrColumn.addSegStrokeR(W32 - W42, -H34);
+		}
+		ctrColumn.closeSegStroke();
 		figColumn.addMainO(ctrColumn);
 		// final figure list
 		rGeome.fig = {
