@@ -18,12 +18,12 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	//contour,
-	contourCircle,
-	ctrRectangle,
+	contour,
+	//contourCircle,
+	//ctrRectangle,
 	figure,
-	//degToRad,
-	//radToDeg,
+	degToRad,
+	radToDeg,
 	ffix,
 	pNumber,
 	//pCheckbox,
@@ -40,17 +40,39 @@ const pDef: tParamDef = {
 	partName: 'trackXY',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('D1', 'mm', 100, 5, 500, 1),
-		pNumber('Di', 'mm', 50, 2, 500, 1),
-		pSectionSeparator('Thickness'),
-		pNumber('T1', 'mm', 30, 1, 500, 1),
-		pNumber('T2', 'mm', 30, 1, 500, 1)
+		pNumber('W1', 'mm', 1000, 10, 2000, 1),
+		pNumber('T1', 'mm', 80, 1, 200, 1),
+		pNumber('S1', 'mm', 200, 1, 500, 1),
+		pNumber('B1', 'mm', 20, 2, 500, 1),
+		pNumber('B2', 'mm', 30, 2, 1000, 1),
+		pNumber('H1', 'mm', 100, 1, 500, 1),
+		pNumber('H2', 'mm', 200, 1, 500, 1),
+		pSectionSeparator('Track'),
+		pNumber('a0', 'degree', 30, -180, 180, 1),
+		pNumber('a1', 'degree', -40, -180, 180, 1),
+		pNumber('a2', 'degree', 30, -180, 180, 1),
+		pNumber('L1', 'm', 30, 0.01, 200, 0.01),
+		pNumber('L2', 'm', 1, 0.01, 200, 0.01),
+		pNumber('L3', 'm', 20, 0.01, 200, 0.01),
+		pNumber('r1', 'm', 10, 0.01, 200, 0.01),
+		pNumber('r2', 'm', 20, 0.01, 200, 0.01)
 	],
 	paramSvg: {
-		D1: 'trackXY_midLine.svg',
-		Di: 'trackXY_top.svg',
-		T1: 'trackXY_side.svg',
-		T2: 'trackXY_section.svg'
+		W1: 'trackXY_section.svg',
+		T1: 'trackXY_section.svg',
+		S1: 'trackXY_top.svg',
+		B1: 'trackXY_top.svg',
+		B2: 'trackXY_top.svg',
+		H1: 'trackXY_side.svg',
+		H2: 'trackXY_side.svg',
+		a0: 'trackXY_midLine.svg',
+		a1: 'trackXY_midLine.svg',
+		a2: 'trackXY_midLine.svg',
+		L1: 'trackXY_midLine.svg',
+		L2: 'trackXY_midLine.svg',
+		L3: 'trackXY_midLine.svg',
+		r1: 'trackXY_midLine.svg',
+		r2: 'trackXY_midLine.svg'
 	},
 	sim: {
 		tMax: 180,
@@ -61,43 +83,65 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figCylinder = figure();
-	const figHeight = figure();
+	const figTop1 = figure();
+	const figTop2 = figure();
+	const figSection = figure();
+	const figSide = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		const Ri = param.Di / 2;
-		const R1 = param.D1 / 2;
-		const surface = Math.PI * R1 ** 2 - Math.PI * Ri ** 2;
-		const volume = surface * param.T1;
+		const pi2 = Math.PI / 2;
+		const Lr1 = param.a1 * param.r1;
+		const Lr2 = param.a2 * param.r2;
+		const Ltot = param.L1 + Lr1 + param.L2 + Lr2 + param.L3;
+		const A0 = degToRad(param.a0);
+		const A1 = degToRad(param.a1);
+		const A1b = A0 + A1;
+		const A2 = degToRad(param.a2);
+		const A2b = A1b + A2;
 		// step-5 : checks on the parameter values
-		if (R1 < Ri) {
-			throw `err071: D1 ${param.D1} is too small compare to Di ${param.Di}`;
+		if (A1 > pi2) {
+			throw `err102: a1 ${param.a1} degree is larger than 90 degree`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Surface ${ffix(surface)} mm2, volume ${ffix(volume)} mm3\n`;
+		rGeome.logstr += `Track-XY length: ${ffix(Ltot)} m\n`;
+		rGeome.logstr += `Final orientation: ${ffix(radToDeg(A2b))} degree\n`;
 		// sub-function
-		// figCylinder
-		const ctrCylinder = contourCircle(0, 0, R1);
-		const ctrHole = contourCircle(0, 0, Ri);
-		figCylinder.addMainOI([ctrCylinder, ctrHole]);
-		// figHeight
-		figHeight.addMainO(ctrRectangle(-R1, 0, 2 * R1, param.T1));
-		figHeight.addSecond(ctrRectangle(-Ri, 0, 2 * Ri, param.T1));
+		// figTop1
+		const ctrMidLine = contour(0, 0)
+			.addSegStrokeRP(A0, param.L1)
+			.addSegStrokeRP(A1, Lr1)
+			.addSegStrokeRP(A1b, param.L2)
+			.addSegStrokeRP(A2, Lr2)
+			.addSegStrokeRP(A2b, param.L3);
+		figTop1.addSecond(ctrMidLine);
+		// figTop2
+		// figSection
+		// figSide
 		// final figure list
 		rGeome.fig = {
-			faceCylinder: figCylinder,
-			faceHeight: figHeight
+			faceTop1: figTop1,
+			faceTop2: figTop2,
+			faceSide: figSide,
+			faceSection: figSection
 		};
 		// volume
 		const designName = rGeome.partName;
 		rGeome.vol = {
 			extrudes: [
 				{
-					outName: `subpax_${designName}_cyl`,
-					face: `${designName}_faceCylinder`,
+					outName: `subpax_${designName}_beam`,
+					face: `${designName}_faceTop1`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.T1,
+					length: param.H1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_rail`,
+					face: `${designName}_faceTop2`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.H2,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				}
@@ -105,8 +149,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			volumes: [
 				{
 					outName: `pax_${designName}`,
-					boolMethod: EBVolume.eIdentity,
-					inList: [`subpax_${designName}_cyl`]
+					boolMethod: EBVolume.eUnion,
+					inList: [`subpax_${designName}_beam`, `subpax_${designName}_rail`]
 				}
 			]
 		};
