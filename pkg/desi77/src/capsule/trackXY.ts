@@ -190,12 +190,53 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop1.addPoint(point(pt1c.cx, pt1c.cy, ShapePoint.eTri2));
 		figTop1.addPoint(point(pt2c.cx, pt2c.cy, ShapePoint.eTri2));
 		// figTop2
+		figTop2.mergeFigure(figTop1, true);
+		const pR11 = point(0, 0).translatePolar(A0 - pi2, W12);
+		const pR12 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1 / 2, param.r1 - W12 - T1);
+		const pR13 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1, param.r1 - W12 - T1);
+		const pR14 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2 / 2, param.r2 - W12 - T1);
+		const pR15 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2, param.r2 - W12 - T1);
+		const pR16 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2 / 2, param.r2 - W12);
+		const pR17 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2, param.r2 - W12);
+		const pR18 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1 / 2, param.r1 - W12);
+		const pR19 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2, param.r1 - W12);
+		const ctrRail1 = contour(pR11.cx, pR11.cy)
+			.addSegStrokeRP(A0 - pi2, T1)
+			.addSegStrokeRP(A0, param.L1)
+			.addPointA(pR12.cx, pR12.cy)
+			.addPointA(pR13.cx, pR13.cy)
+			.addSegArc2()
+			.addSegStrokeRP(A1b, param.L2)
+			.addPointA(pR14.cx, pR14.cy)
+			.addPointA(pR15.cx, pR15.cy)
+			.addSegArc2()
+			.addSegStrokeRP(A2b, param.L3)
+			.addSegStrokeRP(A2b + pi2, T1)
+			.addSegStrokeRP(A2b + Math.PI, param.L3)
+			.addPointA(pR16.cx, pR16.cy)
+			.addPointA(pR17.cx, pR17.cy)
+			.addSegArc2()
+			.addSegStrokeRP(A1b + Math.PI, param.L2)
+			.addPointA(pR18.cx, pR18.cy)
+			.addPointA(pR19.cx, pR18.cy)
+			.addSegArc2()
+			.closeSegStroke();
+		const pR21 = point(0, 0).translatePolar(A0 + pi2, W12 + T1);
+		const ctrRail2 = contour(pR21.cx, pR21.cy)
+			.addSegStrokeRP(A0 - pi2, T1)
+			.addSegStrokeRP(A0, param.L1)
+			.addSegStrokeRP(A0 + pi2, T1)
+			.closeSegStroke();
+		figTop2.addMainO(ctrRail1);
+		figTop2.addMainO(ctrRail2);
+		figTop1.addSecond(ctrRail1);
+		figTop1.addSecond(ctrRail2);
 		// figSection
 		figSection.addSecond(ctrRectangle(-Lbeam2, 0, 2 * Lbeam2, H1));
 		figSection.addMainO(ctrRectangle(-Lbeam2 + S1, H1, T1, H2));
 		figSection.addMainO(ctrRectangle(W12, H1, T1, H2));
 		// figSide
-		for (let ii = 0; ii < 10; ii++) {
+		for (let ii = 0; ii < 11; ii++) {
 			figSide.addSecond(ctrRectangle(ii * Bstep, 0, 2 * Wbeam2, H1));
 		}
 		figSide.addMainO(ctrRectangle(0, H1, 2 * Wbeam2 + 10 * Bstep, H2));
