@@ -40,7 +40,7 @@ const pDef: tParamDef = {
 	partName: 'bridge',
 	params: [
 		//pNumber(name, unit, init, min, max, step)
-		pNumber('N1', 'arc', 10, 1, 100, 1),
+		pNumber('N1', 'arc', 9, 1, 100, 1),
 		pNumber('W1', 'm', 20, 1, 100, 0.1),
 		pNumber('W2', 'm', 2, 1, 100, 0.1),
 		pNumber('H1', 'm', 2, 1, 100, 0.1),
@@ -49,7 +49,7 @@ const pDef: tParamDef = {
 		pNumber('Ea', 'm', 10, 1, 100, 0.1),
 		pSectionSeparator('Transversal'),
 		pNumber('W3', 'm', 10, 1, 100, 1),
-		pNumber('W4', 'm', 30, 1, 100, 1),
+		pNumber('W4', 'm', 18, 1, 100, 1),
 		pNumber('H3', 'm', 5, 1, 500, 1),
 		pNumber('H4', 'm', 20, 1, 500, 1),
 		pDropdown('sideStyle', ['straight', 'arc']),
@@ -62,13 +62,13 @@ const pDef: tParamDef = {
 		pNumber('Ih22', 'm', 2, 1, 50, 1),
 		pSectionSeparator('Valley'),
 		pNumber('p1x', '%', 20, 1, 99, 1),
-		pNumber('p1y', 'm', -10, -300, 10, 1),
+		pNumber('p1y', 'm', -24, -300, 10, 1),
 		pNumber('p2x', '%', 40, 1, 99, 1),
-		pNumber('p2y', 'm', -20, -300, 10, 1),
+		pNumber('p2y', 'm', -18, -300, 10, 1),
 		pNumber('p3x', '%', 60, 1, 99, 1),
-		pNumber('p3y', 'm', -25, -300, 10, 1),
+		pNumber('p3y', 'm', -31, -300, 10, 1),
 		pNumber('p4x', '%', 80, 1, 99, 1),
-		pNumber('p4y', 'm', -15, -300, 10, 1)
+		pNumber('p4y', 'm', -25, -300, 10, 1)
 	],
 	paramSvg: {
 		N1: 'bridge_panorama.svg',
@@ -109,6 +109,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
 	const figArcade = figure();
 	const figColumn = figure();
+	const figValley = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -122,6 +123,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const La = param.W2 + param.N1 * (param.W1 + param.W2);
 		const Lb = La - param.Ix1 - param.Ix2;
 		const H34 = H12 - param.H3 - param.H4;
+		const vxp = [param.p1x, param.p2x, param.p3x, param.p4x];
+		const vx = vxp.map((xp) => param.Ix1 + (Lb * xp) / 100);
+		const vy = [param.p1y, param.p2y, param.p3y, param.p4y];
 		// step-5 : checks on the parameter values
 		if (param.H2 < W12 && param.arcStyle === 1) {
 			throw `err116: H2 ${param.H2} is too small compare to W1 ${param.W1} m`;
@@ -134,6 +138,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (H34 < 0) {
 			throw `err133: H2 ${param.H2} is too small compare to H3 ${param.H3} or H4 ${param.H4} m`;
+		}
+		if (Lb < 0) {
+			throw `err139: N1 ${param.N1} is too small compare to Ix1 ${param.Ix1} or Ix2 ${param.Ix2} m`;
+		}
+		for (let ii = 0; ii < vx.length - 1; ii++) {
+			if (vx[ii + 1] < vx[ii]) {
+				throw `err145: vx${ii + 1} ${vx[ii + 1]} is smaller than vx${ii} ${vx[ii]} m`;
+			}
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bridge length: ${ffix(Lb)} m\n`;
@@ -202,10 +214,28 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		ctrColumn.closeSegStroke();
 		figColumn.addMainO(ctrColumn);
+		// figValley
+		const ctrValley = contour(-2 * W22, param.Ih11)
+			.addSegStrokeR(2 * W22 + param.Ix1, 0)
+			.addSegStrokeR(0, -param.Ih11 - param.Ih12);
+		for (let ii = 0; ii < vx.length; ii++) {
+			ctrValley.addSegStrokeA(vx[ii], vy[ii]);
+		}
+		ctrValley
+			.addSegStrokeA(La - param.Ix2, -param.Ih22)
+			.addSegStrokeR(0, param.Ih21 + param.Ih22)
+			.addSegStrokeR(2 * W22 + param.Ix2, 0)
+			.addSegStrokeR(0, -param.Ih21 - H12 - param.H1)
+			.addSegStrokeR(-La - 4 * W22, 0)
+			.closeSegStroke();
+		figValley.addMainO(ctrValley);
+		figValley.addSecond(ctrArcade);
+		figArcade.addSecond(ctrValley);
 		// final figure list
 		rGeome.fig = {
 			faceArcade: figArcade,
-			faceColumn: figColumn
+			faceColumn: figColumn,
+			faceValley: figValley
 		};
 		// volume
 		const designName = rGeome.partName;
@@ -235,13 +265,25 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					rotate: [0, 0, 0],
 					translate: [0, 0, -W32]
 				},
-				...volColumn
+				...volColumn,
+				{
+					outName: `subpax_${designName}_valley`,
+					face: `${designName}_faceValley`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: 4 * W42,
+					rotate: [0, 0, 0],
+					translate: [0, 0, -2 * W42]
+				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_arcade`, ...volColumnN]
+					inList: [
+						`subpax_${designName}_arcade`,
+						...volColumnN,
+						`subpax_${designName}_valley`
+					]
 				}
 			]
 		};
