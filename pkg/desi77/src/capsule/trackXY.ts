@@ -104,8 +104,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += logTri1 + logTri2;
 		const aLr1c = A1 / 2;
 		const aLr2c = A2 / 2;
-		const Lbeam2 = (param.W1 / 2 + param.T1 + param.S1) / 1000; // m
+		// conversion in meters
+		const H1 = param.H1 / 1000; // m
+		const H2 = param.H2 / 1000;
+		const W12 = param.W1 / 2000;
+		const T1 = param.T1 / 1000;
+		const S1 = param.S1 / 1000;
 		const Wbeam2 = param.B1 / 2000; // m
+		const Lbeam2 = W12 + T1 + S1; // m
 		// calculation for beam positions
 		const Bstep = (param.B1 + param.B2) / 1000; // m
 		const Nb1 = Math.floor(param.L1 / Bstep);
@@ -185,7 +191,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop1.addPoint(point(pt2c.cx, pt2c.cy, ShapePoint.eTri2));
 		// figTop2
 		// figSection
+		figSection.addSecond(ctrRectangle(-Lbeam2, 0, 2 * Lbeam2, H1));
+		figSection.addMainO(ctrRectangle(-Lbeam2 + S1, H1, T1, H2));
+		figSection.addMainO(ctrRectangle(W12, H1, T1, H2));
 		// figSide
+		for (let ii = 0; ii < 10; ii++) {
+			figSide.addSecond(ctrRectangle(ii * Bstep, 0, 2 * Wbeam2, H1));
+		}
+		figSide.addMainO(ctrRectangle(0, H1, 2 * Wbeam2 + 10 * Bstep, H2));
 		// final figure list
 		rGeome.fig = {
 			faceTop1: figTop1,
@@ -201,7 +214,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_beam`,
 					face: `${designName}_faceTop1`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.H1,
+					length: H1,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
 				},
@@ -209,9 +222,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					outName: `subpax_${designName}_rail`,
 					face: `${designName}_faceTop2`,
 					extrudeMethod: EExtrude.eLinearOrtho,
-					length: param.H2,
+					length: H2,
 					rotate: [0, 0, 0],
-					translate: [0, 0, 0]
+					translate: [0, 0, H1]
 				}
 			],
 			volumes: [
