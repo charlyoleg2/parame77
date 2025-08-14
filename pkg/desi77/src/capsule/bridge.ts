@@ -43,7 +43,7 @@ const pDef: tParamDef = {
 		pNumber('W2', 'm', 2, 1, 100, 0.1),
 		pNumber('H1', 'm', 2, 1, 100, 0.1),
 		pNumber('H2', 'm', 30, 1, 100, 0.1),
-		pDropdown('arcStyle', ['rectangular', 'half-circle', 'gothic']),
+		pDropdown('arcStyle', ['gothic', 'half-circle', 'rectangular']),
 		pNumber('Ea', 'm', 10, 1, 100, 0.1),
 		pSectionSeparator('Transversal'),
 		pNumber('W3', 'm', 10, 1, 100, 1),
@@ -110,25 +110,59 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const W12 = param.W1 / 2;
 		const W32 = param.W3 / 2;
 		const W42 = param.W4 / 2;
+		const Hg = W12 + param.Ea;
 		const H12 = param.H1 + param.H2;
 		const La = param.W2 + param.N1 * (param.W1 + param.W2);
 		const Lb = La - param.Ix1 - param.Ix2;
 		// step-5 : checks on the parameter values
 		if (param.H2 < W12 && param.arcStyle === 1) {
-			throw `err116: H2 ${param.H2} is too small compare to W1 ${param.W1}`;
+			throw `err116: H2 ${param.H2} is too small compare to W1 ${param.W1} m`;
+		}
+		if (param.H2 < Hg && param.arcStyle === 0) {
+			throw `err125: H2 ${param.H2} is too small compare to W1 ${param.W1} and Ea ${param.Ea} m`;
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Bridge length: ${ffix(Lb)} m\n`;
 		// sub-function
 		// figArcade
-		const ctrArcade = contour(0, 0)
-			.addSegStrokeR(0, -H12)
-			.addSegStrokeR(La, 0)
-			.addSegStrokeR(0, H12)
-			.closeSegStroke();
+		const ctrArcade = contour(0, 0).addSegStrokeR(0, -H12).addSegStrokeR(param.W2, 0);
+		for (let ii = 0; ii < param.N1; ii++) {
+			switch (param.arcStyle) {
+				case 1:
+					// half-circle
+					ctrArcade
+						.addSegStrokeR(0, param.H2 - W12)
+						.addPointR(W12, W12)
+						.addPointR(2 * W12, 0)
+						.addSegArc2()
+						.addSegStrokeR(0, -param.H2 + W12)
+						.addSegStrokeR(param.W2, 0);
+					break;
+				case 0:
+					// gothic
+					ctrArcade
+						.addSegStrokeR(0, param.H2 - Hg)
+						.addPointR(W12, Hg)
+						.addSegArc3(pi2, true)
+						.addPointR(W12, -Hg)
+						.addSegArc3(pi2, false)
+						.addSegStrokeR(0, -param.H2 + Hg)
+						.addSegStrokeR(param.W2, 0);
+					break;
+				default:
+					// rectangular
+					ctrArcade
+						.addSegStrokeR(0, param.H2)
+						.addSegStrokeR(param.W1, 0)
+						.addSegStrokeR(0, -param.H2)
+						.addSegStrokeR(param.W2, 0);
+			}
+		}
+		ctrArcade.addSegStrokeR(0, H12).closeSegStroke();
 		figArcade.addMainO(ctrArcade);
 		// figColumn
 		const ctrColumn = contour(-W32, 0)
