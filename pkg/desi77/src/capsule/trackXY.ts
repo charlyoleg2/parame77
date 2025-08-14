@@ -16,7 +16,7 @@ import type {
 import {
 	//withinZeroPi,
 	//withinPiPi,
-	//ShapePoint,
+	ShapePoint,
 	point,
 	contour,
 	//contourCircle,
@@ -49,8 +49,8 @@ const pDef: tParamDef = {
 		pNumber('H2', 'mm', 200, 1, 500, 1),
 		pSectionSeparator('Track'),
 		pNumber('a0', 'degree', 30, -180, 180, 1),
-		pNumber('a1', 'degree', -40, -180, 180, 1),
-		pNumber('a2', 'degree', 30, -180, 180, 1),
+		pNumber('a1', 'degree', -120, -180, 180, 1),
+		pNumber('a2', 'degree', 70, -180, 180, 1),
 		pNumber('L1', 'm', 30, 0.01, 200, 0.01),
 		pNumber('L2', 'm', 1, 0.01, 200, 0.01),
 		pNumber('L3', 'm', 20, 0.01, 200, 0.01),
@@ -90,12 +90,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
-		//const pi2 = Math.PI / 2;
+		const pi2 = Math.PI / 2;
 		const A0 = degToRad(param.a0);
 		const A1 = degToRad(param.a1);
 		const A2 = degToRad(param.a2);
-		const Lr1 = A1 * param.r1;
-		const Lr2 = A2 * param.r2;
+		const Lr1 = Math.abs(A1) * param.r1;
+		const Lr2 = Math.abs(A2) * param.r2;
 		const Ltot = param.L1 + Lr1 + param.L2 + Lr2 + param.L3;
 		const A1b = A0 + A1;
 		const A2b = A1b + A2;
@@ -112,11 +112,17 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Rb1 = param.L1 - Nb1 * Bstep;
 		const Nb1c = Math.floor((Rb1 + Lr1) / Bstep);
 		const Rb1c = Rb1 + Lr1 - Nb1c * Bstep;
+		const a1c = (Math.sign(A1) * Bstep) / param.r1;
+		const a1ci = (Math.sign(A1) * Rb1) / param.r1;
 		const Nb2 = Math.floor((Rb1c + param.L2) / Bstep);
 		const Rb2 = Rb1c + param.L2 - Nb2 * Bstep;
 		const Nb2c = Math.floor((Rb2 + Lr2) / Bstep);
 		const Rb2c = Rb2 + Lr2 - Nb2c * Bstep;
+		const a2c = (Math.sign(A2) * Bstep) / param.r2;
+		const a2ci = (Math.sign(A2) * Rb2) / param.r2;
 		const Nb3 = Math.floor((Rb2c + param.L3) / Bstep);
+		const Nbeam1 = 1 + Math.floor(Ltot / Bstep);
+		const Nbeam2 = 1 + Nb1 + Nb1c + Nb2 + Nb2c + Nb3;
 		//const Rb3 = Rb2c + param.L3 - Nb3 * Bstep;
 		// step-5 : checks on the parameter values
 		if (Math.abs(param.a1) < 0.5) {
@@ -127,7 +133,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// step-6 : any logs
 		rGeome.logstr += `Track-XY length: ${ffix(Ltot)} m\n`;
-		rGeome.logstr += `Beam size: ${ffix(2 * Lbeam2)} x ${ffix(2 * Wbeam2)} m\n`;
+		rGeome.logstr += `Beam number: ${Nbeam1} ${Nbeam2}, size: ${ffix(2 * Lbeam2)} x ${ffix(2 * Wbeam2)} m\n`;
 		rGeome.logstr += `Final orientation: ${ffix(radToDeg(A2b))} degree\n`;
 		// sub-function
 		function ctrBeam(iX: number, iY: number, iA: number): tContour {
@@ -146,20 +152,37 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeRP(A2b, param.L3);
 		figTop1.addSecond(ctrMidLine);
 		const pt0 = point(0, 0);
+		figTop1.addMainO(ctrBeam(pt0.cx, pt0.cy, A0));
 		for (let ii = 0; ii < Nb1; ii++) {
-			const pt = pt0.translatePolar(A0, ii * Bstep);
+			const pt = pt0.translatePolar(A0, (ii + 1) * Bstep);
 			figTop1.addMainO(ctrBeam(pt.cx, pt.cy, A0));
 		}
-		const pt1e = pt0.translatePolar(A0, param.L1).translatePolar(A0 + aLr1c, Lr1c);
+		const pt1b = pt0.translatePolar(A0, param.L1);
+		const pt1c = pt1b.translatePolar(A0 + Math.sign(A1) * pi2, param.r1);
+		for (let ii = 0; ii < Nb1c; ii++) {
+			const ia = A0 - Math.sign(A1) * pi2 - a1ci + (ii + 1) * a1c;
+			const pt = pt1c.translatePolar(ia, param.r1);
+			figTop1.addMainO(ctrBeam(pt.cx, pt.cy, ia - pi2));
+		}
+		const pt1e = pt1b.translatePolar(A0 + aLr1c, Lr1c);
 		for (let ii = 0; ii < Nb2; ii++) {
-			const pt = pt1e.translatePolar(A1b, ii * Bstep - Rb1c);
+			const pt = pt1e.translatePolar(A1b, (ii + 1) * Bstep - Rb1c);
 			figTop1.addMainO(ctrBeam(pt.cx, pt.cy, A1b));
 		}
-		const pt2e = pt1e.translatePolar(A1b, param.L2).translatePolar(A1b + aLr2c, Lr2c);
+		const pt2b = pt1e.translatePolar(A1b, param.L2);
+		const pt2c = pt2b.translatePolar(A1b + Math.sign(A2) * pi2, param.r2);
+		for (let ii = 0; ii < Nb2c; ii++) {
+			const ia = A1b - Math.sign(A2) * pi2 - a2ci + (ii + 1) * a2c;
+			const pt = pt2c.translatePolar(ia, param.r2);
+			figTop1.addMainO(ctrBeam(pt.cx, pt.cy, ia - pi2));
+		}
+		const pt2e = pt2b.translatePolar(A1b + aLr2c, Lr2c);
 		for (let ii = 0; ii < Nb3; ii++) {
-			const pt = pt2e.translatePolar(A2b, ii * Bstep - Rb2c);
+			const pt = pt2e.translatePolar(A2b, (ii + 1) * Bstep - Rb2c);
 			figTop1.addMainO(ctrBeam(pt.cx, pt.cy, A2b));
 		}
+		figTop1.addPoint(point(pt1c.cx, pt1c.cy, ShapePoint.eTri2));
+		figTop1.addPoint(point(pt2c.cx, pt2c.cy, ShapePoint.eTri2));
 		// figTop2
 		// figSection
 		// figSide
