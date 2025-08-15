@@ -2,7 +2,7 @@
 // simulation of train-capsule on XZ-track
 
 import type {
-	//tContour,
+	tContour,
 	//tOuterInner,
 	tParamDef,
 	tParamVal,
@@ -125,6 +125,20 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const pt5 = pt4.translatePolar(a5, param.L5);
 		const ava = Math.atan2(pt5.cy, pt5.cx);
 		const avp = 100 * Math.sin(ava);
+		const N1 = Math.floor(param.L1 / Bstep);
+		const N1r = param.L1 - N1 * Bstep;
+		const N1ra = N1r / r2;
+		const a2s = Bstep / r2;
+		const N2 = Math.floor((N1r + param.L2) / Bstep);
+		const N2r = N1r + param.L2 - N2 * Bstep;
+		const N3 = Math.floor((N2r + param.L3) / Bstep);
+		const N3r = N2r + param.L3 - N3 * Bstep;
+		const N3ra = N3r / r4;
+		const a4s = Bstep / r4;
+		const N4 = Math.floor((N3r + param.L4) / Bstep);
+		const N4r = N3r + param.L4 - N4 * Bstep;
+		const N5 = Math.floor((N4r + param.L5) / Bstep);
+		//const N5r = N4r + param.L5 - N5 * Bstep;
 		// step-5 : checks on the parameter values
 		if (aDiff13 < aMin) {
 			throw `err107: a1 ${ffix(param.a1)} and a3 ${ffix(param.a3)} (degree) are too closed`;
@@ -136,6 +150,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		rGeome.logstr += `Slope length: ${ffix(Ltot)}, X ${ffix(pt5.cx)} Y ${ffix(pt5.cy)} m, average ${ffix(avp)} % ${ffix(radToDeg(ava))} degree\n`;
 		rGeome.logstr += `Slope max transition: aDiffMax ${ffix(radToDeg(aDiffMax))} degree\n`;
 		// sub-function
+		function ctrBeam(ix: number, iy: number, ia: number): tContour {
+			const pt = point(ix, iy).translatePolar(ia + 2 * pi2, Wbeam2);
+			const rCtr = contour(pt.cx, pt.cy)
+				.addSegStrokeRP(ia, 2 * Wbeam2)
+				.addSegStrokeRP(ia + pi2, H1)
+				.addSegStrokeRP(ia + 2 * pi2, 2 * Wbeam2)
+				.addSegStrokeRP(ia - pi2, H1)
+				.closeSegStroke();
+			return rCtr;
+		}
 		// figSection
 		figSection.addSecond(ctrRectangle(-Lbeam2, 0, 2 * Lbeam2, H1));
 		figSection.addMainO(ctrRectangle(-Lbeam2 + S1, H1, T1, H2));
@@ -158,8 +182,31 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.addSegStrokeA(pt5.cx, pt5.cy);
 		figBeam.addSecond(ctrGround);
+		figBeam.addMainO(ctrBeam(pt0.cx, pt0.cy, a1));
+		for (let ii = 0; ii < N1; ii++) {
+			const pp = pt0.translatePolar(a1, (ii + 1) * Bstep);
+			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, a1));
+		}
+		for (let ii = 0; ii < N2; ii++) {
+			const ai = a1 + Math.sign(a2) * (-pi2 + (ii + 1) * a2s - N1ra);
+			const pp = pt2c.translatePolar(ai, r2);
+			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, ai + Math.sign(a2) * pi2));
+		}
+		for (let ii = 0; ii < N3; ii++) {
+			const pp = pt2.translatePolar(a3, (ii + 1) * Bstep - N2r);
+			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, a3));
+		}
+		for (let ii = 0; ii < N4; ii++) {
+			const ai = a3 + Math.sign(a4) * (-pi2 + (ii + 1) * a4s - N3ra);
+			const pp = pt4c.translatePolar(ai, r4);
+			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, ai + Math.sign(a4) * pi2));
+		}
+		for (let ii = 0; ii < N5; ii++) {
+			const pp = pt4.translatePolar(a5, (ii + 1) * Bstep - N4r);
+			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, a5));
+		}
 		// figRail
-		figRail.addSecond(ctrGround);
+		figRail.mergeFigure(figBeam, true);
 		// final figure list
 		rGeome.fig = {
 			faceBeam: figBeam,
