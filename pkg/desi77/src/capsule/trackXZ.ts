@@ -17,7 +17,7 @@ import {
 	//withinZeroPi,
 	//withinPiPi,
 	//ShapePoint,
-	//point,
+	point,
 	contour,
 	//contourCircle,
 	ctrRectangle,
@@ -90,6 +90,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
+		const pi2 = Math.PI / 2;
 		const Ltot = param.L1 + param.L2 + param.L3 + param.L4 + param.L5;
 		// conversion in meters
 		const H1 = param.H1 / 1000; // m
@@ -108,6 +109,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const aDiff13 = Math.abs(a3 - a1);
 		const aDiff35 = Math.abs(a5 - a3);
 		const aDiffMax = Math.max(aDiff13, aDiff35);
+		const a2 = a3 - a1;
+		const a4 = a5 - a3;
+		const r2 = Math.abs(param.L2 / a2);
+		const r4 = Math.abs(param.L4 / a4);
+		const pt0 = point(0, 0);
+		const pt1 = pt0.translatePolar(a1, param.L1);
+		const pt2c = pt1.translatePolar(a1 + Math.sign(a2) * pi2, r2);
+		const pt2m = pt2c.translatePolar(a1 - Math.sign(a2) * pi2 + a2 / 2, r2);
+		const pt2 = pt2c.translatePolar(a1 - Math.sign(a2) * pi2 + a2, r2);
+		const pt3 = pt2.translatePolar(a3, param.L3);
+		const pt4c = pt3.translatePolar(a3 + Math.sign(a4) * pi2, r4);
+		const pt4m = pt4c.translatePolar(a3 - Math.sign(a4) * pi2 + a4 / 2, r4);
+		const pt4 = pt4c.translatePolar(a3 - Math.sign(a4) * pi2 + a4, r4);
+		const pt5 = pt4.translatePolar(a5, param.L5);
+		const ava = Math.atan2(pt5.cy, pt5.cx);
+		const avp = 100 * Math.sin(ava);
 		// step-5 : checks on the parameter values
 		if (aDiff13 < aMin) {
 			throw `err107: a1 ${ffix(param.a1)} and a3 ${ffix(param.a3)} (degree) are too closed`;
@@ -116,7 +133,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err107: a3 ${ffix(param.a3)} and a5 ${ffix(param.a5)} (degree) are too closed`;
 		}
 		// step-6 : any logs
-		rGeome.logstr += `Slope length: ${ffix(Ltot)} m\n`;
+		rGeome.logstr += `Slope length: ${ffix(Ltot)}, X ${ffix(pt5.cx)} Y ${ffix(pt5.cy)} m, average ${ffix(avp)} % ${ffix(radToDeg(ava))} degree\n`;
 		rGeome.logstr += `Slope max transition: aDiffMax ${ffix(radToDeg(aDiffMax))} degree\n`;
 		// sub-function
 		// figSection
@@ -130,10 +147,16 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop.addMainO(ctrRectangle(0, W12, 2 * Wbeam2 + 10 * Bstep, T1));
 		figTop.addMainO(ctrRectangle(0, -W12 - T1, 2 * Wbeam2 + 10 * Bstep, T1));
 		// figBeam
-		const ctrGround = contour(0, 0)
-			.addSegStrokeRP(a1, param.L1)
-			.addSegStrokeRP(a3, param.L3)
-			.addSegStrokeRP(a5, param.L5);
+		const ctrGround = contour(pt0.cx, pt0.cy)
+			.addSegStrokeA(pt1.cx, pt1.cy)
+			.addPointA(pt2m.cx, pt2m.cy)
+			.addPointA(pt2.cx, pt2.cy)
+			.addSegArc2()
+			.addSegStrokeA(pt3.cx, pt3.cy)
+			.addPointA(pt4m.cx, pt4m.cy)
+			.addPointA(pt4.cx, pt4.cy)
+			.addSegArc2()
+			.addSegStrokeA(pt5.cx, pt5.cy);
 		figBeam.addSecond(ctrGround);
 		// figRail
 		figRail.addSecond(ctrGround);
