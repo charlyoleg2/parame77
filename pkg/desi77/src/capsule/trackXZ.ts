@@ -18,7 +18,7 @@ import {
 	//withinPiPi,
 	//ShapePoint,
 	//point,
-	//contour,
+	contour,
 	//contourCircle,
 	ctrRectangle,
 	figure,
@@ -48,13 +48,13 @@ const pDef: tParamDef = {
 		pNumber('H1', 'mm', 100, 1, 500, 1),
 		pNumber('H2', 'mm', 200, 1, 500, 1),
 		pSectionSeparator('Slope'),
-		pNumber('a1', 'degree', 30, -180, 180, 1),
-		pNumber('a3', 'degree', -120, -180, 180, 1),
-		pNumber('a5', 'degree', 70, -180, 180, 1),
+		pNumber('a1', '%', 5, -90, 90, 1),
+		pNumber('a3', '%', 20, -90, 90, 1),
+		pNumber('a5', '%', 2, -90, 90, 1),
 		pNumber('L1', 'm', 30, 0.01, 200, 0.01),
-		pNumber('L2', 'm', 1, 0.01, 200, 0.01),
+		pNumber('L2', 'm', 5, 0.01, 200, 0.01),
 		pNumber('L3', 'm', 20, 0.01, 200, 0.01),
-		pNumber('L4', 'm', 20, 0.01, 200, 0.01),
+		pNumber('L4', 'm', 3, 0.01, 200, 0.01),
 		pNumber('L5', 'm', 20, 0.01, 200, 0.01)
 	],
 	paramSvg: {
@@ -65,9 +65,9 @@ const pDef: tParamDef = {
 		B2: 'trackXZ_top.svg',
 		H1: 'trackXZ_side.svg',
 		H2: 'trackXZ_side.svg',
-		a0: 'trackXZ_slope.svg',
 		a1: 'trackXZ_slope.svg',
-		a2: 'trackXZ_slope.svg',
+		a3: 'trackXZ_slope.svg',
+		a5: 'trackXZ_slope.svg',
 		L1: 'trackXZ_slope.svg',
 		L2: 'trackXZ_slope.svg',
 		L3: 'trackXZ_slope.svg',
@@ -83,8 +83,10 @@ const pDef: tParamDef = {
 
 function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const rGeome = initGeom(pDef.partName + suffix);
-	const figSection = figure();
+	const figBeam = figure();
+	const figRail = figure();
 	const figTop = figure();
+	const figSection = figure();
 	rGeome.logstr += `${rGeome.partName} simTime: ${t}\n`;
 	try {
 		// step-4 : some preparation calculation
@@ -99,9 +101,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const Lbeam2 = W12 + T1 + S1; // m
 		const Bstep = (param.B1 + param.B2) / 1000; // m
 		// slope angles
-		const a1 = degToRad(param.a1);
-		const a3 = degToRad(param.a3);
-		const a5 = degToRad(param.a5);
+		const a1 = Math.asin(param.a1 / 100);
+		const a3 = Math.asin(param.a3 / 100);
+		const a5 = Math.asin(param.a5 / 100);
 		const aMin = degToRad(0.1);
 		const aDiff13 = Math.abs(a3 - a1);
 		const aDiff35 = Math.abs(a5 - a3);
@@ -123,11 +125,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figSection.addMainO(ctrRectangle(W12, H1, T1, H2));
 		// figTop
 		for (let ii = 0; ii < 11; ii++) {
-			figTop.addSecond(ctrRectangle(ii * Bstep, 0, 2 * Wbeam2, H1));
+			figTop.addSecond(ctrRectangle(ii * Bstep, -Lbeam2, 2 * Wbeam2, 2 * Lbeam2));
 		}
-		figTop.addMainO(ctrRectangle(0, H1, 2 * Wbeam2 + 10 * Bstep, H2));
+		figTop.addMainO(ctrRectangle(0, W12, 2 * Wbeam2 + 10 * Bstep, T1));
+		figTop.addMainO(ctrRectangle(0, -W12 - T1, 2 * Wbeam2 + 10 * Bstep, T1));
+		// figBeam
+		const ctrGround = contour(0, 0)
+			.addSegStrokeRP(a1, param.L1)
+			.addSegStrokeRP(a3, param.L3)
+			.addSegStrokeRP(a5, param.L5);
+		figBeam.addSecond(ctrGround);
+		// figRail
+		figRail.addSecond(ctrGround);
 		// final figure list
 		rGeome.fig = {
+			faceBeam: figBeam,
+			faceRail: figRail,
 			faceTop: figTop,
 			faceSection: figSection
 		};
