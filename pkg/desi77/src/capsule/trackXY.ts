@@ -191,42 +191,52 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figTop1.addPoint(point(pt2c.cx, pt2c.cy, ShapePoint.eTri2));
 		// figTop2
 		figTop2.mergeFigure(figTop1, true);
-		const pR11 = point(0, 0).translatePolar(A0 - pi2, W12);
-		const pR12 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1 / 2, param.r1 - W12 - T1);
-		const pR13 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1, param.r1 - W12 - T1);
-		const pR14 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2 / 2, param.r2 - W12 - T1);
-		const pR15 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2, param.r2 - W12 - T1);
-		const pR16 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2 + A2 / 2, param.r2 - W12);
-		const pR17 = pt2c.translatePolar(A1b - Math.sign(A2) * pi2, param.r2 - W12);
-		const pR18 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2 + A1 / 2, param.r1 - W12);
-		const pR19 = pt1c.translatePolar(A0 - Math.sign(A1) * pi2, param.r1 - W12);
-		const ctrRail1 = contour(pR11.cx, pR11.cy)
-			.addSegStrokeRP(A0 - pi2, T1)
-			.addSegStrokeRP(A0, param.L1)
-			.addPointA(pR12.cx, pR12.cy)
-			.addPointA(pR13.cx, pR13.cy)
-			.addSegArc2()
-			.addSegStrokeRP(A1b, param.L2)
-			.addPointA(pR14.cx, pR14.cy)
-			.addPointA(pR15.cx, pR15.cy)
-			.addSegArc2()
-			.addSegStrokeRP(A2b, param.L3)
-			.addSegStrokeRP(A2b + pi2, T1)
-			.addSegStrokeRP(A2b + Math.PI, param.L3)
-			.addPointA(pR16.cx, pR16.cy)
-			.addPointA(pR17.cx, pR17.cy)
-			.addSegArc2()
-			.addSegStrokeRP(A1b + Math.PI, param.L2)
-			.addPointA(pR18.cx, pR18.cy)
-			.addPointA(pR19.cx, pR18.cy)
-			.addSegArc2()
-			.closeSegStroke();
-		const pR21 = point(0, 0).translatePolar(A0 + pi2, W12 + T1);
-		const ctrRail2 = contour(pR21.cx, pR21.cy)
-			.addSegStrokeRP(A0 - pi2, T1)
-			.addSegStrokeRP(A0, param.L1)
-			.addSegStrokeRP(A0 + pi2, T1)
-			.closeSegStroke();
+		function ctrRail(iW12: number, iT1: number, iSign: number): tContour {
+			const aR0 = A0 + iSign * pi2;
+			const aR10 = A0 - Math.sign(A1) * pi2;
+			const aR11 = A0 - Math.sign(A1) * pi2 + A1 / 2;
+			const aR12 = A0 - Math.sign(A1) * pi2 + A1;
+			const aR20 = A1b - Math.sign(A2) * pi2;
+			const aR21 = A1b - Math.sign(A2) * pi2 + A2 / 2;
+			const aR22 = A1b - Math.sign(A2) * pi2 + A2;
+			const sR11 = iSign * Math.sign(A1) * iW12;
+			const sR12 = iSign * Math.sign(A1) * (iW12 + iT1);
+			const sR21 = iSign * Math.sign(A2) * iW12;
+			const sR22 = iSign * Math.sign(A2) * (iW12 + iT1);
+			const pR11 = point(0, 0).translatePolar(aR0, iW12);
+			const pR12 = pt1c.translatePolar(aR11, param.r1 - sR12);
+			const pR13 = pt1c.translatePolar(aR12, param.r1 - sR12);
+			const pR14 = pt2c.translatePolar(aR21, param.r2 - sR22);
+			const pR15 = pt2c.translatePolar(aR22, param.r2 - sR22);
+			const pR16 = pt2c.translatePolar(aR21, param.r2 - sR21);
+			const pR17 = pt2c.translatePolar(aR20, param.r2 - sR21);
+			const pR18 = pt1c.translatePolar(aR11, param.r1 - sR11);
+			const pR19 = pt1c.translatePolar(aR10, param.r1 - sR11);
+			const rCtr = contour(pR11.cx, pR11.cy)
+				.addSegStrokeRP(aR0, iT1)
+				.addSegStrokeRP(A0, param.L1)
+				.addPointA(pR12.cx, pR12.cy)
+				.addPointA(pR13.cx, pR13.cy)
+				.addSegArc2()
+				.addSegStrokeRP(A1b, param.L2)
+				.addPointA(pR14.cx, pR14.cy)
+				.addPointA(pR15.cx, pR15.cy)
+				.addSegArc2()
+				.addSegStrokeRP(A2b, param.L3)
+				.addSegStrokeRP(A2b + pi2, iT1)
+				.addSegStrokeRP(A2b + Math.PI, param.L3)
+				.addPointA(pR16.cx, pR16.cy)
+				.addPointA(pR17.cx, pR17.cy)
+				.addSegArc2()
+				.addSegStrokeRP(A1b + Math.PI, param.L2)
+				.addPointA(pR18.cx, pR18.cy)
+				.addPointA(pR19.cx, pR18.cy)
+				.addSegArc2()
+				.closeSegStroke();
+			return rCtr;
+		}
+		const ctrRail1 = ctrRail(W12, T1, -1);
+		const ctrRail2 = ctrRail(W12, T1, 1);
 		figTop2.addMainO(ctrRail1);
 		figTop2.addMainO(ctrRail2);
 		figTop1.addSecond(ctrRail1);
