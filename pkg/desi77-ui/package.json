@@ -33,7 +33,7 @@
 		"clean": "rimraf .svelte-kit build node_modules static/pgdsvg"
 	},
 	"dependencies": {
-		"desi77": "^0.1.23",
+		"desi77": "^0.1.24",
 		"geometrix": "^1.0.24",
 		"geomui": "^1.0.24"
 	},
@@ -41,7 +41,7 @@
 		"@atao60/fse-cli": "^0.1.9",
 		"@sveltejs/adapter-auto": "^6.1.0",
 		"@sveltejs/adapter-static": "^3.0.9",
-		"@sveltejs/kit": "^2.31.0",
+		"@sveltejs/kit": "^2.31.1",
 		"@sveltejs/vite-plugin-svelte": "^6.1.2",
 		"@types/eslint": "^9.6.1",
 		"eslint": "^9.33.0",
