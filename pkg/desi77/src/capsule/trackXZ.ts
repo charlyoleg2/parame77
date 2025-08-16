@@ -138,6 +138,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const N4 = Math.floor((N3r + param.L4) / Bstep);
 		const N4r = N3r + param.L4 - N4 * Bstep;
 		const N5 = Math.floor((N4r + param.L5) / Bstep);
+		const H12 = H1 + H2;
 		//const N5r = N4r + param.L5 - N5 * Bstep;
 		// step-5 : checks on the parameter values
 		if (aDiff13 < aMin) {
@@ -207,6 +208,45 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		// figRail
 		figRail.mergeFigure(figBeam, true);
+		const pr0 = pt0.translatePolar(a1 + pi2, H1);
+		const pr0b = pt0.translatePolar(a1 + pi2, H12);
+		const pr1 = pt1.translatePolar(a1 + pi2, H1);
+		const pr1b = pt1.translatePolar(a1 + pi2, H12);
+		const pr2m = pt2m.translatePolar((a1 + a3) / 2 + pi2, H1);
+		const pr2mb = pt2m.translatePolar((a1 + a3) / 2 + pi2, H12);
+		const pr2 = pt2.translatePolar(a3 + pi2, H1);
+		const pr2b = pt2.translatePolar(a3 + pi2, H12);
+		const pr3 = pt3.translatePolar(a3 + pi2, H1);
+		const pr3b = pt3.translatePolar(a3 + pi2, H12);
+		const pr4m = pt4m.translatePolar((a3 + a5) / 2 + pi2, H1);
+		const pr4mb = pt4m.translatePolar((a3 + a5) / 2 + pi2, H12);
+		const pr4 = pt4.translatePolar(a5 + pi2, H1);
+		const pr4b = pt4.translatePolar(a5 + pi2, H12);
+		const pr5 = pt5.translatePolar(a5 + pi2, H1);
+		const pr5b = pt5.translatePolar(a5 + pi2, H12);
+		const ctrRail = contour(pr0.cx, pr0.cy)
+			.addSegStrokeA(pr1.cx, pr1.cy)
+			.addPointA(pr2m.cx, pr2m.cy)
+			.addPointA(pr2.cx, pr2.cy)
+			.addSegArc2()
+			.addSegStrokeA(pr3.cx, pr3.cy)
+			.addPointA(pr4m.cx, pr4m.cy)
+			.addPointA(pr4.cx, pr4.cy)
+			.addSegArc2()
+			.addSegStrokeA(pr5.cx, pr5.cy)
+			.addSegStrokeA(pr5b.cx, pr5b.cy)
+			.addSegStrokeA(pr4b.cx, pr4b.cy)
+			.addPointA(pr4mb.cx, pr4mb.cy)
+			.addPointA(pr3b.cx, pr3b.cy)
+			.addSegArc2()
+			.addSegStrokeA(pr2b.cx, pr2b.cy)
+			.addPointA(pr2mb.cx, pr2mb.cy)
+			.addPointA(pr1b.cx, pr1b.cy)
+			.addSegArc2()
+			.addSegStrokeA(pr0b.cx, pr0b.cy)
+			.closeSegStroke();
+		figRail.addMainO(ctrRail);
+		figBeam.addSecond(ctrRail);
 		// final figure list
 		rGeome.fig = {
 			faceBeam: figBeam,
@@ -225,13 +265,33 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: 2 * Lbeam2,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_rail1`,
+					face: `${designName}_faceRail`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: T1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, S1]
+				},
+				{
+					outName: `subpax_${designName}_rail2`,
+					face: `${designName}_faceRail`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: T1,
+					rotate: [0, 0, 0],
+					translate: [0, 0, Lbeam2 + W12]
 				}
 			],
 			volumes: [
 				{
 					outName: `pax_${designName}`,
 					boolMethod: EBVolume.eUnion,
-					inList: [`subpax_${designName}_beam`]
+					inList: [
+						`subpax_${designName}_beam`,
+						`subpax_${designName}_rail1`,
+						`subpax_${designName}_rail2`
+					]
 				}
 			]
 		};
