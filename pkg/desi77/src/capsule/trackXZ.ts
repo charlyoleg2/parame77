@@ -125,8 +125,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const pt5 = pt4.translatePolar(a5, param.L5);
 		const ava = Math.atan2(pt5.cy, pt5.cx);
 		const avp = 100 * Math.sin(ava);
-		const N1 = Math.floor(param.L1 / Bstep);
-		const N1r = param.L1 - N1 * Bstep;
+		const N0r = Bstep - Wbeam2;
+		const N1 = Math.floor(N0r + param.L1 / Bstep);
+		const N1r = N0r + param.L1 - N1 * Bstep;
 		const N1ra = N1r / r2;
 		const a2s = Bstep / r2;
 		const N2 = Math.floor((N1r + param.L2) / Bstep);
@@ -138,6 +139,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const N4 = Math.floor((N3r + param.L4) / Bstep);
 		const N4r = N3r + param.L4 - N4 * Bstep;
 		const N5 = Math.floor((N4r + param.L5) / Bstep);
+		const beamNb = N1 + N2 + N3 + N4 + N5;
+		const beamNb2 = Math.floor((N0r + Ltot) / Bstep);
 		const H12 = H1 + H2;
 		//const N5r = N4r + param.L5 - N5 * Bstep;
 		// step-5 : checks on the parameter values
@@ -150,6 +153,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		// step-6 : any logs
 		rGeome.logstr += `Slope length: ${ffix(Ltot)}, X ${ffix(pt5.cx)} Y ${ffix(pt5.cy)} m, average ${ffix(avp)} % ${ffix(radToDeg(ava))} degree\n`;
 		rGeome.logstr += `Slope max transition: aDiffMax ${ffix(radToDeg(aDiffMax))} degree\n`;
+		rGeome.logstr += `Beam number: ${beamNb} ${beamNb2}, size: ${ffix(2 * Lbeam2)} x ${ffix(2 * Wbeam2)} m\n`;
 		// sub-function
 		function ctrBeam(ix: number, iy: number, ia: number): tContour {
 			const pt = point(ix, iy).translatePolar(ia + 2 * pi2, Wbeam2);
@@ -183,9 +187,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegArc2()
 			.addSegStrokeA(pt5.cx, pt5.cy);
 		figBeam.addSecond(ctrGround);
-		figBeam.addMainO(ctrBeam(pt0.cx, pt0.cy, a1));
 		for (let ii = 0; ii < N1; ii++) {
-			const pp = pt0.translatePolar(a1, (ii + 1) * Bstep);
+			const pp = pt0.translatePolar(a1, (ii + 1) * Bstep - N0r);
 			figBeam.addMainO(ctrBeam(pp.cx, pp.cy, a1));
 		}
 		for (let ii = 0; ii < N2; ii++) {
