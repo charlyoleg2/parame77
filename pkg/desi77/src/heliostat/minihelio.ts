@@ -156,11 +156,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R1 = param.D1 / 2;
 		const R2 = param.D2 / 2;
 		const R3 = param.D3 / 2;
+		const R4 = param.D4 / 2;
 		const R8 = param.D8 / 2;
 		const Rm = param.Dm / 2;
 		const RmE = Rm + param.Em;
 		const R12 = R2 - R1;
 		const R23 = R2 - R3;
+		const R34 = R3 - R4;
+		const R23b = (param.T1 * R23) / param.H3;
 		const Wbottom2 = param.W1 / 2 - param.H4;
 		const H123 = param.H1 + param.H2 + param.H3;
 		const H567 = param.H5 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7;
@@ -196,6 +199,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		}
 		if (R23 < 0.1) {
 			throw `err139: D2 ${ffix(param.D2)} is too small compare to D3 ${ffix(param.D3)} mm`;
+		}
+		if (R34 < 0.1) {
+			throw `err203: D3 ${ffix(param.D3)} is too small compare to D4 ${ffix(param.D4)} mm`;
 		}
 		if (param.H2 < param.T1) {
 			throw `err142: H2 ${ffix(param.H2)} is too small compare to T1 ${ffix(param.T1)} mm`;
@@ -241,8 +247,10 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.addSegStrokeR(sign * R12, 0)
 				.addSegStrokeR(0, param.H2)
 				.addSegStrokeR(-sign * R23, param.H3)
-				.addSegStrokeR(-sign * param.T1, 0)
-				.addSegStrokeR(sign * R23, -param.H3)
+				.addSegStrokeR(-sign * R34, 0)
+				.addSegStrokeR(0, -param.T1)
+				.addSegStrokeR(sign * (R34 - param.T1 + R23b), 0)
+				.addSegStrokeR(sign * (R23 - R23b), -param.H3 + param.T1)
 				.addSegStrokeR(0, -param.H2 + param.T1)
 				.addSegStrokeR(-sign * R12, 0)
 				.addSegStrokeR(0, -param.H1 - param.T1)
