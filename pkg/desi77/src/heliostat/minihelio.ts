@@ -164,6 +164,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const R23 = R2 - R3;
 		const R34 = R3 - R4;
 		const R23b = (param.T1 * R23) / param.H3;
+		const D8T2 = param.D8 + 2 * param.T2;
+		const R8T2 = D8T2 / 2;
 		const Wbottom2 = param.W1 / 2 - param.H4;
 		const H123 = param.H1 + param.H2 + param.H3;
 		const H567 = param.H5 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7;
@@ -174,6 +176,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const H6b = param.H6 + param.T2;
 		const H18pre = H15 + param.T2 + param.H8;
 		const H18b = H18pre - Rm;
+		const H18c = H18pre - R8T2;
 		const H18 = H18pre - param.Hm / 2;
 		const L8 = (param.W1 - param.Wm) / 2;
 		const H17 = H15 + param.T2 + param.N1 * (param.H6 + param.T2) + param.H7;
@@ -193,6 +196,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const mirrorSurfaceN = param.N1 * mirrorSurface;
 		const mh2 = param.Hm / 2;
 		const aSSun2 = degToRad(param.aSolidSun) / 2;
+		const WS1 = param.W1 / 2 - param.S1;
 		// step-5 : checks on the parameter values
 		if (R12 < 0.1) {
 			throw `err134: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -362,6 +366,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figFrameMid.addSecond(ctrRectangle(-param.Wm / 2, H18 + ii * H6b, param.Wm, param.Hm));
 			figFrameMid.addSecond(ctrRectangle(-param.W1 / 2, H18b + ii * H6b, L8, param.Dm));
 			figFrameMid.addSecond(ctrRectangle(param.Wm / 2, H18b + ii * H6b, L8, param.Dm));
+			figFrameMid.addSecond(ctrRectangle(-param.W1 / 2, H18c + ii * H6b, param.S1, D8T2));
+			figFrameMid.addSecond(ctrRectangle(WS1, H18c + ii * H6b, param.S1, D8T2));
 		}
 		// figFrameTop
 		figFrameTop.mergeFigure(figFrameMid, true);
