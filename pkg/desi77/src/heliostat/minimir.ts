@@ -41,7 +41,7 @@ const pDef: tParamDef = {
 		pNumber('L1', 'mm', 50, 10, 2000, 1),
 		pNumber('G1', 'mm', 50, 10, 2000, 1),
 		pNumber('G2', 'mm', 5, 1, 500, 1),
-		pNumber('G3', 'mm', 5, 1, 500, 1),
+		pNumber('G3', 'mm', 5, 0, 500, 1),
 		pSectionSeparator('Wheel'),
 		pNumber('D1', 'mm', 1, 0, 200, 0.5),
 		pNumber('D2', 'mm', 2, 0.5, 200, 0.5),
