@@ -593,9 +593,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			d3Frame.push(`subpax_${designName}_frameBand2`);
 			d3Frame.push(`subpax_${designName}_frameTop`);
 			d3Frame.push(`subpax_${designName}_frameBottom`);
+			d3Frame.push(`subpax_${designName}_frameBottomPlate`);
 			d3Frame.push(`subpax_${designName}_frameMid`);
 			d3Frame.push(`subpax_${designName}_frameSide1`);
 			d3Frame.push(`subpax_${designName}_frameSide2`);
+			d3Frame.push(`subpax_${designName}_frameSideAxis1`);
+			d3Frame.push(`subpax_${designName}_frameSideAxis2`);
 		}
 		if (param.d3_mirrors === 1) {
 			d3Mirror.push(`subpax_${designName}_mirrorSide`);
@@ -646,6 +649,14 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					translate: [0, param.W3 / 2, 0]
 				},
 				{
+					outName: `subpax_${designName}_frameBottomPlate`,
+					face: `${designName}_faceFrameBottomPlate`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T2,
+					rotate: [0, 0, 0],
+					translate: [0, 0, H123]
+				},
+				{
 					outName: `subpax_${designName}_frameMid`,
 					face: `${designName}_faceFrameMid`,
 					extrudeMethod: EExtrude.eLinearOrtho,
@@ -668,6 +679,22 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.T2,
 					rotate: [pi2, 0, pi2],
 					translate: [-W1b2 - param.T2, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameSideAxis1`,
+					face: `${designName}_faceFrameSideHAxis`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.S1,
+					rotate: [pi2, 0, pi2],
+					translate: [W12 - param.S1, 0, 0]
+				},
+				{
+					outName: `subpax_${designName}_frameSideAxis2`,
+					face: `${designName}_faceFrameSideHAxis`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.S1,
+					rotate: [pi2, 0, pi2],
+					translate: [-W12, 0, 0]
 				},
 				{
 					outName: `subpax_${designName}_mirrorSide`,
