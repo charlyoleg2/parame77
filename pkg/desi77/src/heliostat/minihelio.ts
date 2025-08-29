@@ -142,7 +142,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figFrameBottom = figure();
 	const figFrameTop = figure();
 	const figFrameSide = figure();
+	const figFrameSideHAxis = figure();
 	const figFrameMid = figure();
+	const figFootButtress = figure();
 	const figMirrorSide = figure();
 	const figMirrorAxis = figure();
 	const figOneMirror = figure();
@@ -207,6 +209,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R34 < 0.1) {
 			throw `err203: D3 ${ffix(param.D3)} is too small compare to D4 ${ffix(param.D4)} mm`;
 		}
+		if (R1 < param.T1) {
+			throw `err213: D1 ${ffix(param.D1)} is too small compare to T1 ${ffix(param.T1)} mm`;
+		}
 		if (param.H2 < param.T1) {
 			throw `err142: H2 ${ffix(param.H2)} is too small compare to T1 ${ffix(param.T1)} mm`;
 		}
@@ -259,6 +264,18 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 				.addSegStrokeR(-sign * R12, 0)
 				.addSegStrokeR(0, -param.H1 - param.T1)
 				.closeSegStroke();
+			return rCtr;
+		}
+		function ctrFootButtress(sign: number): tContour {
+			const rCtr = contour(sign * (R1 - param.T1), param.H1 + param.T1)
+				.addSegStrokeR(sign * R12, 0)
+				.addSegStrokeR(0, param.H2 - param.T1)
+				.addSegStrokeR(-sign * (R23 - R23b), param.H3 - param.T1)
+				.addSegStrokeR(-sign * (R34 - param.T1 + R23b), 0);
+			if (R4 < R1 - param.T1) {
+				rCtr.addSegStrokeR(sign * (R1 - param.T1 - R4), -H123 + param.T1);
+			}
+			rCtr.closeSegStroke();
 			return rCtr;
 		}
 		function ctrOval(iDelta: number): tContour {
@@ -369,6 +386,11 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			figFrameMid.addSecond(ctrRectangle(-param.W1 / 2, H18c + ii * H6b, param.S1, D8T2));
 			figFrameMid.addSecond(ctrRectangle(WS1, H18c + ii * H6b, param.S1, D8T2));
 		}
+		// figFootButtress
+		figFootButtress.addSecond(ctrFoot(1));
+		figFootButtress.addSecond(ctrFoot(-1));
+		figFootButtress.addMainO(ctrFootButtress(1));
+		figFootButtress.addMainO(ctrFootButtress(-1));
 		// figFrameTop
 		figFrameTop.mergeFigure(figFrameMid, true);
 		const ctrFrameTop = contour(-W1b2, H17)
@@ -431,6 +453,13 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.addSegStrokeR(0, -Hside1)
 			.closeSegStroke();
 		figFrameSide.addMainOI([ctrSide, ...ctrSideHoles]);
+		// figFrameSideHAxis
+		figFrameSideHAxis.mergeFigure(figFrameSide, true);
+		for (let ii = 0; ii < param.N1; ii++) {
+			const ctrHAxisI = contourCircle(0, H18pre + ii * H6b, R8);
+			const ctrHAxisE = contourCircle(0, H18pre + ii * H6b, R8T2);
+			figFrameSideHAxis.addMainOI([ctrHAxisE, ctrHAxisI]);
+		}
 		// figMirrorSide figMirrorAxis
 		const ctrMirrorSide = contour(-RmE, 0)
 			.addPointR(RmE, -RmE)
@@ -508,7 +537,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceFrameTop: figFrameTop,
 			faceFrameBottom: figFrameBottom,
 			faceFrameSide: figFrameSide,
+			faceFrameSideHAxis: figFrameSideHAxis,
 			faceFrameMid: figFrameMid,
+			faceFootButtress: figFootButtress,
 			faceMirrorSide: figMirrorSide,
 			faceMirrorAxis: figMirrorAxis,
 			faceOneMirror: figOneMirror
