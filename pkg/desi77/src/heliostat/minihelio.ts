@@ -145,6 +145,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 	const figFrameSideHAxis = figure();
 	const figFrameMid = figure();
 	const figFootButtress = figure();
+	const figFrameBottomPlate = figure();
 	const figMirrorSide = figure();
 	const figMirrorAxis = figure();
 	const figOneMirror = figure();
@@ -199,6 +200,12 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const mh2 = param.Hm / 2;
 		const aSSun2 = degToRad(param.aSolidSun) / 2;
 		const WS1 = param.W1 / 2 - param.S1;
+		const W32 = param.W3 / 2;
+		const H41 = param.H4 - param.T1;
+		const W42 = param.W4 / 2;
+		const T12 = param.T1 / 2;
+		const R241 = R2 - R4 - param.T1;
+		const aButtress = param.N2 > 0 ? (4 * pi2) / param.N2 : pi2;
 		// step-5 : checks on the parameter values
 		if (R12 < 0.1) {
 			throw `err134: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -209,6 +216,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		if (R34 < 0.1) {
 			throw `err203: D3 ${ffix(param.D3)} is too small compare to D4 ${ffix(param.D4)} mm`;
 		}
+		if (H41 < 0.1) {
+			throw `err216: H4 ${ffix(param.H4)} is too small compare to T1 ${ffix(param.T1)} mm`;
+		}
 		if (R1 < param.T1) {
 			throw `err213: D1 ${ffix(param.D1)} is too small compare to T1 ${ffix(param.T1)} mm`;
 		}
@@ -216,7 +226,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			throw `err142: H2 ${ffix(param.H2)} is too small compare to T1 ${ffix(param.T1)} mm`;
 		}
 		if (Wbottom2 < R3) {
-			throw `err151: W1 ${ffix(param.W1)} is too small compare to H4 ${ffix(param.H4)} mm`;
+			throw `err151: W1 ${ffix(param.W1)} is too small compare to H4 ${ffix(param.H4)} and D3 ${ffix(param.D3)} mm`;
 		}
 		if (W1b < 0) {
 			throw `err158: W1 ${ffix(param.W1)} is too small compare to T2 ${ffix(param.T2)} mm`;
@@ -391,6 +401,24 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFootButtress.addSecond(ctrFoot(-1));
 		figFootButtress.addMainO(ctrFootButtress(1));
 		figFootButtress.addMainO(ctrFootButtress(-1));
+		// figFrameBottomPlate
+		const ctrFBPlateE = ctrRectangle(-Wbottom2, -W32, 2 * Wbottom2, param.W3);
+		const ctrFBPlateI = contourCircle(0, 0, R4);
+		figFrameBottomPlate.addMainOI([ctrFBPlateE, ctrFBPlateI]);
+		figFrameBottomPlate.addSecond(ctrRectangle(-W1b2, -W32, H41, param.W3));
+		figFrameBottomPlate.addSecond(ctrRectangle(-W12, -W32, param.T2, param.W3));
+		figFrameBottomPlate.addSecond(ctrRectangle(Wbottom2, -W32, H41, param.W3));
+		figFrameBottomPlate.addSecond(ctrRectangle(W1b2, -W32, param.T2, param.W3));
+		figFrameBottomPlate.addSecond(ctrRectangle(-W1b2, -W42 - param.T2, W1b, param.T2));
+		figFrameBottomPlate.addSecond(ctrRectangle(-W1b2, W42, W1b, param.T2));
+		figFrameBottomPlate.addSecond(contourCircle(0, 0, R3));
+		figFrameBottomPlate.addSecond(contourCircle(0, 0, R2));
+		figFrameBottomPlate.addSecond(contourCircle(0, 0, R2 - param.T1));
+		figFrameBottomPlate.addSecond(contourCircle(0, 0, R1));
+		for (let ii = 0; ii < param.N2; ii++) {
+			const iCtr = ctrRectangle(R4, -T12, R241, param.T1).rotate(0, 0, ii * aButtress);
+			figFrameBottomPlate.addSecond(iCtr);
+		}
 		// figFrameTop
 		figFrameTop.mergeFigure(figFrameMid, true);
 		const ctrFrameTop = contour(-W1b2, H17)
@@ -540,6 +568,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			faceFrameSideHAxis: figFrameSideHAxis,
 			faceFrameMid: figFrameMid,
 			faceFootButtress: figFootButtress,
+			faceFrameBottomPlate: figFrameBottomPlate,
 			faceMirrorSide: figMirrorSide,
 			faceMirrorAxis: figMirrorAxis,
 			faceOneMirror: figOneMirror
