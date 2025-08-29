@@ -379,7 +379,9 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFoot.addSecond(ctrOval(0));
 		figFoot.addSecond(ctrOval(param.T2));
 		figFoot.addSecond(ctrOval(param.T2 + param.W2));
+		figFoot.addSecond(ctrRectangle(-R4, H123, 2 * R4, param.T2));
 		// figFrameBand
+		figFrameBand.addSecond(ctrRectangle(-R4, H123, 2 * R4, param.T2));
 		figFrameBand.addMainOI([ctrOval(param.T2), ctrOval(param.T2 + param.W2)]);
 		figFrameBand.addSecond(ctrOval(0));
 		figFrameBand.addSecond(ctrFoot(1));
@@ -448,6 +450,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 			.closeSegStroke();
 		figFrameBottom.addMainO(ctrFrameBottom);
 		// figFrameSide
+		figFrameSide.addSecond(ctrRectangle(-R4, H123, 2 * R4, param.T2));
 		figFrameSide.addSecond(ctrFoot(1));
 		figFrameSide.addSecond(ctrFoot(-1));
 		figFrameSide.addSecond(ctrRectangle(-param.W3 / 2, H123, param.W3, param.H4));
