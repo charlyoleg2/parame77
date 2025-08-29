@@ -435,20 +435,23 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFrameTop.addMainO(ctrFrameTop);
 		// figFrameBottom
 		figFrameBottom.mergeFigure(figFrameMid, true);
-		const ctrFrameBottom = contour(Wbottom2, H123)
+		const ctrFrameBottomR = contour(Wbottom2, H123)
 			.addPointR(param.H4, param.H4)
 			.addSegArc(param.H4, false, true)
 			.addSegStrokeR(-param.T2, 0)
 			.addPointR(-H42, -H42)
 			.addSegArc(H42, false, false)
-			.addSegStrokeR(-2 * Wbottom2, 0)
+			.closeSegStroke();
+		const ctrFrameBottomL = contour(-Wbottom2, H123 + param.T2)
 			.addPointR(-H42, H42)
 			.addSegArc(H42, false, false)
 			.addSegStrokeR(-param.T2, 0)
 			.addPointR(param.H4, -param.H4)
 			.addSegArc(param.H4, false, true)
 			.closeSegStroke();
-		figFrameBottom.addMainO(ctrFrameBottom);
+		figFrameBottom.addMainO(ctrFrameBottomR);
+		figFrameBottom.addMainO(ctrFrameBottomL);
+		//figFrameBottom.addSecond(ctrRectangle(-Wbottom2, H123, 2 * Wbottom2, param.T2));
 		// figFrameSide
 		figFrameSide.addSecond(ctrRectangle(-R4, H123, 2 * R4, param.T2));
 		figFrameSide.addSecond(ctrFoot(1));
