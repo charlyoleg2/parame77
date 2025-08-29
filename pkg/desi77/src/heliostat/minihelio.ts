@@ -7,7 +7,9 @@ import type {
 	tParamDef,
 	tParamVal,
 	tGeom,
-	tPageDef
+	tPageDef,
+	tExtrude
+	//tVolume
 	//tSubInst
 	//tSubDesign
 } from 'geometrix';
@@ -27,6 +29,7 @@ import {
 	pCheckbox,
 	//pDropdown,
 	pSectionSeparator,
+	transform3d,
 	EExtrude,
 	EBVolume,
 	initGeom
@@ -206,6 +209,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		const T12 = param.T1 / 2;
 		const R241 = R2 - R4 - param.T1;
 		const aButtress = param.N2 > 0 ? (4 * pi2) / param.N2 : pi2;
+		const idxFootButtress = [...Array(param.N2).keys()];
 		// step-5 : checks on the parameter values
 		if (R12 < 0.1) {
 			throw `err134: D2 ${ffix(param.D2)} is too small compare to D1 ${ffix(param.D1)} mm`;
@@ -402,7 +406,7 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFootButtress.addSecond(ctrFoot(1));
 		figFootButtress.addSecond(ctrFoot(-1));
 		figFootButtress.addMainO(ctrFootButtress(1));
-		figFootButtress.addMainO(ctrFootButtress(-1));
+		figFootButtress.addSecond(ctrFootButtress(-1));
 		// figFrameBottomPlate
 		const ctrFBPlateE = ctrRectangle(-Wbottom2, -W32, 2 * Wbottom2, param.W3);
 		const ctrFBPlateI = contourCircle(0, 0, R4);
@@ -417,8 +421,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		figFrameBottomPlate.addSecond(contourCircle(0, 0, R2));
 		figFrameBottomPlate.addSecond(contourCircle(0, 0, R2 - param.T1));
 		figFrameBottomPlate.addSecond(contourCircle(0, 0, R1));
-		for (let ii = 0; ii < param.N2; ii++) {
-			const iCtr = ctrRectangle(R4, -T12, R241, param.T1).rotate(0, 0, ii * aButtress);
+		for (const idx of idxFootButtress) {
+			const iCtr = ctrRectangle(R4, -T12, R241, param.T1).rotate(0, 0, idx * aButtress);
 			figFrameBottomPlate.addSecond(iCtr);
 		}
 		// figFrameTop
@@ -581,12 +585,29 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 		};
 		// volume
 		const designName = rGeome.partName;
+		const listVol: tExtrude[] = [];
 		const d3Foot: string[] = [];
 		const d3Frame: string[] = [];
 		const d3Mirror: string[] = [];
 		const d3OneMirror: string[] = [];
 		if (param.d3_foot === 1) {
 			d3Foot.push(`subpax_${designName}_foot`);
+			for (const idx of idxFootButtress) {
+				const iOutName = `subpax_${designName}_fbutt${idx.toString().padStart(4, '0')}`;
+				d3Foot.push(iOutName);
+				const iT3d = transform3d()
+					.addRotation(pi2, 0, 0)
+					.addTranslation(0, T12, 0)
+					.addRotation(0, 0, idx * aButtress);
+				listVol.push({
+					outName: iOutName,
+					face: `${designName}_faceFootButtress`,
+					extrudeMethod: EExtrude.eLinearOrtho,
+					length: param.T1,
+					rotate: iT3d.getRotation(),
+					translate: iT3d.getTranslation()
+				});
+			}
 		}
 		if (param.d3_frame === 1) {
 			d3Frame.push(`subpax_${designName}_frameBand1`);
@@ -719,7 +740,8 @@ function pGeom(t: number, param: tParamVal, suffix = ''): tGeom {
 					length: param.Wm,
 					rotate: [0, 0, 0],
 					translate: [0, 0, 0]
-				}
+				},
+				...listVol
 			],
 			volumes: [
 				{
