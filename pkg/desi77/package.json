@@ -61,8 +61,8 @@
 	},
 	"dependencies": {
 		"geometrix": "^1.0.25",
-		"sheetfold": "^1.0.5",
-		"triangule": "^1.0.12"
+		"sheetfold": "^1.0.6",
+		"triangule": "^1.0.13"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.30.0",
