@@ -60,9 +60,9 @@
 		"clean": "rimraf dist dist2 node_modules"
 	},
 	"dependencies": {
-		"geometrix": "^1.0.25",
-		"sheetfold": "^1.0.6",
-		"triangule": "^1.0.13"
+		"geometrix": "^1.0.26",
+		"sheetfold": "^1.0.7",
+		"triangule": "^1.0.14"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.30.0",
@@ -77,6 +77,6 @@
 		"tsup": "^8.5.0",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.2",
-		"vitest": "^4.0.4"
+		"vitest": "^4.0.5"
 	}
 }
