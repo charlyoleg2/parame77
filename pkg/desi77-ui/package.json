@@ -34,8 +34,8 @@
 	},
 	"dependencies": {
 		"desi77": "^0.1.26",
-		"geometrix": "^1.0.26",
-		"geomui": "^1.0.26"
+		"geometrix": "^1.0.27",
+		"geomui": "^1.0.27"
 	},
 	"devDependencies": {
 		"@atao60/fse-cli": "^0.1.9",
