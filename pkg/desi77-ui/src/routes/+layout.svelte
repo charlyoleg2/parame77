@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { repoToHomepage } from '$lib/general';
-	import { resolve, asset } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { version_details } from 'geometrix';
 	import topPackage from '../../../../package.json';
 	import libPackage from '../../../desi77/package.json';
@@ -19,7 +19,7 @@
 <header>
 	<h1>Welcome to Desi77-UI</h1>
 	<h6>
-		Display the designs of <a href={asset(topPackage.homepage)} rel="external"
+		Display the designs of <a href={topPackage.homepage} rel="external"
 			>{libPackage.name}</a
 		>. Powered by the framework
 		<a href="https://charlyoleg2.github.io/parametrix/">parametrix</a>.
@@ -35,7 +35,7 @@
 	<article>
 		<h3>{topPackage.name}</h3>
 		<code>
-			<a href={asset(repoToHomepage(topPackage.repository.url))} rel="external"
+			<a href={repoToHomepage(topPackage.repository.url)} rel="external"
 				>{topPackage.name}</a
 			>
 			version {topPackage.version}
