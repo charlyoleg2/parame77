@@ -25,7 +25,7 @@ export default defineConfig({
 				precompress: false,
 				strict: true
 			}),
-			paths: { base: dev ? '' : `/${basePath}`, relative: false }
+			paths: { base: dev ? '' : `/${basePath}`, relative: true }
 		})
 	],
 	test: { include: ['src/**/*.{test,spec}.{js,ts}'] }
