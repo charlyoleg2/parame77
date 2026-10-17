@@ -33,7 +33,7 @@ import {
 } from 'geometrix';
 //import { triLALrL, triALLrL, triLLLrA } from 'triangule';
 import { triALLrLAA } from 'triangule';
-import { ctrPlugExtern } from './libPlugTorque';
+import { ctrPlugExtern } from './libPlugTorque.ts';
 
 const pDef: tParamDef = {
 	partName: 'plugTorque',
